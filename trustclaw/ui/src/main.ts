@@ -13,6 +13,9 @@ import { renderBrowser } from "./panels/browser.js";
 import { renderLanding } from "./panels/landing.js";
 import { renderLedger } from "./panels/ledger.js";
 import { bindTrustclawRuntimeContextListener } from "./runtime-bridge.js";
+import { initTrustclawThemeSync } from "./theme-sync.js";
+
+initTrustclawThemeSync();
 
 const env = (import.meta as ImportMeta & { env?: { VITE_GATEWAY_URL?: string } }).env;
 const client = createApiClient(resolveApiBaseUrl(env, window.location));

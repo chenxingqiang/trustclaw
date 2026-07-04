@@ -6,7 +6,7 @@
  */
 
 :root {
-  /* Background */
+  color-scheme: dark;
   --bg: #0e1015;
   --bg-accent: #13151b;
   --bg-elevated: #191c24;
@@ -94,10 +94,11 @@
   --duration-normal: 180ms;
 }
 
-/* Light theme — matches Control UI's `theme-claw-light` class so a shared
- * theme switcher (future D5 merge) will Just Work. */
+/* Light theme — matches Control UI `:root[data-theme-mode="light"]`. */
+:root[data-theme-mode="light"],
 html.theme-light,
 html.theme-claw-light {
+  color-scheme: light;
   --bg: #fafafa;
   --bg-accent: #ffffff;
   --bg-elevated: #ffffff;

@@ -2,6 +2,7 @@
 
 export const TRUSTCLAW_PTDS_QUERY_TOOL = "trustclaw_ptds_query";
 export const TRUSTCLAW_RUNTIME_CONTEXT_MESSAGE = "openclaw:trustclaw:runtime-context";
+export const TRUSTCLAW_THEME_MESSAGE = "openclaw:theme";
 
 export type TrustclawRuntimeContextPayload = {
   session_id: string;
@@ -86,6 +87,20 @@ export function parseRuntimeContextFromToolResult(
     return readRuntimeContext(JSON.parse(text));
   } catch {
     return null;
+  }
+}
+
+export function notifyTrustclawPtdsTheme(resolved: string, themeMode: "light" | "dark"): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+  for (const iframe of document.querySelectorAll<HTMLIFrameElement>(
+    ".trustclaw-ptds-rail__frame",
+  )) {
+    iframe.contentWindow?.postMessage(
+      { type: TRUSTCLAW_THEME_MESSAGE, resolved, themeMode },
+      window.location.origin,
+    );
   }
 }
 

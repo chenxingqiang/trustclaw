@@ -22,9 +22,36 @@ function postLocaleToIframe(iframe: HTMLIFrameElement, locale: string): void {
   }
 }
 
+function postThemeToIframe(
+  iframe: HTMLIFrameElement,
+  resolved: string,
+  themeMode: "light" | "dark",
+): void {
+  try {
+    iframe.contentWindow?.postMessage(
+      { type: "openclaw:theme", resolved, themeMode },
+      window.location.origin,
+    );
+  } catch {
+    // not loaded yet
+  }
+}
+
+function syncIframeChrome(
+  iframe: HTMLIFrameElement,
+  locale: string,
+  resolved: string,
+  themeMode: "light" | "dark",
+): void {
+  postLocaleToIframe(iframe, locale);
+  postThemeToIframe(iframe, resolved, themeMode);
+}
+
 export type TrustclawPtdsWorkbenchParams = {
   basePath: string;
   locale?: string;
+  themeResolved?: string;
+  themeMode?: "light" | "dark";
   leftOpen: boolean;
   rightOpen: boolean;
   onToggleLeft: () => void;
@@ -34,6 +61,8 @@ export type TrustclawPtdsWorkbenchParams = {
 
 export function renderTrustclawPtdsWorkbench(params: TrustclawPtdsWorkbenchParams) {
   const locale = params.locale ?? "en";
+  const themeResolved = params.themeResolved ?? "dark";
+  const themeMode = params.themeMode ?? (themeResolved.endsWith("light") ? "light" : "dark");
   const leftSrc = buildTrustclawEmbedSrc(params.basePath, locale, "left");
   const rightSrc = buildTrustclawEmbedSrc(params.basePath, locale, "right");
 
@@ -71,7 +100,12 @@ export function renderTrustclawPtdsWorkbench(params: TrustclawPtdsWorkbenchParam
                 title=${t("ptdsPanel.leftRail")}
                 loading="lazy"
                 @load=${(event: Event) => {
-                  postLocaleToIframe(event.currentTarget as HTMLIFrameElement, locale);
+                  syncIframeChrome(
+                    event.currentTarget as HTMLIFrameElement,
+                    locale,
+                    themeResolved,
+                    themeMode,
+                  );
                 }}
               ></iframe>`
           : html`<div class="trustclaw-ptds-rail__header">
@@ -116,7 +150,12 @@ export function renderTrustclawPtdsWorkbench(params: TrustclawPtdsWorkbenchParam
                 title=${t("ptdsPanel.rightRail")}
                 loading="lazy"
                 @load=${(event: Event) => {
-                  postLocaleToIframe(event.currentTarget as HTMLIFrameElement, locale);
+                  syncIframeChrome(
+                    event.currentTarget as HTMLIFrameElement,
+                    locale,
+                    themeResolved,
+                    themeMode,
+                  );
                 }}
               ></iframe>`
           : html`<div class="trustclaw-ptds-rail__header">

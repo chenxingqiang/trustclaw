@@ -12,12 +12,12 @@ pnpm trustclaw:dev            # gateway :19001 + Vite UI :5174
 
 Open either:
 
-| URL                                 | Experience                                                                                  |
-| ----------------------------------- | ------------------------------------------------------------------------------------------- |
-| `http://127.0.0.1:19001/`           | **TrustClaw dev** — OpenClaw Control UI → **PTDS Console** (use `:19001`, not `:18789`)   |
+| URL                                 | Experience                                                                               |
+| ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| `http://127.0.0.1:19001/`           | **TrustClaw dev** — OpenClaw Control UI → **PTDS Console** (use `:19001`, not `:18789`)  |
 | `http://127.0.0.1:5174/trustclaw/`  | Standalone PTDS Runtime Console (dev, hot reload; center chat iframe to gateway `/chat`) |
-| `http://127.0.0.1:18789/`           | Default OpenClaw gateway (no TrustClaw dev plugin unless configured separately)            |
-| `http://127.0.0.1:18789/trustclaw/` | Production-style bundled console (after `pnpm trustclaw:ui:build`)                         |
+| `http://127.0.0.1:18789/`           | Default OpenClaw gateway (no TrustClaw dev plugin unless configured separately)          |
+| `http://127.0.0.1:18789/trustclaw/` | Production-style bundled console (after `pnpm trustclaw:ui:build`)                       |
 
 ## Gateway auth (dev)
 
@@ -31,13 +31,13 @@ pnpm openclaw dashboard --no-open --dev
 
 Config file: `~/.openclaw-dev/openclaw.json`. Verify with `pnpm openclaw models status --dev`.
 
-| Purpose | Model / key | Notes |
-| --- | --- | --- |
-| Chat (primary) | `ollama/qwen2.5:7b` | Local Ollama at `http://127.0.0.1:11434`; run `ollama pull qwen2.5:7b` |
-| Chat (fallback) | `anthropic/claude-sonnet-4-6` | Used when Ollama is unreachable |
-| Anthropic proxy | `~/.claude/settings.json` → `ANTHROPIC_BASE_URL` | Also set via `models.providers.anthropic.baseUrl` and `env.ANTHROPIC_BASE_URL` |
-| Anthropic API key | paste into OpenClaw auth store | `pnpm openclaw models auth paste-api-key --provider anthropic --dev` (same value as Claude `ANTHROPIC_AUTH_TOKEN`; never commit) |
-| PTDS Text2SQL | `OPENAI_API_KEY` | Separate from chat models; powers audited SQL pipeline |
+| Purpose           | Model / key                                      | Notes                                                                                                                            |
+| ----------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Chat (primary)    | `ollama/qwen2.5:7b`                              | Local Ollama at `http://127.0.0.1:11434`; run `ollama pull qwen2.5:7b`                                                           |
+| Chat (fallback)   | `anthropic/claude-sonnet-4-6`                    | Used when Ollama is unreachable                                                                                                  |
+| Anthropic proxy   | `~/.claude/settings.json` → `ANTHROPIC_BASE_URL` | Also set via `models.providers.anthropic.baseUrl` and `env.ANTHROPIC_BASE_URL`                                                   |
+| Anthropic API key | paste into OpenClaw auth store                   | `pnpm openclaw models auth paste-api-key --provider anthropic --dev` (same value as Claude `ANTHROPIC_AUTH_TOKEN`; never commit) |
+| PTDS Text2SQL     | `OPENAI_API_KEY`                                 | Separate from chat models; powers audited SQL pipeline                                                                           |
 
 Example setup:
 
@@ -75,6 +75,19 @@ TrustClaw console shares OpenClaw's locale storage key **`openclaw.i18n.locale`*
 | URL `?locale=zh-CN` on `/trustclaw/` | Initial locale for standalone console                                  |
 
 Supported console bundles: **English (`en`)** and **简体中文 (`zh-CN`)**; `zh-TW` maps to `zh-CN`.
+
+## Theme
+
+PTDS side rails follow OpenClaw Control UI **Appearance → theme** via shared `openclaw.control.settings.v1*` localStorage and `openclaw:theme` postMessage. Embedded panels use the same `data-theme-mode="light"` tokens as the center chat.
+
+## C3-PO system prompt (PTDS Console chat)
+
+The **dev** agent (`C3-PO`) uses TrustClaw PTDS presets — not the generic Claude Code / debug persona:
+
+- Plugin hook `before_prompt_build` injects `trustclaw/agents/glp1/prompts/c3po-ptds-system.v1.md`
+- `pnpm trustclaw:setup` syncs `trustclaw/workspace/dev/{SOUL,IDENTITY,AGENTS}.md` → `~/.openclaw/workspace-dev/`
+
+After setup, **start a new chat session** (or `/new`) so the updated system prompt loads. Ask “What can you do?” — the reply should describe PTDS panels A–E and `trustclaw_ptds_query`, not IDE/coding features.
 
 ## Demo flow (frozen V1)
 

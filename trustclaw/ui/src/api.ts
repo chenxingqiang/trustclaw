@@ -91,15 +91,14 @@ export function buildBrowseUrl(base: string, table: string, limit?: number): str
   return url.pathname + url.search;
 }
 
-/** Resolve API base URL. Empty string uses same-origin relative paths (gateway or Vite proxy). */
+/** Resolve API base URL. Empty string uses same-origin relative paths (gateway or Vite `/api` proxy). */
 export function resolveApiBaseUrl(
-  env: { VITE_GATEWAY_URL?: string } | undefined,
-  location: Pick<Location, "origin">,
+  _env: { VITE_GATEWAY_URL?: string } | undefined,
+  _location: Pick<Location, "origin">,
 ): string {
-  const override = env?.VITE_GATEWAY_URL?.trim();
-  if (override) {
-    return override.replace(/\/$/, "");
-  }
+  // PTDS HTTP routes are always on the page origin: bundled at `/trustclaw/` on the
+  // gateway, or proxied through Vite dev (`/api` → gateway). Do not use VITE_GATEWAY_URL
+  // here — a stale baked port (e.g. :18789) breaks init when dev gateway runs on :19001.
   return "";
 }
 

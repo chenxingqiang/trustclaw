@@ -66,6 +66,27 @@ describe("trustclaw-ptds plugin", () => {
     expect(on).toHaveBeenCalledWith("before_prompt_build", expect.any(Function));
   });
 
+  it("before_prompt_build injects C3-PO PTDS system context", async () => {
+    let beforePromptBuild: (() => Promise<{ prependSystemContext?: string }>) | undefined;
+    plugin.register({
+      registerHttpRoute() {},
+      registerTool() {},
+      on(event, handler) {
+        if (event === "before_prompt_build") {
+          beforePromptBuild = handler as typeof beforePromptBuild;
+        }
+      },
+      pluginConfig: {},
+      logger: { info: vi.fn() },
+    } as Parameters<typeof plugin.register>[0]);
+
+    expect(beforePromptBuild).toBeDefined();
+    const result = await beforePromptBuild!();
+    expect(result.prependSystemContext).toContain("C3-PO");
+    expect(result.prependSystemContext).toContain("trustclaw_ptds_query");
+    expect(result.prependSystemContext).toMatch(/not.*Claude Code/i);
+  });
+
   it("handles POST /api/ptds/init with frozen contract shape", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-plugin-init-"));
     const dbPath = path.join(dir, "local_ptds.db");

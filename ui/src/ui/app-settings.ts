@@ -86,6 +86,7 @@ import {
 import { normalizeOptionalString } from "./string-coerce.ts";
 import { startThemeTransition, type ThemeTransitionContext } from "./theme-transition.ts";
 import { resolveTheme, type ResolvedTheme, type ThemeMode, type ThemeName } from "./theme.ts";
+import { notifyTrustclawPtdsTheme } from "./trustclaw-ptds-bridge.ts";
 import type { AgentsListResult, AttentionItem } from "./types.ts";
 import { normalizeLocalUserIdentity } from "./user-identity.ts";
 import { resetChatViewState } from "./views/chat.ts";
@@ -600,6 +601,7 @@ export function applyResolvedTheme(host: SettingsHost, resolved: ResolvedTheme) 
   root.dataset.theme = resolved;
   root.dataset.themeMode = themeMode;
   root.style.colorScheme = themeMode;
+  notifyTrustclawPtdsTheme(resolved, themeMode);
 }
 
 function syncSystemThemeListener(host: SettingsHost) {

@@ -25,10 +25,8 @@ describe("trustclaw/ui api client", () => {
     expect(buildBrowseUrl("http://x", "t", Number.NaN)).toBe("/api/ptds/browse?table=t");
   });
 
-  it("resolveApiBaseUrl prefers VITE_GATEWAY_URL override", () => {
-    expect(resolveApiBaseUrl({ VITE_GATEWAY_URL: "http://gw/" }, { origin: "http://x" })).toBe(
-      "http://gw",
-    );
+  it("resolveApiBaseUrl always uses same-origin relative API paths", () => {
+    expect(resolveApiBaseUrl({ VITE_GATEWAY_URL: "http://gw/" }, { origin: "http://x" })).toBe("");
     expect(resolveApiBaseUrl(undefined, { origin: "http://x" })).toBe("");
   });
 

@@ -3925,6 +3925,8 @@ export function renderApp(state: AppViewState) {
           ? renderTrustclawPtdsWorkbench({
               basePath: state.basePath ?? "",
               locale: i18n.getLocale(),
+              themeResolved: state.themeResolved,
+              themeMode: state.themeResolved.endsWith("light") ? "light" : "dark",
               leftOpen: state.ptdsLeftRailOpen,
               rightOpen: state.ptdsRightRailOpen,
               onToggleLeft: () => {
