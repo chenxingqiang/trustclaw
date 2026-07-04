@@ -52,6 +52,7 @@ export type Text2SqlLlmCaller = (prompt: string) => Promise<string>;
 
 export type RunChatOptions = {
   dbPath?: string;
+  auditDir?: string;
   llm: Text2SqlLlmCaller;
 };
 

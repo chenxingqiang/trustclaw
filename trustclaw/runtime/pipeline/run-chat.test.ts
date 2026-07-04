@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -66,6 +66,7 @@ describe("trustclaw/runtime/pipeline", () => {
         },
         {
           dbPath,
+          auditDir: path.join(dir, "ptds-audit"),
           llm: async () =>
             "SELECT * FROM v_glp1_nrdl_check_snapshot WHERE user_id = 'local_user' LIMIT 1",
         },
@@ -84,6 +85,15 @@ describe("trustclaw/runtime/pipeline", () => {
       expect(result.context.pipeline_stages.agent_decision.response.length).toBeGreaterThan(0);
       expect(result.context.audit_trail_id).toMatch(/^aud_/);
       expect(result.context.evidence_ledger_receipt.proof_hash).toMatch(/^[a-f0-9]{64}$/);
+
+      const auditLines = readFileSync(path.join(dir, "ptds-audit", "events.jsonl"), "utf8")
+        .trim()
+        .split("\n");
+      expect(auditLines.length).toBeGreaterThanOrEqual(5);
+      const trailIds = auditLines.map(
+        (line) => (JSON.parse(line) as { audit_trail_id: string }).audit_trail_id,
+      );
+      expect(new Set(trailIds)).toEqual(new Set([result.context.audit_trail_id]));
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

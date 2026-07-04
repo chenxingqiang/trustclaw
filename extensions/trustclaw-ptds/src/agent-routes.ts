@@ -50,6 +50,7 @@ export function createAgentChatHandler(
     const paths = pathOverrides(pluginConfig);
     const result = await runTrustclawChat(body.data, {
       dbPath: paths.dbPath,
+      auditDir: paths.auditDir,
       llm: deps.llm,
     });
 
