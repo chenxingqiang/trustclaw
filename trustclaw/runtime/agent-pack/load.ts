@@ -8,11 +8,24 @@ import {
 } from "./schema.js";
 
 const PACK_FILENAME = "agent.pack.json";
+const GLP1_PACK_MARKER = path.join("glp1", PACK_FILENAME);
 
-const defaultAgentsDir = fileURLToPath(new URL("../../agents", import.meta.url));
+function resolveTrustclawAgentsDir(moduleUrl: string = import.meta.url): string {
+  const moduleDir = path.dirname(fileURLToPath(moduleUrl));
+  const candidates = [
+    path.resolve(moduleDir, "..", "..", "agents"),
+    path.resolve(moduleDir, "..", "..", "..", "trustclaw", "agents"),
+  ];
+  for (const agentsDir of candidates) {
+    if (existsSync(path.join(agentsDir, GLP1_PACK_MARKER))) {
+      return agentsDir;
+    }
+  }
+  return candidates[0]!;
+}
 
 export function resolveDefaultAgentsDir(): string {
-  return defaultAgentsDir;
+  return resolveTrustclawAgentsDir();
 }
 
 export function resolvePackAssetPath(packDir: string, relativePath: string): string {

@@ -15,6 +15,7 @@ export const deviceImportExecuteRequestSchema = z
   .object({
     consentGranted: z.boolean(),
     sessionId: z.string().trim().min(1),
+    agentPackId: z.string().trim().min(1).optional(),
     sourceLabel: z.string().trim().min(1).optional(),
     package: z.unknown().optional(),
     url: z.string().trim().min(1).optional(),

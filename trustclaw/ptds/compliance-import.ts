@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
-import { recordComplianceImportAudit } from "./consent-audit.js";
 import {
   complianceStandardPackageSchema,
   type ComplianceImportRequest,
@@ -10,6 +9,7 @@ import {
   type MedicationComplianceAstRuleRow,
   type MedicationComplianceStandardRow,
 } from "./compliance-types.js";
+import { recordComplianceImportAudit } from "./consent-audit.js";
 import { bootstrapPtdsDatabase, runPtdsImmediateTransactionSync } from "./db.js";
 import { resolvePtdsDbPath, type PtdsPathOverrides } from "./paths.js";
 
@@ -23,9 +23,7 @@ function parsePackage(raw: unknown): ComplianceStandardPackage {
   return complianceStandardPackageSchema.parse(raw);
 }
 
-export function previewComplianceStandardPackage(
-  raw: unknown,
-): CompliancePreviewResult {
+export function previewComplianceStandardPackage(raw: unknown): CompliancePreviewResult {
   try {
     const pkg = parsePackage(raw);
     return {
@@ -75,6 +73,10 @@ export function importComplianceStandardPackage(
   const sessionId = request.sessionId.trim();
   if (!sessionId) {
     return { status: "error", message: "sessionId is required for consent audit." };
+  }
+  const agentPackId = request.agentPackId.trim();
+  if (!agentPackId) {
+    return { status: "error", message: "agentPackId is required for compliance import audit." };
   }
 
   let pkg: ComplianceStandardPackage;
@@ -159,6 +161,7 @@ export function importComplianceStandardPackage(
 
     recordComplianceImportAudit({
       sessionId,
+      agentPackId: request.agentPackId.trim(),
       standardId,
       rulesetHash: pkg.metadata.ruleset_hash,
       rulesImported: pkg.ast_rules.length,

@@ -12,6 +12,10 @@ import { openExternalUrlSafe } from "../open-external-url.ts";
 import type { SidebarContent } from "../sidebar-content.ts";
 import { detectTextDirection } from "../text-direction.ts";
 import { resolveToolDisplay } from "../tool-display.ts";
+import {
+  decorateTrustclawEvidenceTags,
+  type TrustclawEvidenceCitation,
+} from "../trustclaw-ptds-bridge.ts";
 import type {
   MessageContentItem,
   MessageGroup,
@@ -383,6 +387,7 @@ export function renderStreamingGroup(
   assistant?: AssistantIdentity,
   basePath?: string,
   authToken?: string | null,
+  trustclawEvidenceCitations?: TrustclawEvidenceCitation[],
 ) {
   const name = assistant?.name ?? "Assistant";
 
@@ -397,7 +402,7 @@ export function renderStreamingGroup(
             timestamp: startedAt,
           },
           `stream:${startedAt}`,
-          { isStreaming, showReasoning: false },
+          { isStreaming, showReasoning: false, trustclawEvidenceCitations },
           onOpenSidebar,
         )}
         <div class="chat-group-footer">
@@ -432,6 +437,7 @@ type RenderMessageGroupOptions = {
   embedSandboxMode?: EmbedSandboxMode;
   allowExternalEmbedUrls?: boolean;
   contextWindow?: number | null;
+  trustclawEvidenceCitations?: TrustclawEvidenceCitation[];
   onDelete?: () => void;
 };
 
@@ -462,6 +468,7 @@ function buildGroupedMessageRenderOptions(
     assistantAttachmentAuthToken: opts.assistantAttachmentAuthToken,
     embedSandboxMode: opts.embedSandboxMode,
     allowExternalEmbedUrls: opts.allowExternalEmbedUrls,
+    trustclawEvidenceCitations: opts.trustclawEvidenceCitations,
   };
 }
 
@@ -1617,6 +1624,7 @@ function renderGroupedMessage(
     assistantAttachmentAuthToken?: string | null;
     embedSandboxMode?: EmbedSandboxMode;
     allowExternalEmbedUrls?: boolean;
+    trustclawEvidenceCitations?: TrustclawEvidenceCitation[];
   },
   onOpenSidebar?: (content: SidebarContent) => void,
 ) {
@@ -1662,7 +1670,9 @@ function renderGroupedMessage(
     opts.showReasoning && role === "assistant" ? extractThinkingCached(message) : null;
   const markdownBase = extractedText?.trim() ? extractedText : null;
   const reasoningMarkdown = extractedThinking ? formatReasoningMarkdown(extractedThinking) : null;
-  const markdown = markdownBase;
+  const markdown = markdownBase
+    ? decorateTrustclawEvidenceTags(markdownBase, opts.trustclawEvidenceCitations ?? [])
+    : null;
   const markdownRenderOptions = role === "user" ? { codeBlockChrome: "none" as const } : undefined;
   const canCopyMarkdown = role === "assistant" && Boolean(markdown?.trim());
   const canExpand = role === "assistant" && Boolean(onOpenSidebar && markdown?.trim());

@@ -6,6 +6,8 @@ import { collectLedgerReceipts, type LedgerReceiptRow } from "./audit-events.js"
 
 export type { LedgerReceiptRow };
 
+import { mountPanelAgentBar, type PanelAgentBar } from "./panel-agent-bar.js";
+
 export function renderLedger(
   root: HTMLElement,
   client?: TrustclawApiClient,
@@ -20,7 +22,10 @@ export function renderLedger(
   root.innerHTML = `
     <section class="panel panel--e" data-panel="ledger">
       <header class="panel__header">
-        <h2>${escapeHtml(m.title)}</h2>
+        <div class="panel__heading">
+          <h2>${escapeHtml(m.title)}</h2>
+          <p class="panel__subtitle">${escapeHtml(m.subtitle)}</p>
+        </div>
         <span class="badge" data-testid="ledger-verified">${escapeHtml(m.placeholder)}</span>
       </header>
       <div class="panel__body">
@@ -56,29 +61,45 @@ export function renderLedger(
   const proofEl = root.querySelector<HTMLElement>('[data-testid="ledger-proof"]')!;
   const copyBtn = root.querySelector<HTMLButtonElement>('[data-action="copy-proof"]')!;
   const verifiedBadge = root.querySelector<HTMLElement>('[data-testid="ledger-verified"]')!;
+  const panelBody = root.querySelector<HTMLElement>(".panel__body")!;
+  let agentBar: PanelAgentBar | null = null;
+  if (client) {
+    agentBar = mountPanelAgentBar(panelBody, client, "panel.ledger");
+  }
   const rows: LedgerReceiptRow[] = [];
+  let chainVerified: boolean | null = null;
 
   function latestProof(): Record<string, unknown> {
     const last = rows.at(-1);
     if (!last?.proof_hash) {
-      return { status: "pending", task: "401" };
+      return { status: "pending" };
     }
     return {
       block_height: last.block_height ?? rows.length - 1,
       proof_hash: last.proof_hash,
+      previous_evidence_hash: last.previous_evidence_hash ?? null,
       audit_trail_id: last.audit_trail_id,
+      chain_verified: chainVerified,
     };
   }
 
   function repaint(): void {
     const last = rows.at(-1);
     const hash = last?.proof_hash ?? "";
-    const chainHeight = rows.length > 0 ? rows.length : (last?.block_height ?? 0);
+    const chainHeight = rows.length > 0 ? (rows.at(-1)?.block_height ?? rows.length - 1) + 1 : 0;
     heightEl.textContent = `#${chainHeight}`;
     rootEl.textContent = hash ? `${hash.slice(0, 12)}…` : "—";
     proofShortEl.textContent = hash ? `${hash.slice(0, 8)}…` : "—";
     proofEl.textContent = JSON.stringify(latestProof(), null, 2);
-    verifiedBadge.textContent = hash ? m.receiptReady : m.placeholder;
+    if (!hash) {
+      verifiedBadge.textContent = m.placeholder;
+    } else if (chainVerified === true) {
+      verifiedBadge.textContent = m.receiptReady;
+    } else if (chainVerified === false) {
+      verifiedBadge.textContent = m.chainBroken;
+    } else {
+      verifiedBadge.textContent = m.chainPending;
+    }
     emptyNoteEl.hidden = rows.length > 0;
     listEl.innerHTML = rows
       .map(
@@ -133,9 +154,15 @@ export function renderLedger(
       if (!receipt?.proof_hash) {
         return;
       }
+      const contextPackId = context.agent_pack_id?.trim();
+      const selectedPackId = agentBar?.getSelectedPackId();
+      if (contextPackId && selectedPackId && contextPackId !== selectedPackId) {
+        return;
+      }
       upsertReceipt({
         block_height: receipt.block_height,
         proof_hash: receipt.proof_hash,
+        previous_evidence_hash: receipt.previous_evidence_hash ?? null,
         audit_trail_id: context.audit_trail_id,
         timestamp: Date.now() / 1000,
       });
@@ -146,16 +173,47 @@ export function renderLedger(
       if (!client) {
         return;
       }
+      if (agentBar) {
+        await agentBar.refresh();
+      }
+      const packId = agentBar?.getSelectedPackId();
       try {
-        const response = await client.auditEvents("chat", 120);
+        const ledger = await client.ledgerStatus(packId);
+        const verifiedFromApi =
+          ledger.verify?.ok === true ? true : ledger.verify?.ok === false ? false : null;
+        chainVerified = verifiedFromApi;
+        const receipts = (ledger.receipts ?? []).map((row) => ({
+          block_height: row.block_height,
+          proof_hash: row.proof_hash,
+          previous_evidence_hash: row.previous_evidence_hash,
+          audit_trail_id: row.audit_trail_id,
+          timestamp: row.committed_at,
+        }));
+        if (receipts.length > 0) {
+          setReceipts(receipts);
+          return;
+        }
+        if (verifiedFromApi !== null) {
+          setReceipts([]);
+          return;
+        }
+        const response = await client.auditEvents("chat", 120, packId);
         setReceipts(collectLedgerReceipts(response.events ?? []));
       } catch (error) {
-        emptyNoteEl.textContent = `${m.loadError}: ${(error as Error).message}`;
-        emptyNoteEl.hidden = false;
+        try {
+          const response = await client.auditEvents("chat", 120, packId);
+          chainVerified = null;
+          setReceipts(collectLedgerReceipts(response.events ?? []));
+          emptyNoteEl.hidden = rows.length > 0;
+        } catch {
+          emptyNoteEl.textContent = `${m.loadError}: ${(error as Error).message}`;
+          emptyNoteEl.hidden = false;
+        }
       }
     },
     clear() {
       rows.length = 0;
+      chainVerified = null;
       emptyNoteEl.textContent = m.emptyNote;
       emptyNoteEl.hidden = false;
       repaint();

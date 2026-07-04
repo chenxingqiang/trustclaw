@@ -4118,6 +4118,13 @@ td.data-table-key-col {
   text-decoration: underline;
 }
 
+.chat-text :where(.trustclaw-evidence-tag) {
+  cursor: help;
+  font-weight: 600;
+  color: var(--accent);
+  border-bottom: 1px dotted var(--accent);
+}
+
 .chat-text :where(blockquote) {
   border-left: 2px solid var(--border-strong);
   padding-left: 12px;

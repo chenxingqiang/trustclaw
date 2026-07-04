@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { AuditEvent, AuditStepCode } from "./types.js";
 
@@ -42,7 +42,20 @@ export function readAuditEvents(options: ReadAuditEventsOptions): AuditEvent[] {
   return matched.reverse();
 }
 
+/** Remove chat/compliance audit JSONL for demo reset (Task 503). */
+export function clearAuditEvents(auditDir: string): void {
+  const filePath = resolveAuditEventsPath(auditDir);
+  try {
+    unlinkSync(filePath);
+  } catch {
+    // Missing file is already cleared.
+  }
+  mkdirSync(auditDir, { recursive: true });
+  writeFileSync(filePath, "", "utf8");
+}
+
 export const COMPLIANCE_AUDIT_STEPS = [
+  "AGENT_DOMAIN_GRANT",
   "DATA_CONSENT",
   "COMPLIANCE_IMPORT",
   "REFERENCE_SYNC",
@@ -56,3 +69,12 @@ export const CHAT_PIPELINE_AUDIT_STEPS = [
   "AGENT_DECISION",
   "LEDGER_COMMIT",
 ] as const satisfies readonly AuditStepCode[];
+
+/** Steps missing from a chat audit trail (Task 301 / DoD auditable gate). */
+export function missingChatPipelineSteps(auditDir: string, auditTrailId: string): AuditStepCode[] {
+  const events = readAuditEvents({ auditDir, limit: 200 }).filter(
+    (event) => event.audit_trail_id === auditTrailId,
+  );
+  const present = new Set(events.map((event) => event.step));
+  return CHAT_PIPELINE_AUDIT_STEPS.filter((step) => !present.has(step));
+}

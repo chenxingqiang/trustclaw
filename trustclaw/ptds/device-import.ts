@@ -1,20 +1,25 @@
 import { createHash } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
-import { generateDeviceImportSql } from "../runtime/text2sql/generate-device-import.js";
 import {
   assertDeviceImportStatements,
   DeviceImportSecurityError,
   splitInsertStatements,
 } from "../runtime/text2sql/device-write-sanitize.js";
+import { generateDeviceImportSql } from "../runtime/text2sql/generate-device-import.js";
 import { recordDeviceImportAudit } from "./consent-audit.js";
-import { bootstrapPtdsDatabase, openPtdsDatabase, resolvePrimaryUserId, runPtdsImmediateTransactionSync } from "./db.js";
-import { fetchReferencePackageFromUrl } from "./reference-import.js";
-import { resolvePtdsDbPath, type PtdsPathOverrides } from "./paths.js";
+import {
+  bootstrapPtdsDatabase,
+  openPtdsDatabase,
+  resolvePrimaryUserId,
+  runPtdsImmediateTransactionSync,
+} from "./db.js";
 import type {
   DeviceImportExecuteRequest,
   DeviceImportPreviewResult,
   DeviceImportResult,
 } from "./device-types.js";
+import { resolvePtdsDbPath, type PtdsPathOverrides } from "./paths.js";
+import { fetchReferencePackageFromUrl } from "./reference-import.js";
 
 export type DeviceImportLlm = (prompt: string) => Promise<string>;
 
@@ -69,7 +74,9 @@ export async function previewDeviceImport(
   const dbPath =
     typeof options.dbPathOrOverrides === "string" || options.dbPathOrOverrides === undefined
       ? resolvePtdsDbPath(
-          typeof options.dbPathOrOverrides === "string" ? { dbPath: options.dbPathOrOverrides } : {},
+          typeof options.dbPathOrOverrides === "string"
+            ? { dbPath: options.dbPathOrOverrides }
+            : {},
           env,
         )
       : resolvePtdsDbPath(options.dbPathOrOverrides, env);
@@ -121,19 +128,31 @@ export async function importDeviceData(
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<DeviceImportResult> {
   if (!request.consentGranted) {
-    recordDeviceImportAudit({
-      sessionId: request.sessionId,
-      sqlHash: request.sql_hash,
-      tables: [],
-      rowsAffected: 0,
-      granted: false,
-      auditDir: options.auditDir,
-      overrides:
-        typeof options.dbPathOrOverrides === "object" ? options.dbPathOrOverrides : undefined,
-    });
+    const agentPackId = request.agentPackId?.trim();
+    if (agentPackId) {
+      recordDeviceImportAudit({
+        sessionId: request.sessionId,
+        agentPackId,
+        sqlHash: request.sql_hash,
+        tables: [],
+        rowsAffected: 0,
+        granted: false,
+        auditDir: options.auditDir,
+        overrides:
+          typeof options.dbPathOrOverrides === "object" ? options.dbPathOrOverrides : undefined,
+      });
+    }
     return {
       status: "error",
       message: "User consent is required before importing third-party device data.",
+    };
+  }
+
+  const agentPackId = request.agentPackId?.trim();
+  if (!agentPackId) {
+    return {
+      status: "error",
+      message: "agentPackId is required for device import audit.",
     };
   }
 
@@ -157,7 +176,9 @@ export async function importDeviceData(
   const dbPath =
     typeof options.dbPathOrOverrides === "string" || options.dbPathOrOverrides === undefined
       ? resolvePtdsDbPath(
-          typeof options.dbPathOrOverrides === "string" ? { dbPath: options.dbPathOrOverrides } : {},
+          typeof options.dbPathOrOverrides === "string"
+            ? { dbPath: options.dbPathOrOverrides }
+            : {},
           env,
         )
       : resolvePtdsDbPath(options.dbPathOrOverrides, env);
@@ -174,6 +195,7 @@ export async function importDeviceData(
 
       recordDeviceImportAudit({
         sessionId: request.sessionId,
+        agentPackId,
         sqlHash,
         tables: verifiedTables,
         rowsAffected,
@@ -199,6 +221,7 @@ export async function importDeviceData(
     const message = error instanceof Error ? error.message : String(error);
     recordDeviceImportAudit({
       sessionId: request.sessionId,
+      agentPackId,
       sqlHash,
       tables: verifiedTables,
       rowsAffected: 0,

@@ -21,11 +21,15 @@ export type PtdsInitRequest = {
   usedMetforminBadControl: boolean;
   usedSulfonylureaBadControl: boolean;
   usedInsulinBadControl: boolean;
+  /** AST prescription_context.is_first_prescription (default: true). */
+  isFirstPrescription?: boolean;
+  /** AST prescription_context.institution_level 1–3 (default: 3). */
+  institutionLevel?: number;
+  /** AST prescription_context.is_specialist_physician (default: true). */
+  isSpecialistPhysician?: boolean;
 };
 
-export const PTDS_INIT_DEFAULTS: Required<
-  Pick<PtdsInitRequest, "patientName" | "gender" | "age">
-> &
+export const PTDS_INIT_DEFAULTS: Required<Pick<PtdsInitRequest, "patientName" | "gender" | "age">> &
   Omit<PtdsInitRequest, "patientName" | "gender" | "age" | "bmi"> = {
   patientName: "张三",
   gender: "男",

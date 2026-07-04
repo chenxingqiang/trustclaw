@@ -2,7 +2,13 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { initializePtds, PTDS_INIT_DEFAULTS } from "../../../trustclaw/ptds/index.js";
+import { deriveAgentDomainScopes } from "../../../trustclaw/ptds/agent-domain-scopes.js";
+import {
+  initializePtds,
+  PTDS_INIT_DEFAULTS,
+  setAgentDomainGrant,
+} from "../../../trustclaw/ptds/index.js";
+import { getAgentPackRegistry } from "../../../trustclaw/runtime/agent-pack/index.js";
 import {
   buildPtdsDataConsentDescription,
   createTrustclawPtdsDataConsentHook,
@@ -17,6 +23,24 @@ const sampleInitPayload = {
 };
 
 describe("trustclaw-ptds data consent hook", () => {
+  it("blocks trustclaw_ptds_query when domain agent is not granted", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-consent-no-grant-"));
+    const dbPath = path.join(dir, "local_ptds.db");
+    const auditDir = path.join(dir, "audit");
+    try {
+      initializePtds(sampleInitPayload, dbPath);
+      const hook = createTrustclawPtdsDataConsentHook({ dbPath, auditDir });
+      const result = await hook(
+        { toolName: "trustclaw_ptds_query", params: { message: "test" } },
+        { sessionKey: "sess_no_grant" },
+      );
+      expect(result?.block).toBe(true);
+      expect(result?.blockReason).toContain("Panel C");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("blocks trustclaw_ptds_query when PTDS is not mounted", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-consent-hook-"));
     const dbPath = path.join(dir, "local_ptds.db");
@@ -39,6 +63,8 @@ describe("trustclaw-ptds data consent hook", () => {
     const auditDir = path.join(dir, "audit");
     try {
       initializePtds(sampleInitPayload, dbPath);
+      const pack = getAgentPackRegistry().get("glp1-eligibility")!;
+      setAgentDomainGrant(pack.id, deriveAgentDomainScopes(pack), { dbPath, auditDir });
       const hook = createTrustclawPtdsDataConsentHook({ dbPath, auditDir });
       const result = await hook(
         {
@@ -61,6 +87,8 @@ describe("trustclaw-ptds data consent hook", () => {
     const auditDir = path.join(dir, "audit");
     try {
       initializePtds(sampleInitPayload, dbPath);
+      const pack = getAgentPackRegistry().get("glp1-eligibility")!;
+      setAgentDomainGrant(pack.id, deriveAgentDomainScopes(pack), { dbPath, auditDir });
       const hook = createTrustclawPtdsDataConsentHook({ dbPath, auditDir });
       const result = await hook(
         {
@@ -94,10 +122,10 @@ describe("trustclaw-ptds data consent hook", () => {
   });
 
   it("builds bounded consent descriptions", () => {
-    const description = buildPtdsDataConsentDescription(
-      "x".repeat(200),
-      ["患者姓名", "糖化血红蛋白 HbA1c"],
-    );
+    const description = buildPtdsDataConsentDescription("x".repeat(200), [
+      "患者姓名",
+      "糖化血红蛋白 HbA1c",
+    ]);
     expect(description.length).toBeLessThanOrEqual(256);
     expect(description).toContain("患者姓名");
   });

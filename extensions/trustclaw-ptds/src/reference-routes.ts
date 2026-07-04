@@ -1,13 +1,17 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
 import { readFileSync } from "node:fs";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
+import {
+  resolveTrustclawPaths,
+  type TrustclawPluginConfig,
+} from "../../../trustclaw/ptds/config.js";
 import {
   fetchReferencePackageFromUrl,
   getNrdlReferenceStatus,
   previewNrdlReferencePackage,
   syncNrdlReferencePackage,
 } from "../../../trustclaw/ptds/index.js";
-import { resolveTrustclawPaths, type TrustclawPluginConfig } from "../../../trustclaw/ptds/config.js";
+import { requireAgentDomainGrant } from "./agent-grant-guard.js";
 import { methodIs, readJsonBody, sendJson } from "./http-utils.js";
 
 const previewRequestSchema = z
@@ -64,6 +68,11 @@ export function createReferencePreviewHandler(pluginConfig: TrustclawPluginConfi
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
       return true;
     }
+    const guard = requireAgentDomainGrant(req, "panel.compliance", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
+      return true;
+    }
     const parsed = await readJsonBody(req);
     if (!parsed.ok) {
       sendJson(res, 400, { status: "error", message: parsed.message });
@@ -95,6 +104,11 @@ export function createReferenceSyncHandler(pluginConfig: TrustclawPluginConfig |
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
       return true;
     }
+    const guard = requireAgentDomainGrant(req, "panel.compliance", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
+      return true;
+    }
     const parsed = await readJsonBody(req);
     if (!parsed.ok) {
       sendJson(res, 400, { status: "error", message: parsed.message });
@@ -110,6 +124,7 @@ export function createReferenceSyncHandler(pluginConfig: TrustclawPluginConfig |
       {
         consentGranted: body.data.consentGranted,
         sessionId: body.data.sessionId,
+        agentPackId: guard.pack.id,
         sourceLabel: body.data.sourceLabel,
         package: body.data.package,
         url: body.data.url,
@@ -128,6 +143,11 @@ export function createReferenceStatusHandler(pluginConfig: TrustclawPluginConfig
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
       return true;
     }
+    const guard = requireAgentDomainGrant(req, "panel.compliance", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
+      return true;
+    }
     const paths = pathOverrides(pluginConfig);
     const result = getNrdlReferenceStatus({ dbPath: paths.dbPath, auditDir: paths.auditDir });
     sendJson(res, 200, result);
@@ -143,6 +163,11 @@ export function createReferenceSyncBundledHandler(
   return async (req: IncomingMessage, res: ServerResponse): Promise<boolean> => {
     if (!methodIs(req, "POST")) {
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
+      return true;
+    }
+    const guard = requireAgentDomainGrant(req, "panel.compliance", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
       return true;
     }
     const parsed = await readJsonBody(req);
@@ -174,6 +199,7 @@ export function createReferenceSyncBundledHandler(
       {
         consentGranted: body.data.consentGranted,
         sessionId: body.data.sessionId,
+        agentPackId: guard.pack.id,
         sourceLabel: "nrdl-reference-glp1-v1.json",
         package: pkg,
       },

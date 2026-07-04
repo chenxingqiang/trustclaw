@@ -2,10 +2,15 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   CHAT_PIPELINE_AUDIT_STEPS,
   COMPLIANCE_AUDIT_STEPS,
+  auditEventMatchesAgentPack,
   readAuditEvents,
   type AuditStepCode,
 } from "../../../trustclaw/audit/index.js";
-import { resolveTrustclawPaths, type TrustclawPluginConfig } from "../../../trustclaw/ptds/config.js";
+import {
+  resolveTrustclawPaths,
+  type TrustclawPluginConfig,
+} from "../../../trustclaw/ptds/config.js";
+import { requireAgentDomainGrant } from "./agent-grant-guard.js";
 import { methodIs, sendJson } from "./http-utils.js";
 
 const ALL_SCOPES = new Set(["compliance", "chat", "all"]);
@@ -29,7 +34,10 @@ export function createPtdsAuditEventsHandler(pluginConfig: TrustclawPluginConfig
     const url = new URL(req.url ?? "/", "http://localhost");
     const scope = url.searchParams.get("scope")?.trim() || "compliance";
     if (!ALL_SCOPES.has(scope)) {
-      sendJson(res, 400, { status: "error", message: "Invalid scope. Use compliance, chat, or all." });
+      sendJson(res, 400, {
+        status: "error",
+        message: "Invalid scope. Use compliance, chat, or all.",
+      });
       return true;
     }
     const limitRaw = url.searchParams.get("limit")?.trim();
@@ -39,15 +47,22 @@ export function createPtdsAuditEventsHandler(pluginConfig: TrustclawPluginConfig
       return true;
     }
 
-    const paths = resolveTrustclawPaths(pluginConfig);
+    const guard = requireAgentDomainGrant(req, "panel.audit", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
+      return true;
+    }
+
+    const paths = guard.paths;
     const events = readAuditEvents({
       auditDir: paths.auditDir,
       limit,
       steps: resolveSteps(scope),
-    });
+    }).filter((event) => auditEventMatchesAgentPack(event, guard.pack.id));
     sendJson(res, 200, {
       status: "success",
       scope,
+      agent_pack_id: guard.pack.id,
       audit_dir: paths.auditDir,
       events,
     });

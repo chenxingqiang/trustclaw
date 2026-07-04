@@ -1,9 +1,9 @@
 import type { OpenClawPluginToolContext } from "openclaw/plugin-sdk/core";
 import type { TrustclawPluginConfig } from "../../../trustclaw/ptds/config.js";
 import { resolveTrustclawPaths } from "../../../trustclaw/ptds/config.js";
+import { resolveBoundAgentPack } from "../../../trustclaw/runtime/agent-pack/index.js";
 import { TRUSTCLAW_PTDS_QUERY_TOOL } from "../../../trustclaw/runtime/constants.js";
 import type { Text2SqlLlmCaller } from "../../../trustclaw/runtime/pipeline/index.js";
-import { resolveBoundAgentPack } from "../../../trustclaw/runtime/agent-pack/index.js";
 import { runTrustclawChat } from "../../../trustclaw/runtime/pipeline/index.js";
 
 export type TrustclawPtdsQueryToolDeps = {
@@ -61,6 +61,7 @@ export function createTrustclawPtdsQueryToolFactory(
           {
             dbPath: paths.dbPath,
             auditDir: paths.auditDir,
+            evidenceDir: paths.evidenceDir,
             llm: deps.llm,
             agentPack,
           },

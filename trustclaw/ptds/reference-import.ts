@@ -23,7 +23,9 @@ function parsePackage(raw: unknown): NrdlReferencePackage {
   return nrdlReferencePackageSchema.parse(raw);
 }
 
-function normalizeNegotiatedDrug(value: NrdlReferencePackage["drugs"][number]["is_negotiated_drug"]): number {
+function normalizeNegotiatedDrug(
+  value: NrdlReferencePackage["drugs"][number]["is_negotiated_drug"],
+): number {
   if (value === true || value === 1) {
     return 1;
   }
@@ -176,12 +178,12 @@ export function getNrdlReferenceStatus(
       : resolvePtdsDbPath(dbPathOrOverrides, env);
   const db = bootstrapPtdsDatabase(dbPath);
   try {
-    const drugRow = db
-      .prepare("SELECT COUNT(*) AS count FROM nrdl_drug_registry")
-      .get() as { count: number };
-    const ruleRow = db
-      .prepare("SELECT COUNT(*) AS count FROM nrdl_payment_rules")
-      .get() as { count: number };
+    const drugRow = db.prepare("SELECT COUNT(*) AS count FROM nrdl_drug_registry").get() as {
+      count: number;
+    };
+    const ruleRow = db.prepare("SELECT COUNT(*) AS count FROM nrdl_payment_rules").get() as {
+      count: number;
+    };
     return {
       status: "success",
       local_drug_count: drugRow.count,
@@ -207,6 +209,10 @@ export async function syncNrdlReferencePackage(
   const sessionId = request.sessionId.trim();
   if (!sessionId) {
     return { status: "error", message: "sessionId is required for consent audit." };
+  }
+  const agentPackId = request.agentPackId.trim();
+  if (!agentPackId) {
+    return { status: "error", message: "agentPackId is required for reference sync audit." };
   }
 
   let rawPackage = request.package;
@@ -290,9 +296,7 @@ export async function syncNrdlReferencePackage(
         drugIds.add(drug.drug_id);
       }
 
-      const deleteRulesForDrug = db.prepare(
-        `DELETE FROM nrdl_payment_rules WHERE drug_id = ?`,
-      );
+      const deleteRulesForDrug = db.prepare(`DELETE FROM nrdl_payment_rules WHERE drug_id = ?`);
       const insertRule = db.prepare(
         `INSERT INTO nrdl_payment_rules (
            rule_id, drug_id, rule_category, target_key,
@@ -325,7 +329,7 @@ export async function syncNrdlReferencePackage(
       const savedUrl =
         request.saveSubscriptionUrl && subscriptionUrl
           ? subscriptionUrl
-          : existing?.subscription_url ?? null;
+          : (existing?.subscription_url ?? null);
 
       upsertReferenceSyncState(db, {
         versionId: pkg.metadata.version_id,
@@ -343,6 +347,7 @@ export async function syncNrdlReferencePackage(
 
     recordReferenceSyncAudit({
       sessionId,
+      agentPackId: request.agentPackId.trim(),
       versionId: pkg.metadata.version_id,
       packageHash,
       drugsSynced: drugIdsInPackage.size,

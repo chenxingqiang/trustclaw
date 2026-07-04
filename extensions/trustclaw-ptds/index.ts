@@ -1,14 +1,17 @@
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 import type { TrustclawPluginConfig } from "../../trustclaw/ptds/config.js";
-import { createOpenAiText2SqlLlm } from "../../trustclaw/runtime/text2sql/openai-llm.js";
-import { buildTrustclawPtdsAgentGuidance } from "./src/agent-guidance.js";
-import { createAgentChatHandler } from "./src/agent-routes.js";
-import { createAgentPacksHandler } from "./src/agent-pack-routes.js";
 import {
-  createSessionAgentPackDeleteHandler,
-  createSessionAgentPackGetHandler,
-  createSessionAgentPackPutHandler,
-} from "./src/session-agent-pack-routes.js";
+  PTDS_SEED_GLP1_AST_V2_JSON,
+  PTDS_SEED_NRDL_REFERENCE_GLP1_JSON,
+} from "../../trustclaw/ptds/paths.js";
+import { createOpenAiText2SqlLlm } from "../../trustclaw/runtime/text2sql/openai-llm.js";
+import {
+  createAgentGrantsGetHandler,
+  createAgentGrantsPutHandler,
+} from "./src/agent-grant-routes.js";
+import { buildTrustclawPtdsAgentGuidance } from "./src/agent-guidance.js";
+import { createAgentPacksHandler } from "./src/agent-pack-routes.js";
+import { createAgentChatHandler } from "./src/agent-routes.js";
 import { createPtdsAuditEventsHandler } from "./src/audit-routes.js";
 import {
   createComplianceImportBundledHandler,
@@ -17,16 +20,11 @@ import {
   createComplianceRulesHandler,
   createComplianceStandardsHandler,
 } from "./src/compliance-routes.js";
-import {
-  createReferencePreviewHandler,
-  createReferenceStatusHandler,
-  createReferenceSyncBundledHandler,
-  createReferenceSyncHandler,
-} from "./src/reference-routes.js";
-import { createDeviceImportHandler, createDevicePreviewHandler } from "./src/device-routes.js";
 import { createTrustclawPtdsDataConsentHook } from "./src/data-consent-hook.js";
+import { createDeviceImportHandler, createDevicePreviewHandler } from "./src/device-routes.js";
+import { methodIs, sendJson } from "./src/http-utils.js";
+import { createPtdsLedgerHandler } from "./src/ledger-routes.js";
 import { createTrustclawPtdsQueryToolFactory } from "./src/ptds-query-tool.js";
-import { createTrustclawPtdsWriteToolFactory } from "./src/ptds-write-tool.js";
 import {
   createPtdsBrowseHandler,
   createPtdsInitHandler,
@@ -35,9 +33,19 @@ import {
   createPtdsStatusHandler,
   createPtdsTablesHandler,
 } from "./src/ptds-routes.js";
+import { createTrustclawPtdsWriteToolFactory } from "./src/ptds-write-tool.js";
+import {
+  createReferencePreviewHandler,
+  createReferenceStatusHandler,
+  createReferenceSyncBundledHandler,
+  createReferenceSyncHandler,
+} from "./src/reference-routes.js";
+import {
+  createSessionAgentPackDeleteHandler,
+  createSessionAgentPackGetHandler,
+  createSessionAgentPackPutHandler,
+} from "./src/session-agent-pack-routes.js";
 import { createTrustclawUiHandler } from "./src/ui-routes.js";
-import { methodIs, sendJson } from "./src/http-utils.js";
-import { PTDS_SEED_GLP1_AST_V2_JSON, PTDS_SEED_NRDL_REFERENCE_GLP1_JSON } from "../../trustclaw/ptds/paths.js";
 
 function readPluginConfig(
   pluginConfig: Record<string, unknown> | undefined,
@@ -53,9 +61,7 @@ function readPluginConfig(
     agentPacksDir:
       typeof pluginConfig.agentPacksDir === "string" ? pluginConfig.agentPacksDir : undefined,
     defaultAgentPack:
-      typeof pluginConfig.defaultAgentPack === "string"
-        ? pluginConfig.defaultAgentPack
-        : undefined,
+      typeof pluginConfig.defaultAgentPack === "string" ? pluginConfig.defaultAgentPack : undefined,
   };
 }
 
@@ -163,6 +169,12 @@ export default definePluginEntry({
       handler: createPtdsAuditEventsHandler(cfg),
     });
     api.registerHttpRoute({
+      path: "/api/ptds/ledger",
+      auth: "plugin",
+      match: "exact",
+      handler: createPtdsLedgerHandler(cfg),
+    });
+    api.registerHttpRoute({
       path: "/api/ptds/tables",
       auth: "plugin",
       match: "exact",
@@ -179,6 +191,23 @@ export default definePluginEntry({
       auth: "plugin",
       match: "exact",
       handler: createAgentPacksHandler(cfg),
+    });
+    api.registerHttpRoute({
+      path: "/api/ptds/agent-grants",
+      auth: "plugin",
+      match: "exact",
+      handler: async (req, res) => {
+        const getHandler = createAgentGrantsGetHandler(cfg);
+        const putHandler = createAgentGrantsPutHandler(cfg);
+        if (methodIs(req, "GET")) {
+          return getHandler(req, res);
+        }
+        if (methodIs(req, "PUT")) {
+          return putHandler(req, res);
+        }
+        sendJson(res, 405, { status: "error", message: "Method not allowed." });
+        return true;
+      },
     });
     api.registerHttpRoute({
       path: "/api/ptds/session/agent-pack",

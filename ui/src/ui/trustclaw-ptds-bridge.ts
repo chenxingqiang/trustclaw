@@ -12,6 +12,14 @@ export type TrustclawPersonalWritePayload = {
   rows_affected?: number;
 };
 
+export type TrustclawEvidenceCitation = {
+  index: number;
+  label: string;
+  value: string | number | null;
+  rule_id: string;
+  source: string;
+};
+
 export type TrustclawRuntimeContextPayload = {
   session_id: string;
   user_query: string;
@@ -20,12 +28,83 @@ export type TrustclawRuntimeContextPayload = {
   evidence_ledger_receipt?: {
     block_height?: number;
     proof_hash?: string;
+    previous_evidence_hash?: string | null;
   };
 };
 
 type TrustclawPtdsHost = {
   trustclawRuntimeContext?: TrustclawRuntimeContextPayload | null;
+  requestUpdate?: () => void;
 };
+
+const EVIDENCE_TAG_RE = /\[Evidence #(\d+)\]/g;
+
+function escapeHtmlAttr(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export function extractTrustclawEvidenceCitations(
+  context: TrustclawRuntimeContextPayload | null | undefined,
+): TrustclawEvidenceCitation[] {
+  const agentDecision = readRecord(context?.pipeline_stages?.agent_decision);
+  const raw = agentDecision?.citations;
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const citations: TrustclawEvidenceCitation[] = [];
+  for (const entry of raw) {
+    const row = readRecord(entry);
+    if (!row) {
+      continue;
+    }
+    const index = typeof row.index === "number" ? row.index : NaN;
+    const label = typeof row.label === "string" ? row.label : "";
+    const ruleId = typeof row.rule_id === "string" ? row.rule_id : "";
+    const source = typeof row.source === "string" ? row.source : "";
+    if (!Number.isFinite(index) || !label || !ruleId) {
+      continue;
+    }
+    const value =
+      typeof row.value === "string" || typeof row.value === "number"
+        ? row.value
+        : row.value === null
+          ? null
+          : null;
+    citations.push({ index, label, value, rule_id: ruleId, source });
+  }
+  return citations.sort((a, b) => a.index - b.index);
+}
+
+function formatEvidenceValue(value: string | number | null): string {
+  return value === null || value === undefined ? "missing" : String(value);
+}
+
+function buildEvidenceTooltip(citation: TrustclawEvidenceCitation): string {
+  return `${citation.label} · ${citation.rule_id} · ${formatEvidenceValue(citation.value)} (${citation.source})`;
+}
+
+/** Wrap [Evidence #N] in chat markdown with hover tooltips when citations are known. */
+export function decorateTrustclawEvidenceTags(
+  text: string,
+  citations: TrustclawEvidenceCitation[],
+): string {
+  if (!text || citations.length === 0) {
+    return text;
+  }
+  const byIndex = new Map(citations.map((citation) => [citation.index, citation]));
+  return text.replace(EVIDENCE_TAG_RE, (match, indexStr: string) => {
+    const citation = byIndex.get(Number(indexStr));
+    if (!citation) {
+      return match;
+    }
+    return `<span class="trustclaw-evidence-tag" title="${escapeHtmlAttr(buildEvidenceTooltip(citation))}">${match}</span>`;
+  });
+}
 
 function readRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -56,6 +135,12 @@ function readRuntimeContext(value: unknown): TrustclawRuntimeContextPayload | nu
       ? {
           block_height: typeof receipt.block_height === "number" ? receipt.block_height : undefined,
           proof_hash: typeof receipt.proof_hash === "string" ? receipt.proof_hash : undefined,
+          previous_evidence_hash:
+            typeof receipt.previous_evidence_hash === "string"
+              ? receipt.previous_evidence_hash
+              : receipt.previous_evidence_hash === null
+                ? null
+                : undefined,
         }
       : undefined,
   };
@@ -126,7 +211,9 @@ export function notifyTrustclawRuntimeContext(context: TrustclawRuntimeContextPa
 
   const message = { type: TRUSTCLAW_RUNTIME_CONTEXT_MESSAGE, context };
 
-  for (const iframe of document.querySelectorAll<HTMLIFrameElement>("iframe.trustclaw-ptds-rail__frame")) {
+  for (const iframe of document.querySelectorAll<HTMLIFrameElement>(
+    "iframe.trustclaw-ptds-rail__frame",
+  )) {
     const src = iframe.getAttribute("src") ?? "";
     if (src.includes("embed=right")) {
       postRuntimeContextToFrame(iframe, message);
@@ -139,7 +226,9 @@ export function notifyTrustclawRuntimeContext(context: TrustclawRuntimeContextPa
   }
 }
 
-export function parsePersonalWriteFromToolResult(result: unknown): TrustclawPersonalWritePayload | null {
+export function parsePersonalWriteFromToolResult(
+  result: unknown,
+): TrustclawPersonalWritePayload | null {
   const record = readRecord(result);
   if (!record) {
     return null;
@@ -164,7 +253,9 @@ export function notifyTrustclawPtdsDataChanged(payload: TrustclawPersonalWritePa
   }
   const message = { type: TRUSTCLAW_PTDS_DATA_CHANGED_MESSAGE, payload };
 
-  for (const iframe of document.querySelectorAll<HTMLIFrameElement>("iframe.trustclaw-ptds-rail__frame")) {
+  for (const iframe of document.querySelectorAll<HTMLIFrameElement>(
+    "iframe.trustclaw-ptds-rail__frame",
+  )) {
     const src = iframe.getAttribute("src") ?? "";
     if (src.includes("embed=left") || src.includes("embed=right")) {
       iframe.contentWindow?.postMessage(message, "*");
@@ -176,9 +267,7 @@ export function notifyTrustclawPtdsDataChanged(payload: TrustclawPersonalWritePa
   }
 }
 
-export function syncTrustclawPtdsDataChanged(
-  data: Record<string, unknown>,
-): void {
+export function syncTrustclawPtdsDataChanged(data: Record<string, unknown>): void {
   const payload =
     parsePersonalWriteFromToolResult(data.result) ?? parsePersonalWriteFromToolResult(data);
   if (!payload) {
@@ -204,6 +293,7 @@ export function syncTrustclawPtdsRuntimeContext(
     return;
   }
   host.trustclawRuntimeContext = context;
+  host.requestUpdate?.();
   notifyTrustclawRuntimeContext(context);
 }
 

@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
+import { hasAgentDomainGrant } from "../../../trustclaw/ptds/agent-domain-grants.js";
 import type { TrustclawPluginConfig } from "../../../trustclaw/ptds/config.js";
 import { resolveTrustclawPaths } from "../../../trustclaw/ptds/config.js";
 import { resolveBoundAgentPack } from "../../../trustclaw/runtime/agent-pack/index.js";
@@ -50,16 +51,26 @@ export function createAgentChatHandler(
     }
 
     const paths = pathOverrides(pluginConfig);
+    const pathOverrides_ = { dbPath: paths.dbPath, auditDir: paths.auditDir };
     const coordinator = resolveBoundAgentPack({
       sessionKey: body.data.session_id,
       requestedPackId: body.data.agent_pack_id,
       pluginConfig,
     });
+    if (!hasAgentDomainGrant(coordinator.pack.id, "ptds.chat", pathOverrides_)) {
+      sendJson(res, 403, {
+        status: "error",
+        code: "agent_not_granted",
+        message: `Domain agent "${coordinator.pack.id}" lacks ptds.chat grant. Grant in Panel C.`,
+      });
+      return true;
+    }
     const result = await runTrustclawChat(
       { ...body.data, agent_pack_id: coordinator.pack.id },
       {
         dbPath: paths.dbPath,
         auditDir: paths.auditDir,
+        evidenceDir: paths.evidenceDir,
         llm: deps.llm,
         agentPack: coordinator.pack,
       },

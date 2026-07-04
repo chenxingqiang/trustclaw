@@ -47,12 +47,13 @@ describe("trustclaw/ptds profile + consent", () => {
     const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-consent-"));
     const auditDir = path.join(dir, "audit");
     try {
-      expect(hasPtdsDataAccessGrant("sess_a", { auditDir })).toBe(false);
-      grantPtdsDataAccess("sess_a", "allow-always", { auditDir });
-      expect(hasPtdsDataAccessGrant("sess_a", { auditDir })).toBe(true);
+      expect(hasPtdsDataAccessGrant("sess_a", "glp1-eligibility", { auditDir })).toBe(false);
+      grantPtdsDataAccess("sess_a", "glp1-eligibility", "allow-always", { auditDir });
+      expect(hasPtdsDataAccessGrant("sess_a", "glp1-eligibility", { auditDir })).toBe(true);
 
       recordPtdsConsentAudit({
         sessionId: "sess_a",
+        agentPackId: "glp1-eligibility",
         question: "我能报销司美格鲁肽吗？",
         privateDataFields: ["hba1c", "clinical_diagnoses"],
         decision: "allow-once",
@@ -66,8 +67,10 @@ describe("trustclaw/ptds profile + consent", () => {
       expect(event.component).toBe("PTDS.Consent");
       expect(event.status).toBe("SUCCESS");
 
+      expect(event.input.agent_pack_id).toBe("glp1-eligibility");
+
       clearPtdsDataAccessGrants({ auditDir });
-      expect(hasPtdsDataAccessGrant("sess_a", { auditDir })).toBe(false);
+      expect(hasPtdsDataAccessGrant("sess_a", "glp1-eligibility", { auditDir })).toBe(false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

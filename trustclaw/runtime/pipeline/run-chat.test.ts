@@ -2,6 +2,8 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { missingChatPipelineSteps } from "../../audit/index.js";
+import { readEvidenceReceipts, verifyEvidenceChain } from "../../ledger/index.js";
 import { initializePtds } from "../../ptds/init.js";
 import { PTDS_INIT_DEFAULTS } from "../../ptds/types.js";
 import { buildGlp1Decision } from "./glp1-decision.js";
@@ -67,6 +69,7 @@ describe("trustclaw/runtime/pipeline", () => {
         {
           dbPath,
           auditDir: path.join(dir, "ptds-audit"),
+          evidenceDir: path.join(dir, "ptds-evidence"),
           llm: async () =>
             "SELECT * FROM v_glp1_nrdl_check_snapshot WHERE user_id = 'local_user' LIMIT 1",
         },
@@ -85,16 +88,82 @@ describe("trustclaw/runtime/pipeline", () => {
       );
       expect(result.context.pipeline_stages.agent_decision.response.length).toBeGreaterThan(0);
       expect(result.context.audit_trail_id).toMatch(/^aud_/);
-      expect(result.context.evidence_ledger_receipt.proof_hash).toMatch(/^[a-f0-9]{64}$/);
+      expect(result.context.evidence_ledger_receipt?.proof_hash).toMatch(/^[a-f0-9]{64}$/);
+      expect(result.context.evidence_ledger_receipt?.block_height).toBe(0);
+      expect(result.context.evidence_ledger_receipt?.previous_evidence_hash).toBeNull();
+
+      const receipts = readEvidenceReceipts(path.join(dir, "ptds-evidence"));
+      expect(receipts).toHaveLength(1);
+      expect(verifyEvidenceChain(receipts)).toEqual({ ok: true });
 
       const auditLines = readFileSync(path.join(dir, "ptds-audit", "events.jsonl"), "utf8")
         .trim()
         .split("\n");
       expect(auditLines.length).toBeGreaterThanOrEqual(5);
+      expect(
+        missingChatPipelineSteps(path.join(dir, "ptds-audit"), result.context.audit_trail_id),
+      ).toEqual([]);
       const trailIds = auditLines.map(
         (line) => (JSON.parse(line) as { audit_trail_id: string }).audit_trail_id,
       );
       expect(new Set(trailIds)).toEqual(new Set([result.context.audit_trail_id]));
+
+      const decisionLine = auditLines
+        .map((line) => JSON.parse(line) as { step: string; output: { citations?: unknown[] } })
+        .find((event) => event.step === "AGENT_DECISION");
+      expect(decisionLine?.output.citations?.length).toBeGreaterThan(0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("links consecutive chat receipts in the evidence ledger", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-pipeline-chain-"));
+    const dbPath = path.join(dir, "local_ptds.db");
+    const evidenceDir = path.join(dir, "ptds-evidence");
+    try {
+      initializePtds(
+        {
+          ...PTDS_INIT_DEFAULTS,
+          weight: 85,
+          height: 170,
+          hba1c: 6.8,
+          hasType2Diabetes: true,
+        },
+        { dbPath },
+      );
+
+      const chatOpts = {
+        dbPath,
+        auditDir: path.join(dir, "ptds-audit"),
+        evidenceDir,
+        llm: async () =>
+          "SELECT * FROM v_glp1_nrdl_check_snapshot WHERE user_id = 'local_user' LIMIT 1",
+      };
+
+      const first = await runTrustclawChat(
+        { session_id: "sess_chain", message: "我的BMI是多少？" },
+        chatOpts,
+      );
+      const second = await runTrustclawChat(
+        { session_id: "sess_chain", message: "我可以用司美格鲁肽吗？" },
+        chatOpts,
+      );
+
+      expect(first.ok && second.ok).toBe(true);
+      if (!first.ok || !second.ok) {
+        return;
+      }
+
+      expect(first.context.evidence_ledger_receipt?.block_height).toBe(0);
+      expect(second.context.evidence_ledger_receipt?.block_height).toBe(1);
+      expect(second.context.evidence_ledger_receipt?.previous_evidence_hash).toBe(
+        first.context.evidence_ledger_receipt?.proof_hash,
+      );
+
+      const receipts = readEvidenceReceipts(evidenceDir);
+      expect(receipts).toHaveLength(2);
+      expect(verifyEvidenceChain(receipts)).toEqual({ ok: true });
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

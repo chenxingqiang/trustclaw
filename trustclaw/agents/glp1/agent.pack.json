@@ -25,7 +25,13 @@
       "lab_test_results",
       "clinical_diagnoses",
       "medication_history",
+      "user_profile",
+      "data_source_registry",
+      "medication_compliance_standards",
+      "medication_compliance_ast_rules",
+      "nrdl_drug_registry",
       "nrdl_payment_rules",
+      "nrdl_reference_sync_state",
       "v_glp1_nrdl_check_snapshot"
     ],
     "writeTables": [

@@ -24,11 +24,11 @@ pnpm trustclaw:setup          # writes gateway.port + plugin flag to default/dev
 
 Open either:
 
-| URL                                 | Experience                                                                               |
-| ----------------------------------- | ---------------------------------------------------------------------------------------- |
-| `http://127.0.0.1:19001/`           | **TrustClaw** — Control UI → **PTDS Console** (default tab)                             |
-| `http://127.0.0.1:5174/trustclaw/`  | Standalone PTDS Runtime Console (dev, hot reload; center chat iframe to gateway `/chat`) |
-| `http://127.0.0.1:19001/trustclaw/` | Bundled console (after `pnpm trustclaw:ui:build` + gateway on `:19001`)                  |
+| URL                                 | Experience                                                                         |
+| ----------------------------------- | ---------------------------------------------------------------------------------- |
+| `http://127.0.0.1:19001/`           | **TrustClaw** — Control UI → **PTDS Console** (default tab)                        |
+| `http://127.0.0.1:5174/trustclaw/`  | Standalone **PTDS Runtime Console** (dev, hot reload; audit panels only — no Chat) |
+| `http://127.0.0.1:19001/trustclaw/` | Bundled console (after `pnpm trustclaw:ui:build` + gateway on `:19001`)            |
 
 ## Gateway auth (dev)
 
@@ -69,9 +69,9 @@ Set `OPENAI_API_KEY` for Text2SQL in chat.
 
 Control UI **PTDS Console** tab mirrors the OpenClaw chat page:
 
-- **Center (C)** — OpenClaw native Chat (sessions, tools, streaming)
-- **Left rail (A + B)** — PTDS init + data browser (`/trustclaw/?embed=left`)
-- **Right rail (D + E)** — runtime audit + evidence ledger (`/trustclaw/?embed=right`)
+- **Center** — OpenClaw native Chat (sessions, tools, streaming)
+- **Left rail (A + C + B)** — PTDS init + domain agent grants + data browser (`/trustclaw/?embed=left`)
+- **Right rail (D + E + F)** — runtime audit + evidence ledger + compliance (`/trustclaw/?embed=right`)
 
 Side rails collapse like Control UI workspace rails. Chat’s internal workspace rail stays collapsed on the PTDS tab to avoid a triple-column right edge.
 
@@ -104,28 +104,61 @@ After setup, **start a new chat session** (or `/new`) so the updated system prom
 
 `pnpm trustclaw:setup` registers three OpenClaw agents and syncs workspace prompts:
 
-| OpenClaw `agentId` | Agent pack | Workspace template |
-| ------------------ | ---------- | ------------------ |
-| `main` (dev) | `glp1-eligibility` (C3-PO) | `trustclaw/workspace/dev` |
-| `nrdl-reimburse` | `nrdl-reimburse` | `trustclaw/workspace/nrdl-reimburse` |
-| `compliance-auditor` | `compliance-auditor` | `trustclaw/workspace/compliance-auditor` |
+| OpenClaw `agentId`   | Agent pack                 | Workspace template                       |
+| -------------------- | -------------------------- | ---------------------------------------- |
+| `main` (dev)         | `glp1-eligibility` (C3-PO) | `trustclaw/workspace/dev`                |
+| `nrdl-reimburse`     | `nrdl-reimburse`           | `trustclaw/workspace/nrdl-reimburse`     |
+| `compliance-auditor` | `compliance-auditor`       | `trustclaw/workspace/compliance-auditor` |
 
 In **PTDS Console**, use the **领域 Agent** dropdown above chat to bind a pack per session (`PUT /api/ptds/session/agent-pack`), or switch the OpenClaw agent in the chat sidebar. Restart Gateway after `trustclaw:setup` so new agents appear.
 
 ## Demo flow (frozen V1)
 
 1. **A · PTDS 初始化区** — `POST /api/ptds/init`
-2. **B · 数据浏览器** — browse local SQLite tables
-3. **C · 可信问答** — OpenClaw Chat calls `trustclaw_ptds_query`; audit/ledger rails refresh from tool Runtime Context
-4. **D · 运行时审计** — pipeline stages from Runtime Context
-5. **E · 凭证账本** — receipt placeholder (Task 401)
+2. **C · 领域 Agent 赋权** — per-pack `panel.*` / `ptds.*` scopes (`GET/PUT /api/ptds/agent-grants`)
+3. **B · 数据浏览器** — browse local SQLite tables
+4. **Audited Chat (Control UI)** — OpenClaw Chat calls `trustclaw_ptds_query`; audit/ledger rails refresh from tool Runtime Context
+5. **D · 运行时审计** — pipeline stages from Runtime Context
+6. **E · 凭证账本** — SHA-256 链式 receipt（`state/ptds-evidence/ledger.jsonl`）；Reset 清空 PTDS + audit + ledger
+7. **F · 合规订阅** — NRDL / device import with consent
+
+### V1 DoD smoke — two full passes (manual)
+
+Run the frozen demo **twice** without code changes. No orchestrator script — follow this checklist (see `AGENTS.md` §V1 DoD 闸门).
+
+**Pass 1 — happy path**
+
+1. `pnpm trustclaw:setup && pnpm trustclaw:dev` → open `http://127.0.0.1:19001/` PTDS Console (or `:5174/trustclaw/`).
+2. **A** — Initialize with defaults; confirm **处方上下文** fields (first prescription, institution level, specialist).
+3. **C** — Grant `glp1-eligibility` scopes (`ptds.chat`, `panel.browse`, etc.) and save.
+4. **B** — Browse `user_profile` / `v_glp1_nrdl_check_snapshot`.
+5. **Chat** — New chat session; ask a GLP-1 eligibility question; approve `trustclaw_ptds_query` if prompted.
+6. **D** — Refresh audit: five pipeline steps + compliance section if import/consent occurred.
+7. **E** — Ledger badge **verified**; `block_height` increments after second chat; `previous_evidence_hash` links blocks.
+8. **F** (optional) — Import compliance standard with consent; Panel D shows summarized `COMPLIANCE_IMPORT`.
+
+**Pass 2 — reset**
+
+1. **A** — **Reset PTDS**; status returns to not mounted.
+2. Repeat steps 2–7 from Pass 1 on a **new** chat session.
+3. Confirm audit JSONL + `ledger.jsonl` were cleared before re-init (Panel E empty until next chat).
+
+**Automated proof (CI/local):** `extensions/trustclaw-ptds/src/dod-reset-demo.test.ts` — init → 2× chat → reset → re-init → chat with fresh `block_height: 0`.
+
+**Blocking fixes**
+
+| Symptom                                                   | Fix                                                                 |
+| --------------------------------------------------------- | ------------------------------------------------------------------- |
+| `plugin manifest not found: .../dist/extensions/acpx/...` | `pnpm trustclaw:setup` disables `acpx` when dist manifest is absent |
+| Gateway ECONNREFUSED on `:19001`                          | Wait for gateway ready log; do not start Vite alone                 |
+| Init 400 after route changes                              | Restart `pnpm trustclaw:dev` + hard refresh                         |
 
 ## Architecture (TrustClaw × OpenClaw)
 
 ```
 OpenClaw Gateway (TrustClaw default **:19001**; upstream OpenClaw alone still uses :18789)
   ├── Control UI (/)           → default tab: PTDS Console (native chat + side rails)
-  ├── /trustclaw/*           → TrustClaw demo SPA (plugin static; embed=left|right)
+  ├── /trustclaw/*           → PTDS Runtime Console static (plugin serve; embed=left|right)
   └── /api/ptds/*, /api/agent/chat → PTDS plugin APIs
 ```
 

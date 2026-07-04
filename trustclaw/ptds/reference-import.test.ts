@@ -5,13 +5,13 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { readAuditEvents } from "../audit/index.js";
 import { bootstrapPtdsDatabase } from "./db.js";
+import { PTDS_SEED_NRDL_REFERENCE_GLP1_JSON } from "./paths.js";
 import {
   getNrdlReferenceStatus,
   isAllowedReferenceFetchUrl,
   previewNrdlReferencePackage,
   syncNrdlReferencePackage,
 } from "./reference-import.js";
-import { PTDS_SEED_NRDL_REFERENCE_GLP1_JSON } from "./paths.js";
 
 describe("trustclaw/ptds reference sync", () => {
   const seedPackage = JSON.parse(readFileSync(PTDS_SEED_NRDL_REFERENCE_GLP1_JSON, "utf8"));
@@ -52,6 +52,7 @@ describe("trustclaw/ptds reference sync", () => {
         {
           consentGranted: true,
           sessionId: "sess_ref_sync",
+          agentPackId: "compliance-auditor",
           sourceLabel: "nrdl-reference-glp1-v1.json",
           package: seedPackage,
         },
@@ -91,6 +92,7 @@ describe("trustclaw/ptds reference sync", () => {
         {
           consentGranted: true,
           sessionId: "sess_ref_1",
+          agentPackId: "compliance-auditor",
           package: seedPackage,
         },
         dbPath,
@@ -101,6 +103,7 @@ describe("trustclaw/ptds reference sync", () => {
         {
           consentGranted: true,
           sessionId: "sess_ref_2",
+          agentPackId: "compliance-auditor",
           package: seedPackage,
         },
         dbPath,

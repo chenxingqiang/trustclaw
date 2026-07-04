@@ -1,8 +1,9 @@
 import type { DatabaseSync } from "node:sqlite";
 import { bootstrapPtdsDatabase, resolvePrimaryUserId } from "../../ptds/db.js";
 import { resolvePtdsDbPath, type PtdsPathOverrides } from "../../ptds/paths.js";
+import { readPrescriptionContext } from "../../ptds/prescription-context.js";
 
-/** Demo defaults for prescription_context fields absent from PTDS v1.1 personal data. */
+/** Demo fallback when prescription_context row is absent (pre-init DB probes). */
 export type PrescriptionContextDefaults = {
   is_first_prescription: number;
   institution_level: number;
@@ -54,8 +55,9 @@ export function buildComplianceEvalContext(
   prescriptionDefaults: PrescriptionContextDefaults = DEFAULT_PRESCRIPTION_CONTEXT,
 ): Record<string, unknown> {
   const userId = resolvePrimaryUserId(db);
+  const prescriptionRow = userId ? readPrescriptionContext(db, userId) : prescriptionDefaults;
   if (!userId) {
-    return { prescription_context: prescriptionDefaults };
+    return { prescription_context: prescriptionRow };
   }
 
   const profile = db
@@ -63,9 +65,7 @@ export function buildComplianceEvalContext(
     .get(userId) as { birth_date: string } | undefined;
 
   const anthropometrics = db
-    .prepare(
-      `SELECT bmi FROM body_anthropometrics ORDER BY body_id DESC LIMIT 1`,
-    )
+    .prepare(`SELECT bmi FROM body_anthropometrics ORDER BY body_id DESC LIMIT 1`)
     .get() as { bmi: number } | undefined;
 
   const hba1cRow = db
@@ -134,7 +134,7 @@ export function buildComplianceEvalContext(
         HbA1c: { test_value: hba1cRow?.test_value ?? 0 },
       },
     },
-    prescription_context: prescriptionDefaults,
+    prescription_context: prescriptionRow,
   };
 }
 

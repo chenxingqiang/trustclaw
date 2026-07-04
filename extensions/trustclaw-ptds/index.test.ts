@@ -4,6 +4,9 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { setAgentDomainGrant } from "../../trustclaw/ptds/agent-domain-grants.js";
+import { deriveAgentDomainScopes } from "../../trustclaw/ptds/agent-domain-scopes.js";
+import { getAgentPackRegistry } from "../../trustclaw/runtime/agent-pack/index.js";
 import plugin from "./index.js";
 import manifest from "./openclaw.plugin.json" with { type: "json" };
 import { createAgentChatHandler } from "./src/agent-routes.js";
@@ -89,15 +92,17 @@ describe("trustclaw-ptds plugin", () => {
       "/api/ptds/device/import",
       "/api/ptds/profile-summary",
       "/api/ptds/audit/events",
+      "/api/ptds/ledger",
       "/api/ptds/tables",
       "/api/ptds/browse",
       "/api/ptds/agent-packs",
+      "/api/ptds/agent-grants",
       "/api/ptds/session/agent-pack",
       "/api/agent/chat",
       "/trustclaw",
     ]);
     expect(routes.every((route) => route.auth === "plugin")).toBe(true);
-    expect(routes.filter((route) => route.match === "exact").length).toBe(21);
+    expect(routes.filter((route) => route.match === "exact").length).toBe(23);
     expect(routes.find((route) => route.path === "/trustclaw")?.match).toBe("prefix");
     expect(registerTool).toHaveBeenCalledTimes(2);
     expect(on).toHaveBeenCalledWith("before_prompt_build", expect.any(Function));
@@ -195,8 +200,9 @@ describe("trustclaw-ptds plugin", () => {
   it("handles POST /api/agent/chat with Runtime Context contract", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-plugin-chat-"));
     const dbPath = path.join(dir, "local_ptds.db");
+    const auditDir = path.join(dir, "ptds-audit");
     try {
-      const initHandler = createPtdsInitHandler({ dbPath });
+      const initHandler = createPtdsInitHandler({ dbPath, auditDir });
       const initReq = {
         method: "POST",
         async *[Symbol.asyncIterator]() {
@@ -207,8 +213,11 @@ describe("trustclaw-ptds plugin", () => {
       await initHandler(initReq, initRes);
       expect(initRes.statusCode).toBe(200);
 
+      const glp1Pack = getAgentPackRegistry().get("glp1-eligibility")!;
+      setAgentDomainGrant(glp1Pack.id, deriveAgentDomainScopes(glp1Pack), { dbPath, auditDir });
+
       const chatHandler = createAgentChatHandler(
-        { dbPath },
+        { dbPath, auditDir },
         {
           llm: async () =>
             "SELECT * FROM v_glp1_nrdl_check_snapshot WHERE user_id = 'local_user' LIMIT 1",
@@ -220,6 +229,7 @@ describe("trustclaw-ptds plugin", () => {
           yield JSON.stringify({
             session_id: "sess_plugin_test",
             message: "我可以用司美格鲁肽吗？",
+            agent_pack_id: glp1Pack.id,
           });
         },
       } as IncomingMessage;

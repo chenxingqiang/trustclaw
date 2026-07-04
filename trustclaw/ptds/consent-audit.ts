@@ -10,6 +10,7 @@ function createConsentTrailId(): string {
 
 export function recordComplianceImportAudit(params: {
   sessionId: string;
+  agentPackId: string;
   standardId: string;
   rulesetHash: string;
   rulesImported: number;
@@ -30,6 +31,7 @@ export function recordComplianceImportAudit(params: {
     step: "COMPLIANCE_IMPORT",
     component: "PTDS.ComplianceImport",
     input: {
+      agent_pack_id: params.agentPackId.trim(),
       standard_id: params.standardId,
       ruleset_hash: params.rulesetHash,
     },
@@ -43,6 +45,7 @@ export function recordComplianceImportAudit(params: {
 
 export function recordDeviceImportAudit(params: {
   sessionId: string;
+  agentPackId: string;
   sqlHash: string;
   tables: string[];
   rowsAffected: number;
@@ -64,6 +67,7 @@ export function recordDeviceImportAudit(params: {
     step: "DEVICE_IMPORT",
     component: "PTDS.DeviceImport",
     input: {
+      agent_pack_id: params.agentPackId.trim(),
       sql_hash: params.sqlHash,
       source_label: params.sourceLabel ?? null,
     },
@@ -78,6 +82,7 @@ export function recordDeviceImportAudit(params: {
 
 export function recordReferenceSyncAudit(params: {
   sessionId: string;
+  agentPackId: string;
   versionId: string;
   packageHash: string;
   drugsSynced: number;
@@ -100,6 +105,7 @@ export function recordReferenceSyncAudit(params: {
     step: "REFERENCE_SYNC",
     component: "PTDS.ReferenceSync",
     input: {
+      agent_pack_id: params.agentPackId.trim(),
       version_id: params.versionId,
       package_hash: params.packageHash,
       subscription_url: params.subscriptionUrl ?? null,
@@ -115,6 +121,7 @@ export function recordReferenceSyncAudit(params: {
 
 export function recordPtdsConsentAudit(params: {
   sessionId: string;
+  agentPackId: string;
   question: string;
   privateDataFields: string[];
   decision: PtdsConsentDecision;
@@ -135,6 +142,7 @@ export function recordPtdsConsentAudit(params: {
     step: "DATA_CONSENT",
     component: "PTDS.Consent",
     input: {
+      agent_pack_id: params.agentPackId.trim(),
       user_query: params.question,
       private_data_fields: params.privateDataFields,
     },

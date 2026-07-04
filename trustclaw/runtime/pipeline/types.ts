@@ -38,9 +38,10 @@ export type RuntimeContext = {
   agent_pack_id: string;
   pipeline_stages: PipelineStages;
   audit_trail_id: string;
-  evidence_ledger_receipt: {
+  evidence_ledger_receipt?: {
     block_height: number;
     proof_hash: string;
+    previous_evidence_hash: string | null;
   };
 };
 
@@ -55,6 +56,7 @@ export type Text2SqlLlmCaller = (prompt: string) => Promise<string>;
 export type RunChatOptions = {
   dbPath?: string;
   auditDir?: string;
+  evidenceDir?: string;
   llm: Text2SqlLlmCaller;
   agentPack?: import("../agent-pack/index.js").ResolvedAgentPack;
 };

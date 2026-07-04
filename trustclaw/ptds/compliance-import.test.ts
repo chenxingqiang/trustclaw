@@ -3,15 +3,15 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { bootstrapPtdsDatabase } from "./db.js";
+import { evaluateGlp1RulesFromDb } from "../runtime/rules/index.js";
 import {
   getActiveComplianceStandard,
   importComplianceStandardPackage,
   loadComplianceAstRules,
   previewComplianceStandardPackage,
 } from "./compliance-import.js";
+import { bootstrapPtdsDatabase } from "./db.js";
 import { initializePtds, PTDS_INIT_DEFAULTS, PTDS_SEED_GLP1_AST_V2_JSON } from "./index.js";
-import { evaluateGlp1RulesFromDb } from "../runtime/rules/index.js";
 
 describe("trustclaw/ptds compliance import", () => {
   const seedPackage = JSON.parse(readFileSync(PTDS_SEED_GLP1_AST_V2_JSON, "utf8"));
@@ -63,6 +63,7 @@ describe("trustclaw/ptds compliance import", () => {
         {
           consentGranted: true,
           sessionId: "sess_import_ok",
+          agentPackId: "compliance-auditor",
           sourceLabel: "glp1-nrdl-ast-handshake-v2.json",
           package: seedPackage,
         },

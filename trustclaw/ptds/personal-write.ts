@@ -1,4 +1,7 @@
-import { generatePersonalWriteSql, resolvePersonalWriteSchemaSnippet } from "../runtime/text2sql/generate-personal-write.js";
+import {
+  generatePersonalWriteSql,
+  resolvePersonalWriteSchemaSnippet,
+} from "../runtime/text2sql/generate-personal-write.js";
 import { recordDeviceImportAudit } from "./consent-audit.js";
 import { openPtdsDatabase, resolvePrimaryUserId, runPtdsImmediateTransactionSync } from "./db.js";
 import {
@@ -6,14 +9,15 @@ import {
   hashDeviceImportStatements,
   type DeviceImportLlm,
 } from "./device-import.js";
-import { buildPtdsHealthProfileSummary } from "./profile-summary.js";
-import { resolvePtdsDbPath, type PtdsPathOverrides } from "./paths.js";
 import type { DeviceImportPreviewResult, DeviceImportResult } from "./device-types.js";
+import { resolvePtdsDbPath, type PtdsPathOverrides } from "./paths.js";
+import { buildPtdsHealthProfileSummary } from "./profile-summary.js";
 
 export type PersonalWriteRequest = {
   message: string;
   consentGranted: boolean;
   sessionId: string;
+  agentPackId: string;
 };
 
 function profileSnapshotForWrite(
@@ -104,6 +108,7 @@ export async function executePersonalWrite(
   if (!request.consentGranted) {
     recordDeviceImportAudit({
       sessionId: request.sessionId,
+      agentPackId: request.agentPackId.trim(),
       sqlHash: "blocked",
       tables: [],
       rowsAffected: 0,
@@ -130,7 +135,9 @@ export async function executePersonalWrite(
   const dbPath =
     typeof options.dbPathOrOverrides === "string" || options.dbPathOrOverrides === undefined
       ? resolvePtdsDbPath(
-          typeof options.dbPathOrOverrides === "string" ? { dbPath: options.dbPathOrOverrides } : {},
+          typeof options.dbPathOrOverrides === "string"
+            ? { dbPath: options.dbPathOrOverrides }
+            : {},
           env,
         )
       : resolvePtdsDbPath(options.dbPathOrOverrides, env);
@@ -147,6 +154,7 @@ export async function executePersonalWrite(
 
       recordDeviceImportAudit({
         sessionId: request.sessionId,
+        agentPackId: request.agentPackId.trim(),
         sqlHash: preview.sql_hash,
         tables: preview.tables ?? [],
         rowsAffected,
@@ -172,6 +180,7 @@ export async function executePersonalWrite(
     const message = error instanceof Error ? error.message : String(error);
     recordDeviceImportAudit({
       sessionId: request.sessionId,
+      agentPackId: request.agentPackId.trim(),
       sqlHash: preview.sql_hash,
       tables: preview.tables ?? [],
       rowsAffected: 0,

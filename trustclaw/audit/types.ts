@@ -1,4 +1,5 @@
 export type AuditStepCode =
+  | "AGENT_DOMAIN_GRANT"
   | "COMPLIANCE_IMPORT"
   | "REFERENCE_SYNC"
   | "DEVICE_IMPORT"
@@ -10,6 +11,7 @@ export type AuditStepCode =
   | "LEDGER_COMMIT";
 
 export type AuditComponent =
+  | "PTDS.AgentDomainGrant"
   | "PTDS.ComplianceImport"
   | "PTDS.ReferenceSync"
   | "PTDS.DeviceImport"

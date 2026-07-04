@@ -28,6 +28,10 @@ export const PTDS_REFERENCE_SYNC_SQL = path.join(
   TRUSTCLAW_ROOT,
   "ptds/schema/reference-sync.v1.sql",
 );
+export const PTDS_PRESCRIPTION_CONTEXT_SQL = path.join(
+  TRUSTCLAW_ROOT,
+  "ptds/schema/prescription-context.v1.sql",
+);
 export const PTDS_SEED_NRDL_GLP1_SQL = path.join(TRUSTCLAW_ROOT, "ptds/seeds/nrdl-glp1-seed.sql");
 export const PTDS_SEED_GLP1_AST_V2_JSON = path.join(
   TRUSTCLAW_ROOT,

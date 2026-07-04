@@ -1,13 +1,10 @@
-// TrustClaw PTDS side panels — center chat uses OpenClaw Control UI (iframe or native in workbench).
+// TrustClaw PTDS side panels — standalone console (A/B left, D/E/F right; chat via Control UI when needed).
 
 import "./styles.css";
-import {
-  buildControlUiChatSrc,
-  createApiClient,
-  resolveApiBaseUrl,
-  resolveGatewayControlUiOrigin,
-} from "./api.js";
+import { createApiClient, resolveApiBaseUrl } from "./api.js";
+import { renderConsoleOverview } from "./console-overview.js";
 import { i18n, msg } from "./i18n/index.js";
+import { renderAgentGrants } from "./panels/agent-grants.js";
 import { renderAudit } from "./panels/audit.js";
 import { renderBrowser } from "./panels/browser.js";
 import { renderCompliance } from "./panels/compliance.js";
@@ -79,9 +76,11 @@ function mountEmbed(mode: EmbedMode): void {
     col.className = "embed-column";
     app!.append(col);
     const landing = document.createElement("div");
+    const grants = document.createElement("div");
     const browser = document.createElement("div");
-    col.append(landing, browser);
+    col.append(landing, grants, browser);
     const browserPanel = renderBrowser(browser, client);
+    renderAgentGrants(grants, client);
     renderLanding(landing, client, {
       onInitialized: () => void browserPanel.refresh(),
       onReset: () => void browserPanel.refresh(),
@@ -127,6 +126,10 @@ function mountFullConsole(): void {
   `;
   app!.append(topbar);
 
+  const overviewHost = document.createElement("div");
+  renderConsoleOverview(overviewHost);
+  app!.append(overviewHost);
+
   const statusDot = topbar.querySelector<HTMLElement>('[data-testid="system-status-dot"]')!;
   const statusWrap = topbar.querySelector<HTMLElement>('[data-testid="system-status-wrap"]')!;
   const statusText = topbar.querySelector<HTMLElement>('[data-testid="system-status-text"]')!;
@@ -140,45 +143,30 @@ function mountFullConsole(): void {
   const shell = document.createElement("div");
   shell.className = "console-shell";
   const layout = document.createElement("div");
-  layout.className = "console-layout";
+  layout.className = "console-layout console-layout--no-chat";
   layout.innerHTML = `
-    <div class="console-column console-column--left"></div>
-    <div class="console-column console-column--center"></div>
-    <div class="console-column console-column--right"></div>
+    <div class="console-column console-column--left">
+      <p class="console-column__label">${escapeHtml(m.console.columnDataPlane)}</p>
+    </div>
+    <div class="console-column console-column--right">
+      <p class="console-column__label">${escapeHtml(m.console.columnAuditPlane)}</p>
+    </div>
   `;
   shell.append(layout);
   app!.append(shell);
 
   const leftCol = layout.querySelector<HTMLElement>(".console-column--left")!;
-  const centerCol = layout.querySelector<HTMLElement>(".console-column--center")!;
   const rightCol = layout.querySelector<HTMLElement>(".console-column--right")!;
 
   const landingSection = document.createElement("div");
+  const grantsSection = document.createElement("div");
   const browserSection = document.createElement("div");
-  leftCol.append(landingSection, browserSection);
+  leftCol.append(landingSection, grantsSection, browserSection);
 
   const auditSection = document.createElement("div");
   const ledgerSection = document.createElement("div");
   const complianceSection = document.createElement("div");
   rightCol.append(auditSection, ledgerSection, complianceSection);
-
-  const chatPanel = document.createElement("section");
-  chatPanel.className = "panel panel--chat-embed";
-  chatPanel.innerHTML = `
-    <header class="panel__header panel--c">
-      <h2>${escapeHtml(m.panels.chat.title)}</h2>
-    </header>
-  `;
-  const chatBody = document.createElement("div");
-  chatBody.className = "panel__body panel__body--chat-embed";
-  const chatFrame = document.createElement("iframe");
-  chatFrame.className = "console-chat-frame";
-  chatFrame.src = buildControlUiChatSrc(env, window.location);
-  chatFrame.title = m.console.chatFrameTitle;
-  chatFrame.loading = "lazy";
-  chatBody.append(chatFrame);
-  chatPanel.append(chatBody);
-  centerCol.append(chatPanel);
 
   const browser = renderBrowser(browserSection, client);
   const ledgerPanel = renderLedger(ledgerSection, client);
@@ -201,10 +189,10 @@ function mountFullConsole(): void {
       void auditPanel.refresh();
       void ledgerPanel.refresh();
     },
-    allowedOrigins: [window.location.origin, resolveGatewayControlUiOrigin(env, window.location)],
   });
   void ledgerPanel.refresh();
 
+  renderAgentGrants(grantsSection, client);
   renderLanding(landingSection, client, {
     onInitialized() {
       void browser.refresh();

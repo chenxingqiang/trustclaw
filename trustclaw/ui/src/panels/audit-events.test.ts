@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { pickLatestChatTrail, readLedgerCommitFromTrail, collectLedgerReceipts, type AuditEventRow } from "./audit-events.js";
+import {
+  collectLedgerReceipts,
+  pickLatestChatTrail,
+  readLedgerCommitFromTrail,
+  summarizeComplianceEvent,
+  type AuditEventRow,
+} from "./audit-events.js";
 
 function event(
   partial: Partial<AuditEventRow> & Pick<AuditEventRow, "audit_trail_id" | "step" | "timestamp">,
@@ -31,12 +37,13 @@ describe("audit-events helpers", () => {
         audit_trail_id: "aud_1",
         step: "LEDGER_COMMIT",
         timestamp: 5,
-        output: { block_height: 0, proof_hash: "abc123" },
+        output: { block_height: 0, proof_hash: "abc123", previous_evidence_hash: null },
       }),
     ]);
     expect(receipt).toEqual({
       block_height: 0,
       proof_hash: "abc123",
+      previous_evidence_hash: null,
       audit_trail_id: "aud_1",
       timestamp: 5,
     });
@@ -54,7 +61,7 @@ describe("audit-events helpers", () => {
         audit_trail_id: "aud_2",
         step: "LEDGER_COMMIT",
         timestamp: 10,
-        output: { block_height: 0, proof_hash: "hash_b" },
+        output: { block_height: 1, proof_hash: "hash_b" },
       }),
       event({
         audit_trail_id: "aud_1",
@@ -64,8 +71,44 @@ describe("audit-events helpers", () => {
       }),
     ]);
     expect(receipts).toHaveLength(2);
-    expect(receipts[0]?.audit_trail_id).toBe("aud_1");
-    expect(receipts[0]?.proof_hash).toBe("hash_a2");
-    expect(receipts[1]?.audit_trail_id).toBe("aud_2");
+    expect(receipts[0]?.audit_trail_id).toBe("aud_2");
+    expect(receipts[0]?.proof_hash).toBe("hash_b");
+    expect(receipts[1]?.audit_trail_id).toBe("aud_1");
+    expect(receipts[1]?.proof_hash).toBe("hash_a2");
+  });
+
+  it("summarizes compliance audit events for Panel D", () => {
+    expect(
+      summarizeComplianceEvent(
+        event({
+          audit_trail_id: "c1",
+          step: "DATA_CONSENT",
+          timestamp: 1,
+          output: { decision: "allow-once", granted: true },
+        }),
+      ),
+    ).toContain("allow-once");
+    expect(
+      summarizeComplianceEvent(
+        event({
+          audit_trail_id: "c2",
+          step: "COMPLIANCE_IMPORT",
+          timestamp: 2,
+          input: { standard_id: "glp1-v2" },
+          output: { rules_imported: 12, granted: true },
+        }),
+      ),
+    ).toBe("Imported 12 rules · glp1-v2");
+    expect(
+      summarizeComplianceEvent(
+        event({
+          audit_trail_id: "g3",
+          step: "AGENT_DOMAIN_GRANT",
+          timestamp: 3,
+          input: { agent_pack_id: "glp1-eligibility", scopes: ["ptds.chat"] },
+          output: { granted: true, scope_count: 1 },
+        }),
+      ),
+    ).toContain("glp1-eligibility");
   });
 });

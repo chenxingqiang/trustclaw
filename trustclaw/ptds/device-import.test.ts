@@ -4,13 +4,13 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { readAuditEvents } from "../audit/index.js";
 import { applyPtdsInitRequest, bootstrapPtdsDatabase } from "./db.js";
-import { PTDS_INIT_DEFAULTS, type PtdsInitRequest } from "./types.js";
 import {
   executeDeviceImportStatements,
   hashDeviceImportStatements,
   importDeviceData,
   previewDeviceImport,
 } from "./device-import.js";
+import { PTDS_INIT_DEFAULTS, type PtdsInitRequest } from "./types.js";
 
 const initRequest: PtdsInitRequest = {
   ...PTDS_INIT_DEFAULTS,
@@ -70,6 +70,7 @@ describe("device-import", () => {
       {
         consentGranted: true,
         sessionId: "ui_device_test",
+        agentPackId: "glp1-eligibility",
         sourceLabel: "demo-oura.json",
         package: { demo: true },
         sql_statements: sampleSql,
@@ -108,6 +109,7 @@ describe("device-import", () => {
       {
         consentGranted: false,
         sessionId: "ui_device_denied",
+        agentPackId: "glp1-eligibility",
         sql_statements: sampleSql,
         sql_hash: sqlHash,
         package: {},

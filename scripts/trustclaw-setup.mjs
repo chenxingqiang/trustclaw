@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 // Ensures TrustClaw PTDS plugin is enabled for local fork demos.
-import { cpSync, existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +9,13 @@ import { TRUSTCLAW_DEFAULT_GATEWAY_PORT } from "./lib/trustclaw-defaults.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "..");
 const workspaceRoot = path.join(repoRoot, "trustclaw", "workspace");
+const ACPX_DIST_MANIFEST = path.join(
+  repoRoot,
+  "dist",
+  "extensions",
+  "acpx",
+  "openclaw.plugin.json",
+);
 
 /** Repo-relative workspace templates synced into OpenClaw agent workspaces. */
 const TRUSTCLAW_AGENT_WORKSPACES = [
@@ -32,65 +38,116 @@ const TRUSTCLAW_AGENT_WORKSPACES = [
 
 const devArgs = process.argv.includes("--dev") ? ["--dev"] : [];
 
-function runConfigSet(profileArgs, key, value, strictJson = false) {
-  const args = [
-    path.join(repoRoot, "scripts/run-node.mjs"),
-    ...profileArgs,
-    "config",
-    "set",
-    key,
-    String(value),
-  ];
-  if (strictJson) {
-    args.push("--strict-json");
-  }
-  const result = spawnSync(process.execPath, args, {
-    cwd: repoRoot,
-    stdio: "inherit",
-    env: process.env,
-  });
-  return result.status ?? (result.error ? 1 : 0);
+function resolveProfileStateDir(profileArgs) {
+  const isDev = profileArgs.includes("--dev");
+  return path.join(homedir(), isDev ? ".openclaw-dev" : ".openclaw");
 }
 
-function runOpenClaw(profileArgs, commandArgs, { allowAlreadyExists = false } = {}) {
-  const args = [path.join(repoRoot, "scripts/run-node.mjs"), ...profileArgs, ...commandArgs];
-  const result = spawnSync(process.execPath, args, {
-    cwd: repoRoot,
-    encoding: "utf8",
-    env: process.env,
-  });
-  const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-  if (
-    allowAlreadyExists &&
-    result.status !== 0 &&
-    output.includes("already exists")
-  ) {
+function resolveProfileConfigPath(profileArgs) {
+  return path.join(resolveProfileStateDir(profileArgs), "openclaw.json");
+}
+
+function loadProfileConfig(profileArgs) {
+  const configPath = resolveProfileConfigPath(profileArgs);
+  if (!existsSync(configPath)) {
+    return { configPath, config: {} };
+  }
+  try {
+    return {
+      configPath,
+      config: JSON.parse(readFileSync(configPath, "utf8")),
+    };
+  } catch {
+    return { configPath, config: {} };
+  }
+}
+
+function saveProfileConfig(configPath, config) {
+  mkdirSync(path.dirname(configPath), { recursive: true });
+  writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+}
+
+/** Writes TrustClaw defaults directly to openclaw.json (avoids repeated dev rebuilds). */
+function applyTrustclawConfig(profileArgs) {
+  const { configPath, config } = loadProfileConfig(profileArgs);
+  const plugins = config.plugins ?? {};
+  const entries = plugins.entries ?? {};
+  const existing = entries["trustclaw-ptds"] ?? {};
+
+  config.plugins = {
+    ...plugins,
+    entries: {
+      ...entries,
+      "trustclaw-ptds": {
+        ...existing,
+        enabled: true,
+        config: {
+          ...(existing.config ?? {}),
+          defaultAgentPack: "glp1-eligibility",
+        },
+      },
+    },
+  };
+  config.gateway = {
+    ...config.gateway,
+    port: Number(TRUSTCLAW_DEFAULT_GATEWAY_PORT),
+  };
+
+  saveProfileConfig(configPath, config);
+  return 0;
+}
+
+/** TrustClaw dev builds exclude some upstream dist plugins (e.g. acpx); disable missing manifests. */
+function pruneBrokenDistPlugins(profileArgs) {
+  if (existsSync(ACPX_DIST_MANIFEST)) {
     return 0;
   }
-  if (result.status !== 0) {
-    if (output.trim()) {
-      process.stderr.write(output);
-    }
-  } else if (output.trim()) {
-    process.stdout.write(output);
+  const { configPath, config } = loadProfileConfig(profileArgs);
+  const plugins = config.plugins ?? {};
+  const entries = { ...(plugins.entries ?? {}) };
+  if (entries.acpx?.enabled === false) {
+    return 0;
   }
-  return result.status ?? (result.error ? 1 : 0);
-}
-
-function enablePlugin(extraArgs = []) {
-  return runConfigSet(extraArgs, "plugins.entries.trustclaw-ptds.enabled", "true");
-}
-
-function setDefaultGatewayPort(extraArgs = []) {
-  return runConfigSet(extraArgs, "gateway.port", TRUSTCLAW_DEFAULT_GATEWAY_PORT, true);
-}
-
-function setDefaultAgentPack(extraArgs = []) {
-  return runConfigSet(
-    extraArgs,
-    "plugins.entries.trustclaw-ptds.config.defaultAgentPack",
-    "glp1-eligibility",
+  entries.acpx = { ...(entries.acpx ?? {}), enabled: false };
+  config.plugins = { ...plugins, entries };
+  saveProfileConfig(configPath, config);
+  console.log(
+    "[trustclaw:setup] Disabled plugins.entries.acpx (dist manifest missing; run full build to enable)",
   );
+  return 0;
+}
+
+function ensureTrustclawAgents(profileArgs) {
+  const { configPath, config } = loadProfileConfig(profileArgs);
+  const stateDir = resolveProfileStateDir(profileArgs);
+  const list = Array.isArray(config.agents?.list) ? [...config.agents.list] : [];
+  let changed = false;
+
+  for (const entry of TRUSTCLAW_AGENT_WORKSPACES) {
+    if (entry.agentId === "main") {
+      continue;
+    }
+    if (list.some((agent) => agent?.id === entry.agentId)) {
+      continue;
+    }
+    list.push({
+      id: entry.agentId,
+      name: entry.agentId,
+      workspace: entry.templateDir,
+      agentDir: path.join(stateDir, "agents", entry.agentId, "agent"),
+    });
+    changed = true;
+  }
+
+  if (changed) {
+    config.agents = {
+      ...(config.agents ?? {}),
+      list,
+    };
+    saveProfileConfig(configPath, config);
+  }
+
+  return 0;
 }
 
 function syncWorkspaceTemplate(templateDir, targetDir) {
@@ -118,52 +175,15 @@ function syncDevWorkspace() {
   }
 }
 
-function ensureTrustclawAgents(profileArgs) {
-  let exitCode = 0;
-  for (const entry of TRUSTCLAW_AGENT_WORKSPACES) {
-    if (entry.agentId === "main") {
-      continue;
-    }
-    const workspacePath = entry.templateDir;
-    const displayName =
-      entry.agentId === "nrdl-reimburse" ? "NRDL Reimburse Advisor" : "PTDS Compliance Auditor";
-    const code = runOpenClaw(
-      profileArgs,
-      [
-        "agents",
-        "add",
-        entry.agentId,
-        "--workspace",
-        workspacePath,
-        "--name",
-        displayName,
-        "--non-interactive",
-      ],
-      { allowAlreadyExists: true },
-    );
-    if (code !== 0) {
-      exitCode = code;
-      break;
-    }
-    const targetDir = path.join(homedir(), ".openclaw", entry.syncTargetName);
-    syncWorkspaceTemplate(entry.templateDir, targetDir);
-  }
-  return exitCode;
-}
-
 // Enable for default + dev profiles
 const profiles = devArgs.length > 0 ? [devArgs] : [[], ["--dev"]];
 let exitCode = 0;
 for (const profileArgs of profiles) {
-  exitCode = enablePlugin(profileArgs);
+  exitCode = applyTrustclawConfig(profileArgs);
   if (exitCode !== 0) {
     break;
   }
-  exitCode = setDefaultGatewayPort(profileArgs);
-  if (exitCode !== 0) {
-    break;
-  }
-  exitCode = setDefaultAgentPack(profileArgs);
+  exitCode = pruneBrokenDistPlugins(profileArgs);
   if (exitCode !== 0) {
     break;
   }

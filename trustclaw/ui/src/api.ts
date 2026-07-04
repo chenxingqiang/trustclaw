@@ -1,4 +1,4 @@
-// TrustClaw demo SPA — typed API client for plugin routes.
+// TrustClaw PTDS Runtime Console — typed API client for plugin routes.
 // Contracts follow handlers under `extensions/trustclaw-ptds/src/` and
 // colocated types here. If the shape changes, update handlers + DECISIONS.md first.
 
@@ -24,6 +24,12 @@ export interface PtdsInitRequest {
   usedMetforminBadControl: boolean;
   usedSulfonylureaBadControl: boolean;
   usedInsulinBadControl: boolean;
+  /** AST prescription_context.is_first_prescription (default: true). */
+  isFirstPrescription?: boolean;
+  /** AST prescription_context.institution_level 1–3 (default: 3). */
+  institutionLevel?: number;
+  /** AST prescription_context.is_specialist_physician (default: true). */
+  isSpecialistPhysician?: boolean;
 }
 
 export const PTDS_INIT_FORM_DEFAULTS: Required<
@@ -49,6 +55,9 @@ export const PTDS_INIT_FORM_DEFAULTS: Required<
   usedMetforminBadControl: false,
   usedSulfonylureaBadControl: false,
   usedInsulinBadControl: false,
+  isFirstPrescription: true,
+  institutionLevel: 3,
+  isSpecialistPhysician: true,
 };
 
 export function computePtdsBmi(weightKg: number, heightCm: number): number {
@@ -75,10 +84,60 @@ export interface PtdsStatusResponse {
   snapshot: unknown;
 }
 
+export type PtdsTableKind = "personal" | "subscribed" | "reference" | "provenance" | "view";
+
+export interface PtdsTableCatalogRow {
+  table: string;
+  kind: PtdsTableKind;
+  subscription_type?: "pharma-compliance" | "nrdl-reference" | "device-data";
+  label_en: string;
+  label_zh: string;
+}
+
+export interface PtdsLineageNode {
+  id: string;
+  role: "table" | "source" | "subscription" | "panel" | "engine";
+  label: string;
+  meta?: Record<string, string | number | null>;
+}
+
+export interface PtdsLineageEdge {
+  from: string;
+  to: string;
+  label?: string;
+}
+
+export interface PtdsTableLineage {
+  table: string;
+  kind: PtdsTableKind;
+  subscription_type?: "pharma-compliance" | "nrdl-reference" | "device-data";
+  provenance_fields: string[];
+  nodes: PtdsLineageNode[];
+  edges: PtdsLineageEdge[];
+  live?: {
+    active_standard_id?: string | null;
+    ruleset_hash?: string | null;
+    consent_session_id?: string | null;
+    reference_version_id?: string | null;
+    reference_package_hash?: string | null;
+    subscription_url?: string | null;
+    source_ids?: Array<{
+      source_id: string;
+      source_name: string;
+      source_category: string;
+      reliability_level: number;
+      row_count: number;
+    }>;
+  };
+}
+
 export interface PtdsTablesResponse {
   status: "success" | "error";
   default_tables: string[];
   tables: string[];
+  catalog?: PtdsTableCatalogRow[];
+  personal_tables?: string[];
+  subscribed_tables?: string[];
 }
 
 export interface PtdsBrowseResponse {
@@ -86,6 +145,7 @@ export interface PtdsBrowseResponse {
   table: string;
   columns?: string[];
   rows?: unknown[];
+  lineage?: PtdsTableLineage;
   message?: string;
 }
 
@@ -103,12 +163,22 @@ export interface RuntimeContextResponse {
     text2sql?: { sql?: string; duration_ms?: number };
     db_query?: { raw_data?: unknown };
     rule_evaluation?: { evaluated_rules?: unknown[] };
-    agent_decision?: { response?: string; citations?: unknown[] };
+    agent_decision?: {
+      response?: string;
+      citations?: Array<{
+        index: number;
+        label: string;
+        value: string | number | null;
+        rule_id: string;
+        source: string;
+      }>;
+    };
   };
   audit_trail_id: string;
   evidence_ledger_receipt?: {
     block_height?: number;
     proof_hash?: string;
+    previous_evidence_hash?: string | null;
   };
 }
 
@@ -179,6 +249,26 @@ export interface AuditEventsResponse {
   scope?: string;
   audit_dir?: string;
   events?: AuditEventRow[];
+  message?: string;
+}
+
+export interface LedgerReceiptApiRow {
+  block_height: number;
+  content_hash: string;
+  previous_evidence_hash: string | null;
+  proof_hash: string;
+  audit_trail_id: string;
+  session_id: string;
+  agent_pack_id: string;
+  committed_at: number;
+}
+
+export interface LedgerStatusResponse {
+  status: "success" | "error";
+  evidence_dir?: string;
+  receipt_count?: number;
+  receipts?: LedgerReceiptApiRow[];
+  verify?: { ok: true } | { ok: false; block_height: number; reason: string };
   message?: string;
 }
 
@@ -297,14 +387,72 @@ export function isAgentChatError(r: AgentChatResponse): r is AgentChatErrorRespo
   return typeof (r as AgentChatErrorResponse).status === "string";
 }
 
-/** Serialize query params without leaking undefined. */
-export function buildBrowseUrl(base: string, table: string, limit?: number): string {
+/** Serialize browse URL with domain-agent authorization. */
+export function buildBrowseUrl(
+  base: string,
+  table: string,
+  limit?: number,
+  agentPackId?: string,
+): string {
   const url = new URL("/api/ptds/browse", base);
   url.searchParams.set("table", table);
+  if (agentPackId?.trim()) {
+    url.searchParams.set("agentPackId", agentPackId.trim());
+  }
   if (typeof limit === "number" && Number.isFinite(limit)) {
     url.searchParams.set("limit", String(Math.trunc(limit)));
   }
   return url.pathname + url.search;
+}
+
+export type AgentDomainScopeId =
+  | "panel.browse"
+  | "panel.audit"
+  | "panel.ledger"
+  | "panel.compliance"
+  | "ptds.chat"
+  | "ptds.write";
+
+export interface AgentGrantPackRow {
+  id: string;
+  version: string;
+  displayName: { "zh-CN": string; en: string };
+  domain?: string[];
+  available_scopes: AgentDomainScopeId[];
+  granted_scopes: AgentDomainScopeId[];
+  granted_at: number | null;
+}
+
+export interface AgentGrantHistoryEntry {
+  event_id: string;
+  audit_trail_id: string;
+  timestamp: number;
+  agent_pack_id: string;
+  scopes: string[];
+  granted: boolean;
+  status: string;
+}
+
+export interface AgentGrantsResponse {
+  status: "success" | "error";
+  packs: AgentGrantPackRow[];
+  grants: Record<string, { granted_at: number; scopes: AgentDomainScopeId[] }>;
+  history?: AgentGrantHistoryEntry[];
+  message?: string;
+}
+
+export interface PutAgentGrantRequest {
+  session_id: string;
+  agent_pack_id: string;
+  scopes: string[];
+}
+
+export interface PutAgentGrantResponse {
+  status: "success" | "error";
+  agent_pack_id?: string;
+  granted_scopes?: AgentDomainScopeId[];
+  granted_at?: number;
+  message?: string;
 }
 
 /** Resolve API base URL. Empty string uses same-origin relative paths (gateway or Vite `/api` proxy). */
@@ -383,20 +531,57 @@ export interface TrustclawApiClient {
   init(body: PtdsInitRequest): Promise<PtdsInitResponse>;
   reset(): Promise<PtdsResetResponse>;
   status(): Promise<PtdsStatusResponse>;
-  tables(): Promise<PtdsTablesResponse>;
-  browse(table: string, limit?: number): Promise<PtdsBrowseResponse>;
+  tables(agentPackId?: string): Promise<PtdsTablesResponse>;
+  browse(table: string, limit?: number, agentPackId?: string): Promise<PtdsBrowseResponse>;
+  agentGrants(): Promise<AgentGrantsResponse>;
+  putAgentGrant(body: PutAgentGrantRequest): Promise<PutAgentGrantResponse>;
   chat(body: AgentChatRequest): Promise<AgentChatResponse>;
-  compliancePreview(packagePayload: unknown): Promise<CompliancePreviewResult>;
-  complianceImport(body: ComplianceImportRequestBody): Promise<ComplianceImportResult>;
-  complianceImportBundled(body: ComplianceBundledImportRequestBody): Promise<ComplianceImportResult>;
-  complianceStandards(): Promise<ComplianceStandardsResponse>;
-  referencePreview(body: { package?: unknown; url?: string }): Promise<ReferencePreviewResult>;
-  referenceSync(body: ReferenceSyncRequestBody): Promise<ReferenceSyncResult>;
-  referenceSyncBundled(body: ReferenceBundledSyncRequestBody): Promise<ReferenceSyncResult>;
-  referenceStatus(): Promise<ReferenceStatusResponse>;
-  devicePreview(body: DeviceImportPreviewRequestBody): Promise<DeviceImportPreviewResult>;
-  deviceImport(body: DeviceImportExecuteRequestBody): Promise<DeviceImportResult>;
-  auditEvents(scope?: "compliance" | "chat" | "all", limit?: number): Promise<AuditEventsResponse>;
+  auditEvents(
+    scope?: "compliance" | "chat" | "all",
+    limit?: number,
+    agentPackId?: string,
+  ): Promise<AuditEventsResponse>;
+  ledgerStatus(agentPackId?: string): Promise<LedgerStatusResponse>;
+  compliancePreview(
+    packagePayload: unknown,
+    agentPackId?: string,
+  ): Promise<CompliancePreviewResult>;
+  complianceImport(
+    body: ComplianceImportRequestBody,
+    agentPackId?: string,
+  ): Promise<ComplianceImportResult>;
+  complianceImportBundled(
+    body: ComplianceBundledImportRequestBody,
+    agentPackId?: string,
+  ): Promise<ComplianceImportResult>;
+  complianceStandards(agentPackId?: string): Promise<ComplianceStandardsResponse>;
+  referencePreview(
+    body: { package?: unknown; url?: string },
+    agentPackId?: string,
+  ): Promise<ReferencePreviewResult>;
+  referenceSync(body: ReferenceSyncRequestBody, agentPackId?: string): Promise<ReferenceSyncResult>;
+  referenceSyncBundled(
+    body: ReferenceBundledSyncRequestBody,
+    agentPackId?: string,
+  ): Promise<ReferenceSyncResult>;
+  referenceStatus(agentPackId?: string): Promise<ReferenceStatusResponse>;
+  devicePreview(
+    body: DeviceImportPreviewRequestBody,
+    agentPackId?: string,
+  ): Promise<DeviceImportPreviewResult>;
+  deviceImport(
+    body: DeviceImportExecuteRequestBody,
+    agentPackId?: string,
+  ): Promise<DeviceImportResult>;
+}
+
+function scopedPath(path: string, agentPackId?: string): string {
+  if (!agentPackId?.trim()) {
+    return path;
+  }
+  const url = new URL(path, "http://x");
+  url.searchParams.set("agentPackId", agentPackId.trim());
+  return url.pathname + url.search;
 }
 
 export function createApiClient(
@@ -416,13 +601,20 @@ export function createApiClient(
     status() {
       return callJson(fetchImpl, baseUrl, "/api/ptds/status");
     },
-    tables() {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/tables");
+    tables(agentPackId) {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/tables", agentPackId));
     },
-    browse(table, limit) {
-      // buildBrowseUrl needs any absolute base to construct URLSearchParams; only
-      // the pathname+search is returned, so the origin is discarded downstream.
-      return callJson(fetchImpl, baseUrl, buildBrowseUrl("http://x", table, limit));
+    browse(table, limit, agentPackId) {
+      return callJson(fetchImpl, baseUrl, buildBrowseUrl("http://x", table, limit, agentPackId));
+    },
+    agentGrants() {
+      return callJson(fetchImpl, baseUrl, "/api/ptds/agent-grants");
+    },
+    putAgentGrant(body) {
+      return callJson(fetchImpl, baseUrl, "/api/ptds/agent-grants", {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
     },
     chat(body) {
       return callJson(fetchImpl, baseUrl, "/api/agent/chat", {
@@ -430,65 +622,85 @@ export function createApiClient(
         body: JSON.stringify(body),
       });
     },
-    compliancePreview(packagePayload) {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/compliance/preview", {
+    compliancePreview(packagePayload, agentPackId) {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/compliance/preview", agentPackId), {
         method: "POST",
         body: JSON.stringify({ package: packagePayload }),
       });
     },
-    complianceImport(body) {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/compliance/import", {
+    complianceImport(body, agentPackId) {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/compliance/import", agentPackId), {
         method: "POST",
         body: JSON.stringify(body),
       });
     },
-    complianceImportBundled(body) {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/compliance/import/bundled-glp1-v2", {
+    complianceImportBundled(body, agentPackId) {
+      return callJson(
+        fetchImpl,
+        baseUrl,
+        scopedPath("/api/ptds/compliance/import/bundled-glp1-v2", agentPackId),
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      );
+    },
+    complianceStandards(agentPackId) {
+      return callJson(
+        fetchImpl,
+        baseUrl,
+        scopedPath("/api/ptds/compliance/standards", agentPackId),
+      );
+    },
+    referencePreview(body, agentPackId) {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/reference/preview", agentPackId), {
         method: "POST",
         body: JSON.stringify(body),
       });
     },
-    complianceStandards() {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/compliance/standards");
-    },
-    referencePreview(body) {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/reference/preview", {
+    referenceSync(body, agentPackId) {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/reference/sync", agentPackId), {
         method: "POST",
         body: JSON.stringify(body),
       });
     },
-    referenceSync(body) {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/reference/sync", {
+    referenceSyncBundled(body, agentPackId) {
+      return callJson(
+        fetchImpl,
+        baseUrl,
+        scopedPath("/api/ptds/reference/sync/bundled-glp1", agentPackId),
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      );
+    },
+    referenceStatus(agentPackId) {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/reference/status", agentPackId));
+    },
+    devicePreview(body, agentPackId) {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/device/preview", agentPackId), {
         method: "POST",
         body: JSON.stringify(body),
       });
     },
-    referenceSyncBundled(body) {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/reference/sync/bundled-glp1", {
+    deviceImport(body, agentPackId) {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/device/import", agentPackId), {
         method: "POST",
         body: JSON.stringify(body),
       });
     },
-    referenceStatus() {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/reference/status");
-    },
-    devicePreview(body) {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/device/preview", {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-    },
-    deviceImport(body) {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/device/import", {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-    },
-    auditEvents(scope = "compliance", limit = 30) {
+    auditEvents(scope = "compliance", limit = 30, agentPackId) {
       const url = new URL("/api/ptds/audit/events", "http://x");
       url.searchParams.set("scope", scope);
       url.searchParams.set("limit", String(limit));
+      if (agentPackId?.trim()) {
+        url.searchParams.set("agentPackId", agentPackId.trim());
+      }
       return callJson(fetchImpl, baseUrl, url.pathname + url.search);
+    },
+    ledgerStatus(agentPackId) {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/ledger", agentPackId));
     },
   };
 }

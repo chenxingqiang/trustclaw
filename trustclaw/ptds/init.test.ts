@@ -12,6 +12,9 @@ import {
   queryPtds,
   readGlp1CheckSnapshot,
   assertReadOnlySelectSql,
+  buildTableLineage,
+  classifyPtdsTable,
+  PTDS_BROWSER_DEFAULT_TABLES,
 } from "./index.js";
 import { PTDS_INIT_DEFAULTS } from "./types.js";
 
@@ -28,9 +31,9 @@ describe("trustclaw/ptds", () => {
         .get();
       expect(tables).toBeTruthy();
 
-      const drugCount = db
-        .prepare("SELECT COUNT(*) AS count FROM nrdl_drug_registry")
-        .get() as { count: number };
+      const drugCount = db.prepare("SELECT COUNT(*) AS count FROM nrdl_drug_registry").get() as {
+        count: number;
+      };
       expect(drugCount.count).toBeGreaterThan(0);
       db.close();
     } finally {
@@ -65,9 +68,7 @@ describe("trustclaw/ptds", () => {
 
       const db = new DatabaseSync(dbPath);
       const bmiRow = db
-        .prepare(
-          "SELECT bmi FROM body_anthropometrics ORDER BY body_id DESC LIMIT 1",
-        )
+        .prepare("SELECT bmi FROM body_anthropometrics ORDER BY body_id DESC LIMIT 1")
         .get() as { bmi: number };
       expect(bmiRow.bmi).toBeCloseTo(29.4, 1);
 
@@ -167,6 +168,26 @@ describe("trustclaw/ptds", () => {
       const tables = listPtdsTables(dbPath);
       expect(tables).toContain("body_anthropometrics");
       expect(tables).toContain("v_glp1_nrdl_check_snapshot");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("classifies subscribed tables for Panel B browser defaults", () => {
+    expect(classifyPtdsTable("medication_compliance_standards")).toBe("subscribed");
+    expect(classifyPtdsTable("nrdl_payment_rules")).toBe("subscribed");
+    expect(PTDS_BROWSER_DEFAULT_TABLES).toContain("nrdl_reference_sync_state");
+  });
+
+  it("builds lineage graph with source registry after init", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-ptds-lineage-"));
+    const dbPath = path.join(dir, "local_ptds.db");
+    try {
+      bootstrapPtdsDatabase(dbPath);
+      initializePtds({ ...PTDS_INIT_DEFAULTS, weight: 80, height: 170, hba1c: 6.5 }, dbPath);
+      const lineage = buildTableLineage("lab_test_results", dbPath);
+      expect(lineage.provenance_fields).toContain("source_id");
+      expect(lineage.live?.source_ids?.length).toBeGreaterThan(0);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -1,14 +1,19 @@
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { AuditRecorder } from "../../audit/index.js";
+import { commitEvidenceReceipt, hashEvidenceContent } from "../../ledger/index.js";
 import { getActiveComplianceStandard } from "../../ptds/compliance-import.js";
 import { bootstrapPtdsDatabase } from "../../ptds/db.js";
-import { resolvePtdsAuditDir, resolvePtdsDbPath } from "../../ptds/paths.js";
+import {
+  resolvePtdsAuditDir,
+  resolvePtdsDbPath,
+  resolvePtdsEvidenceDir,
+} from "../../ptds/paths.js";
 import { readGlp1CheckSnapshot, queryPtds } from "../../ptds/query.js";
 import { getAgentPackRegistry } from "../agent-pack/index.js";
-import { evaluateGlp1RulesFromDb } from "../rules/index.js";
-import type { RuleEvaluationMatrix } from "../rules/types.js";
-import { resolveGlp1EvalDrugId } from "../rules/resolve-glp1-drug-id.js";
 import { loadAgentPackText2SqlTemplate } from "../agent-pack/text2sql-prompt.js";
+import { evaluateGlp1RulesFromDb } from "../rules/index.js";
+import { resolveGlp1EvalDrugId } from "../rules/resolve-glp1-drug-id.js";
+import type { RuleEvaluationMatrix } from "../rules/types.js";
 import { generateText2Sql } from "../text2sql/generate.js";
 import { loadPtdsSchemaSnippetForObjects } from "../text2sql/schema-context.js";
 import { buildPackAgentDecision, packIncludesStage } from "./pack-decision.js";
@@ -18,8 +23,11 @@ function createAuditTrailId(): string {
   return `aud_${randomBytes(8).toString("hex")}`;
 }
 
-function buildProofHash(context: Omit<RuntimeContext, "evidence_ledger_receipt">): string {
-  return createHash("sha256").update(JSON.stringify(context)).digest("hex");
+function resolveEvidenceDir(options: RunChatOptions): string {
+  if (options.evidenceDir?.trim()) {
+    return options.evidenceDir;
+  }
+  return resolvePtdsEvidenceDir({});
 }
 
 function resolveAuditDir(options: RunChatOptions): string {
@@ -179,6 +187,7 @@ export async function runTrustclawChat(
     output: {
       response_preview: agentDecision.response.slice(0, 200),
       citation_count: agentDecision.citations.length,
+      citations: agentDecision.citations,
     },
     status: "SUCCESS",
   });
@@ -204,24 +213,40 @@ export async function runTrustclawChat(
     audit_trail_id: auditTrailId,
   };
 
-  const proofHash = buildProofHash(partialContext);
+  const contentHash = hashEvidenceContent(partialContext);
+
+  let evidence_ledger_receipt: RuntimeContext["evidence_ledger_receipt"] | undefined;
 
   if (packIncludesStage(pack, "LEDGER_COMMIT")) {
+    const committed = commitEvidenceReceipt({
+      evidenceDir: resolveEvidenceDir(options),
+      audit_trail_id: auditTrailId,
+      session_id: input.session_id,
+      agent_pack_id: pack.id,
+      content_hash: contentHash,
+    });
+    evidence_ledger_receipt = {
+      block_height: committed.block_height,
+      proof_hash: committed.proof_hash,
+      previous_evidence_hash: committed.previous_evidence_hash,
+    };
     audit.record({
       step: "LEDGER_COMMIT",
       component: "EvidenceLedger.Commit",
       input: { audit_trail_id: auditTrailId, agent_pack_id: pack.id },
-      output: { block_height: 0, proof_hash: proofHash },
+      output: {
+        block_height: committed.block_height,
+        proof_hash: committed.proof_hash,
+        previous_evidence_hash: committed.previous_evidence_hash,
+        content_hash: committed.content_hash,
+      },
       status: "SUCCESS",
     });
   }
 
   const context: RuntimeContext = {
     ...partialContext,
-    evidence_ledger_receipt: {
-      block_height: 0,
-      proof_hash: proofHash,
-    },
+    ...(evidence_ledger_receipt ? { evidence_ledger_receipt } : {}),
   };
 
   return { ok: true, context };

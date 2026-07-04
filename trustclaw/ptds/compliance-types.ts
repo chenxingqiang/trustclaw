@@ -75,6 +75,7 @@ export type MedicationComplianceAstRuleRow = {
 export type ComplianceImportRequest = {
   consentGranted: boolean;
   sessionId: string;
+  agentPackId: string;
   sourceLabel?: string;
   package: ComplianceStandardPackage;
 };

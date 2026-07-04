@@ -1,11 +1,15 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import {
+  resolveTrustclawPaths,
+  type TrustclawPluginConfig,
+} from "../../../trustclaw/ptds/config.js";
 import { importDeviceData, previewDeviceImport } from "../../../trustclaw/ptds/device-import.js";
+import type { DeviceImportLlm } from "../../../trustclaw/ptds/device-import.js";
 import {
   deviceImportExecuteRequestSchema,
   deviceImportPreviewRequestSchema,
 } from "../../../trustclaw/ptds/device-types.js";
-import { resolveTrustclawPaths, type TrustclawPluginConfig } from "../../../trustclaw/ptds/config.js";
-import type { DeviceImportLlm } from "../../../trustclaw/ptds/device-import.js";
+import { requireAgentDomainGrant } from "./agent-grant-guard.js";
 import { methodIs, readJsonBody, sendJson } from "./http-utils.js";
 
 function pathOverrides(pluginConfig: TrustclawPluginConfig | undefined) {
@@ -19,6 +23,11 @@ export function createDevicePreviewHandler(
   return async (req: IncomingMessage, res: ServerResponse): Promise<boolean> => {
     if (!methodIs(req, "POST")) {
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
+      return true;
+    }
+    const guard = requireAgentDomainGrant(req, "panel.compliance", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
       return true;
     }
     const parsed = await readJsonBody(req);
@@ -41,12 +50,15 @@ export function createDevicePreviewHandler(
   };
 }
 
-export function createDeviceImportHandler(
-  pluginConfig: TrustclawPluginConfig | undefined,
-) {
+export function createDeviceImportHandler(pluginConfig: TrustclawPluginConfig | undefined) {
   return async (req: IncomingMessage, res: ServerResponse): Promise<boolean> => {
     if (!methodIs(req, "POST")) {
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
+      return true;
+    }
+    const guard = requireAgentDomainGrant(req, "panel.compliance", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
       return true;
     }
     const parsed = await readJsonBody(req);
@@ -60,10 +72,13 @@ export function createDeviceImportHandler(
       return true;
     }
     const paths = pathOverrides(pluginConfig);
-    const result = await importDeviceData(body.data, {
-      dbPathOrOverrides: { dbPath: paths.dbPath, auditDir: paths.auditDir },
-      auditDir: paths.auditDir,
-    });
+    const result = await importDeviceData(
+      { ...body.data, agentPackId: guard.pack.id },
+      {
+        dbPathOrOverrides: { dbPath: paths.dbPath, auditDir: paths.auditDir },
+        auditDir: paths.auditDir,
+      },
+    );
     sendJson(res, result.status === "success" ? 200 : 400, result);
     return true;
   };

@@ -4,8 +4,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { readAuditEvents } from "../audit/index.js";
 import { applyPtdsInitRequest, bootstrapPtdsDatabase } from "./db.js";
-import { PTDS_INIT_DEFAULTS, type PtdsInitRequest } from "./types.js";
 import { executePersonalWrite, previewPersonalWrite } from "./personal-write.js";
+import { PTDS_INIT_DEFAULTS, type PtdsInitRequest } from "./types.js";
 
 const initRequest: PtdsInitRequest = {
   ...PTDS_INIT_DEFAULTS,
@@ -58,6 +58,7 @@ describe("personal-write", () => {
         message: "90天后体重72kg，HbA1c 6.5%",
         consentGranted: true,
         sessionId: "chat_write_test",
+        agentPackId: "glp1-eligibility",
       },
       { llm: mockLlm, dbPathOrOverrides: { dbPath, auditDir } },
     );
@@ -65,12 +66,10 @@ describe("personal-write", () => {
     expect(result.status).toBe("success");
     expect(result.rows_affected).toBeGreaterThanOrEqual(2);
 
-    const events = readAuditEvents({ auditDir });
-    const importEvent = events.find((event) => event.event_type === "DEVICE_IMPORT");
-    expect(importEvent?.payload).toMatchObject({
-      granted: true,
-      source_label: "chat-personal-write",
-    });
+    const events = readAuditEvents({ auditDir, steps: ["DEVICE_IMPORT"] });
+    const importEvent = events.find((event) => event.step === "DEVICE_IMPORT");
+    expect(importEvent?.input.agent_pack_id).toBe("glp1-eligibility");
+    expect(importEvent?.status).toBe("SUCCESS");
 
     rmSync(dir, { recursive: true, force: true });
   });
@@ -88,6 +87,7 @@ describe("personal-write", () => {
         message: "record weight 72kg",
         consentGranted: false,
         sessionId: "chat_deny",
+        agentPackId: "glp1-eligibility",
       },
       { llm: mockLlm, dbPathOrOverrides: { dbPath, auditDir } },
     );

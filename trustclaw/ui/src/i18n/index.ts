@@ -1,4 +1,4 @@
-// TrustClaw demo SPA i18n — shares OpenClaw Control UI locale storage (`openclaw.i18n.locale`).
+// TrustClaw PTDS Runtime Console i18n — shares OpenClaw Control UI locale storage (`openclaw.i18n.locale`).
 import { en } from "./locales/en.js";
 import { zh_CN } from "./locales/zh-CN.js";
 import type { TrustclawLocale, TrustclawMessages } from "./types.js";

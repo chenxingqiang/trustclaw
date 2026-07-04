@@ -1,3 +1,4 @@
+import { hasAgentDomainGrant } from "../../../trustclaw/ptds/agent-domain-grants.js";
 import type { TrustclawPluginConfig } from "../../../trustclaw/ptds/config.js";
 import { resolveTrustclawPaths } from "../../../trustclaw/ptds/config.js";
 import { recordPtdsConsentAudit } from "../../../trustclaw/ptds/consent-audit.js";
@@ -10,7 +11,10 @@ import {
   formatPrivateDataFieldLabels,
 } from "../../../trustclaw/ptds/profile-summary.js";
 import { resolveBoundAgentPack } from "../../../trustclaw/runtime/agent-pack/index.js";
-import { TRUSTCLAW_PTDS_QUERY_TOOL, TRUSTCLAW_PTDS_WRITE_TOOL } from "../../../trustclaw/runtime/constants.js";
+import {
+  TRUSTCLAW_PTDS_QUERY_TOOL,
+  TRUSTCLAW_PTDS_WRITE_TOOL,
+} from "../../../trustclaw/runtime/constants.js";
 
 const CONSENT_TITLE = "访问个人健康数据 / Access personal health data";
 const WRITE_CONSENT_TITLE = "写入个人健康数据 / Write personal health data";
@@ -56,7 +60,9 @@ function resolvePackForHook(
   }).pack;
 }
 
-export function createTrustclawPtdsDataConsentHook(pluginConfig: TrustclawPluginConfig | undefined) {
+export function createTrustclawPtdsDataConsentHook(
+  pluginConfig: TrustclawPluginConfig | undefined,
+) {
   return async (
     event: { toolName: string; params: Record<string, unknown> },
     ctx: { sessionKey?: string; sessionId?: string; agentId?: string },
@@ -69,6 +75,7 @@ export function createTrustclawPtdsDataConsentHook(pluginConfig: TrustclawPlugin
     }
 
     const paths = resolveTrustclawPaths(pluginConfig);
+    const pathOverrides = { dbPath: paths.dbPath, auditDir: paths.auditDir };
     const sessionKey = resolveSessionKey(ctx.sessionKey, ctx.sessionId);
     const question = readQuestion(event.params);
     const profile = buildPtdsHealthProfileSummary({ dbPath: paths.dbPath });
@@ -79,6 +86,14 @@ export function createTrustclawPtdsDataConsentHook(pluginConfig: TrustclawPlugin
         block: true,
         blockReason:
           "PTDS is not mounted. Ask the user to initialize personal data in Panel A first.",
+      };
+    }
+
+    const requiredScope = event.toolName === TRUSTCLAW_PTDS_WRITE_TOOL ? "ptds.write" : "ptds.chat";
+    if (!hasAgentDomainGrant(pack.id, requiredScope, pathOverrides)) {
+      return {
+        block: true,
+        blockReason: `Domain agent "${pack.id}" lacks user grant for ${requiredScope}. Grant permissions in Panel C first.`,
       };
     }
 
@@ -110,6 +125,7 @@ export function createTrustclawPtdsDataConsentHook(pluginConfig: TrustclawPlugin
             const granted = decision === "allow-once" || decision === "allow-always";
             recordPtdsConsentAudit({
               sessionId: sessionKey,
+              agentPackId: pack.id,
               question,
               privateDataFields: profile.private_data_fields,
               decision,
@@ -141,6 +157,7 @@ export function createTrustclawPtdsDataConsentHook(pluginConfig: TrustclawPlugin
             const granted = decision === "allow-once";
             recordPtdsConsentAudit({
               sessionId: sessionKey,
+              agentPackId: pack.id,
               question,
               privateDataFields: profile.private_data_fields,
               decision,
@@ -152,7 +169,7 @@ export function createTrustclawPtdsDataConsentHook(pluginConfig: TrustclawPlugin
       };
     }
 
-    if (hasPtdsDataAccessGrant(sessionKey, { dbPath: paths.dbPath, auditDir: paths.auditDir })) {
+    if (hasPtdsDataAccessGrant(sessionKey, pack.id, pathOverrides)) {
       return;
     }
 
@@ -176,6 +193,7 @@ export function createTrustclawPtdsDataConsentHook(pluginConfig: TrustclawPlugin
           const granted = decision === "allow-once" || decision === "allow-always";
           recordPtdsConsentAudit({
             sessionId: sessionKey,
+            agentPackId: pack.id,
             question,
             privateDataFields: profile.private_data_fields,
             decision,
@@ -183,10 +201,7 @@ export function createTrustclawPtdsDataConsentHook(pluginConfig: TrustclawPlugin
             auditDir: paths.auditDir,
           });
           if (decision === "allow-always") {
-            grantPtdsDataAccess(sessionKey, "allow-always", {
-              dbPath: paths.dbPath,
-              auditDir: paths.auditDir,
-            });
+            grantPtdsDataAccess(sessionKey, pack.id, "allow-always", pathOverrides);
           }
         },
       },

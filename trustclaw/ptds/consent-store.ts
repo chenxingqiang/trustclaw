@@ -1,39 +1,74 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { DEFAULT_AGENT_PACK_ID } from "../runtime/agent-pack/schema.js";
 import { resolvePtdsAuditDir, type PtdsPathOverrides } from "./paths.js";
 
-type ConsentGrantFile = {
+type PackGrantEntry = {
   allow_always: boolean;
   session_keys: string[];
 };
 
-const EMPTY_GRANTS: ConsentGrantFile = {
-  allow_always: false,
-  session_keys: [],
+type ConsentGrantFileV2 = {
+  version: 2;
+  packs: Record<string, PackGrantEntry>;
 };
+
+/** Legacy single-pack shape (pre domain-agent decoupling). */
+type ConsentGrantFileV1 = {
+  allow_always?: boolean;
+  session_keys?: string[];
+};
+
+const EMPTY_V2: ConsentGrantFileV2 = { version: 2, packs: {} };
 
 function resolveConsentGrantPath(auditDir: string): string {
   return path.join(auditDir, "consent-grants.json");
 }
 
-function readGrantFile(grantPath: string): ConsentGrantFile {
+function emptyPackEntry(): PackGrantEntry {
+  return { allow_always: false, session_keys: [] };
+}
+
+function readGrantFile(grantPath: string): ConsentGrantFileV2 {
   try {
     const raw = readFileSync(grantPath, "utf8");
-    const parsed = JSON.parse(raw) as Partial<ConsentGrantFile>;
+    const parsed = JSON.parse(raw) as ConsentGrantFileV1 & Partial<ConsentGrantFileV2>;
+    if (parsed.version === 2 && parsed.packs && typeof parsed.packs === "object") {
+      const packs: Record<string, PackGrantEntry> = {};
+      for (const [packId, entry] of Object.entries(parsed.packs)) {
+        packs[packId] = {
+          allow_always: entry?.allow_always === true,
+          session_keys: Array.isArray(entry?.session_keys)
+            ? entry.session_keys.filter((value): value is string => typeof value === "string")
+            : [],
+        };
+      }
+      return { version: 2, packs };
+    }
+    // Migrate v1 global grant to default pack only.
     return {
-      allow_always: parsed.allow_always === true,
-      session_keys: Array.isArray(parsed.session_keys)
-        ? parsed.session_keys.filter((value): value is string => typeof value === "string")
-        : [],
+      version: 2,
+      packs: {
+        [DEFAULT_AGENT_PACK_ID]: {
+          allow_always: parsed.allow_always === true,
+          session_keys: Array.isArray(parsed.session_keys)
+            ? parsed.session_keys.filter((value): value is string => typeof value === "string")
+            : [],
+        },
+      },
     };
   } catch {
-    return { ...EMPTY_GRANTS };
+    return { ...EMPTY_V2, packs: {} };
   }
 }
 
-function writeGrantFile(grantPath: string, grants: ConsentGrantFile): void {
+function writeGrantFile(grantPath: string, grants: ConsentGrantFileV2): void {
   mkdirSync(path.dirname(grantPath), { recursive: true });
   writeFileSync(grantPath, `${JSON.stringify(grants, null, 2)}\n`, "utf8");
+}
+
+function resolvePackEntry(file: ConsentGrantFileV2, agentPackId: string): PackGrantEntry {
+  return file.packs[agentPackId] ?? emptyPackEntry();
 }
 
 export function resolvePtdsConsentGrantPath(
@@ -46,19 +81,22 @@ export function resolvePtdsConsentGrantPath(
 
 export function hasPtdsDataAccessGrant(
   sessionKey: string,
+  agentPackId: string,
   overrides?: PtdsPathOverrides,
   env: NodeJS.ProcessEnv = process.env,
 ): boolean {
   const grantPath = resolvePtdsConsentGrantPath(overrides, env);
-  const grants = readGrantFile(grantPath);
-  if (grants.allow_always) {
+  const file = readGrantFile(grantPath);
+  const entry = resolvePackEntry(file, agentPackId.trim());
+  if (entry.allow_always) {
     return true;
   }
-  return grants.session_keys.includes(sessionKey);
+  return entry.session_keys.includes(sessionKey);
 }
 
 export function grantPtdsDataAccess(
   sessionKey: string,
+  agentPackId: string,
   mode: "allow-once" | "allow-always",
   overrides?: PtdsPathOverrides,
   env: NodeJS.ProcessEnv = process.env,
@@ -66,13 +104,16 @@ export function grantPtdsDataAccess(
   if (mode === "allow-once") {
     return;
   }
+  const packId = agentPackId.trim();
   const grantPath = resolvePtdsConsentGrantPath(overrides, env);
-  const grants = readGrantFile(grantPath);
-  grants.allow_always = true;
-  if (!grants.session_keys.includes(sessionKey)) {
-    grants.session_keys.push(sessionKey);
+  const file = readGrantFile(grantPath);
+  const entry = resolvePackEntry(file, packId);
+  entry.allow_always = true;
+  if (!entry.session_keys.includes(sessionKey)) {
+    entry.session_keys.push(sessionKey);
   }
-  writeGrantFile(grantPath, grants);
+  file.packs[packId] = entry;
+  writeGrantFile(grantPath, file);
 }
 
 export function clearPtdsDataAccessGrants(
@@ -80,5 +121,5 @@ export function clearPtdsDataAccessGrants(
   env: NodeJS.ProcessEnv = process.env,
 ): void {
   const grantPath = resolvePtdsConsentGrantPath(overrides, env);
-  writeGrantFile(grantPath, { ...EMPTY_GRANTS });
+  writeGrantFile(grantPath, { version: 2, packs: {} });
 }

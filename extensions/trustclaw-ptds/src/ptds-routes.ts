@@ -1,15 +1,26 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
+import { clearAuditEvents } from "../../../trustclaw/audit/index.js";
+import { clearEvidenceLedger } from "../../../trustclaw/ledger/index.js";
+import { clearAgentDomainGrants } from "../../../trustclaw/ptds/agent-domain-grants.js";
+import { resolveAgentBrowseTables } from "../../../trustclaw/ptds/agent-domain-scopes.js";
+import {
+  resolveTrustclawPaths,
+  type TrustclawPluginConfig,
+} from "../../../trustclaw/ptds/config.js";
 import {
   buildPtdsHealthProfileSummary,
   clearPtdsDataAccessGrants,
   initializePtds,
   listPtdsTables,
+  PTDS_BROWSER_DEFAULT_TABLES,
   queryPtds,
   readGlp1CheckSnapshot,
   resetPtds,
+  buildTableLineage,
+  summarizeTableCatalog,
 } from "../../../trustclaw/ptds/index.js";
-import { resolveTrustclawPaths, type TrustclawPluginConfig } from "../../../trustclaw/ptds/config.js";
+import { requireAgentDomainGrant } from "./agent-grant-guard.js";
 import { methodIs, readJsonBody, sendJson } from "./http-utils.js";
 
 const initRequestSchema = z
@@ -34,18 +45,14 @@ const initRequestSchema = z
     usedMetforminBadControl: z.boolean(),
     usedSulfonylureaBadControl: z.boolean(),
     usedInsulinBadControl: z.boolean(),
+    isFirstPrescription: z.boolean().optional(),
+    institutionLevel: z.number().int().min(1).max(3).optional(),
+    isSpecialistPhysician: z.boolean().optional(),
   })
   .strict();
 
-/** Default PTDS browser tables (D12). */
-export const PTDS_BROWSER_TABLES = [
-  "body_anthropometrics",
-  "lab_test_results",
-  "medication_compliance_ast_rules",
-  "medication_compliance_standards",
-  "nrdl_payment_rules",
-  "v_glp1_nrdl_check_snapshot",
-] as const;
+/** Default PTDS browser tables (D12 + subscribed reference/compliance). */
+export const PTDS_BROWSER_TABLES = PTDS_BROWSER_DEFAULT_TABLES;
 
 function pathOverrides(pluginConfig: TrustclawPluginConfig | undefined) {
   return resolveTrustclawPaths(pluginConfig);
@@ -93,6 +100,9 @@ export function createPtdsResetHandler(pluginConfig: TrustclawPluginConfig | und
     const result = resetPtds({ dbPath: paths.dbPath });
     if (result.status === "success") {
       clearPtdsDataAccessGrants({ dbPath: paths.dbPath, auditDir: paths.auditDir });
+      clearAgentDomainGrants({ dbPath: paths.dbPath, auditDir: paths.auditDir });
+      clearAuditEvents(paths.auditDir);
+      clearEvidenceLedger(paths.evidenceDir);
     }
     sendJson(res, result.status === "success" ? 200 : 500, result);
     return true;
@@ -140,12 +150,28 @@ export function createPtdsTablesHandler(pluginConfig: TrustclawPluginConfig | un
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
       return true;
     }
-    const paths = pathOverrides(pluginConfig);
+    const guard = requireAgentDomainGrant(req, "panel.browse", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
+      return true;
+    }
+    const paths = guard.paths;
     const allTables = listPtdsTables({ dbPath: paths.dbPath });
+    const allowed = new Set(resolveAgentBrowseTables(guard.pack));
+    const filtered = allTables.filter((table) => allowed.has(table));
+    const catalog = filtered.map((table) => summarizeTableCatalog(table));
     sendJson(res, 200, {
       status: "success",
-      default_tables: [...PTDS_BROWSER_TABLES],
-      tables: allTables,
+      agent_pack_id: guard.pack.id,
+      default_tables: filtered.filter((table) =>
+        (PTDS_BROWSER_TABLES as readonly string[]).includes(table),
+      ),
+      tables: filtered,
+      catalog,
+      personal_tables: catalog
+        .filter((row) => row.kind === "personal" || row.kind === "view")
+        .map((r) => r.table),
+      subscribed_tables: catalog.filter((row) => row.kind === "subscribed").map((r) => r.table),
     });
     return true;
   };
@@ -157,6 +183,11 @@ export function createPtdsBrowseHandler(pluginConfig: TrustclawPluginConfig | un
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
       return true;
     }
+    const guard = requireAgentDomainGrant(req, "panel.browse", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
+      return true;
+    }
     const url = new URL(req.url ?? "/", "http://localhost");
     const table = url.searchParams.get("table")?.trim() ?? "";
     const limitRaw = url.searchParams.get("limit") ?? "100";
@@ -165,20 +196,23 @@ export function createPtdsBrowseHandler(pluginConfig: TrustclawPluginConfig | un
       sendJson(res, 400, { status: "error", message: "Missing table query parameter." });
       return true;
     }
-    const paths = pathOverrides(pluginConfig);
-    const allowed = new Set(listPtdsTables({ dbPath: paths.dbPath }));
-    if (!allowed.has(table) || !/^[a-zA-Z0-9_]+$/.test(table)) {
-      sendJson(res, 400, { status: "error", message: "Table not allowed." });
+    const paths = guard.paths;
+    const packTables = new Set(resolveAgentBrowseTables(guard.pack));
+    if (!packTables.has(table) || !/^[a-zA-Z0-9_]+$/.test(table)) {
+      sendJson(res, 403, {
+        status: "error",
+        message: `Table "${table}" is not in agent pack "${guard.pack.id}" readTables.`,
+      });
       return true;
     }
     try {
-      const result = queryPtds(
-        `SELECT * FROM ${table} LIMIT ${limit}`,
-        { dbPath: paths.dbPath },
-      );
+      const result = queryPtds(`SELECT * FROM ${table} LIMIT ${limit}`, { dbPath: paths.dbPath });
+      const lineage = buildTableLineage(table, { dbPath: paths.dbPath });
       sendJson(res, 200, {
         status: "success",
+        agent_pack_id: guard.pack.id,
         table,
+        lineage,
         ...result,
       });
       return true;

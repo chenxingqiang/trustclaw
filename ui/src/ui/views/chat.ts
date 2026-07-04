@@ -119,6 +119,7 @@ export type ChatProps = {
   streamSegments: Array<{ text: string; ts: number }>;
   stream: string | null;
   streamStartedAt: number | null;
+  trustclawEvidenceCitations?: import("../trustclaw-ptds-bridge.ts").TrustclawEvidenceCitation[];
   assistantAvatarUrl?: string | null;
   draft: string;
   queue: ChatQueueItem[];
@@ -2257,6 +2258,7 @@ export function renderChat(props: ChatProps) {
                     assistantIdentity,
                     props.basePath,
                     props.assistantAttachmentAuthToken ?? null,
+                    props.trustclawEvidenceCitations,
                   );
                 }
                 if (item.kind === "group") {
@@ -2293,6 +2295,7 @@ export function renderChat(props: ChatProps) {
                     embedSandboxMode: props.embedSandboxMode ?? "scripts",
                     allowExternalEmbedUrls: props.allowExternalEmbedUrls ?? false,
                     contextWindow: threadContextWindow,
+                    trustclawEvidenceCitations: props.trustclawEvidenceCitations,
                     onDelete: () => {
                       deleted.delete(item.key);
                       requestUpdate();

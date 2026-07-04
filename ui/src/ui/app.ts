@@ -268,6 +268,9 @@ export class OpenClawApp extends LitElement {
   @state() chatMessage = "";
   @state() chatMessages: unknown[] = [];
   @state() chatToolMessages: unknown[] = [];
+  @state() trustclawRuntimeContext:
+    | import("./trustclaw-ptds-bridge.ts").TrustclawRuntimeContextPayload
+    | null = null;
   @state() activityEntries: ActivityEntry[] = [];
   @state() activityFilterText = "";
   @state() activityStatusFilters: Record<ActivityStatus, boolean> = {
@@ -982,6 +985,7 @@ export class OpenClawApp extends LitElement {
 
   resetToolStream() {
     resetToolStreamInternal(this as unknown as Parameters<typeof resetToolStreamInternal>[0]);
+    this.trustclawRuntimeContext = null;
   }
 
   resetChatScroll() {

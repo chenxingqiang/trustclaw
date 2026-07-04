@@ -7,6 +7,7 @@ import type {
   TrustclawApiClient,
 } from "../api.js";
 import { msg } from "../i18n/index.js";
+import { mountPanelAgentBar } from "./panel-agent-bar.js";
 
 export interface ComplianceHandlers {
   onImported(): void;
@@ -34,7 +35,10 @@ export function renderCompliance(
   root.innerHTML = `
     <section class="panel panel--f" data-panel="compliance">
       <header class="panel__header">
-        <h2>${escapeHtml(m.title)}</h2>
+        <div class="panel__heading">
+          <h2>${escapeHtml(m.title)}</h2>
+          <p class="panel__subtitle">${escapeHtml(m.subtitle)}</p>
+        </div>
         <span class="tag tag--muted" data-testid="subscription-active">${escapeHtml(m.noStandard)}</span>
       </header>
       <div class="panel__body">
@@ -124,26 +128,43 @@ export function renderCompliance(
   `;
 
   const typeSelect = root.querySelector<HTMLSelectElement>('[data-testid="subscription-type"]')!;
-  const methodSelect = root.querySelector<HTMLSelectElement>('[data-testid="subscription-method"]')!;
+  const methodSelect = root.querySelector<HTMLSelectElement>(
+    '[data-testid="subscription-method"]',
+  )!;
   const activeTag = root.querySelector<HTMLElement>('[data-testid="subscription-active"]')!;
   const statusEl = root.querySelector<HTMLElement>('[data-testid="subscription-status"]')!;
-  const consentInput = root.querySelector<HTMLInputElement>('[data-testid="subscription-consent"]')!;
-  const consentLabelEl = root.querySelector<HTMLElement>('[data-testid="subscription-consent-label"]')!;
-  const consentHintEl = root.querySelector<HTMLElement>('[data-testid="subscription-consent-hint"]')!;
+  const consentInput = root.querySelector<HTMLInputElement>(
+    '[data-testid="subscription-consent"]',
+  )!;
+  const consentLabelEl = root.querySelector<HTMLElement>(
+    '[data-testid="subscription-consent-label"]',
+  )!;
+  const consentHintEl = root.querySelector<HTMLElement>(
+    '[data-testid="subscription-consent-hint"]',
+  )!;
   const fileInput = root.querySelector<HTMLInputElement>('[data-testid="compliance-file"]')!;
   const referenceUrlInput = root.querySelector<HTMLInputElement>('[data-testid="reference-url"]')!;
-  const referenceFileInput = root.querySelector<HTMLInputElement>('[data-testid="reference-file"]')!;
+  const referenceFileInput = root.querySelector<HTMLInputElement>(
+    '[data-testid="reference-file"]',
+  )!;
   const deviceUrlInput = root.querySelector<HTMLInputElement>('[data-testid="device-url"]')!;
   const deviceHintInput = root.querySelector<HTMLInputElement>('[data-testid="device-hint"]')!;
   const deviceFileInput = root.querySelector<HTMLInputElement>('[data-testid="device-file"]')!;
-  const deviceFileHintInput = root.querySelector<HTMLInputElement>('[data-testid="device-file-hint"]')!;
+  const deviceFileHintInput = root.querySelector<HTMLInputElement>(
+    '[data-testid="device-file-hint"]',
+  )!;
   const previewBtn = root.querySelector<HTMLButtonElement>('[data-action="preview"]')!;
   const importBtn = root.querySelector<HTMLButtonElement>('[data-action="import"]')!;
   const referenceSyncBtn = root.querySelector<HTMLButtonElement>('[data-action="reference-sync"]')!;
-  const referenceSyncUrlBtn = root.querySelector<HTMLButtonElement>('[data-action="reference-sync-url"]')!;
+  const referenceSyncUrlBtn = root.querySelector<HTMLButtonElement>(
+    '[data-action="reference-sync-url"]',
+  )!;
   const deviceImportBtn = root.querySelector<HTMLButtonElement>('[data-action="device-import"]')!;
   const bundledBtn = root.querySelector<HTMLButtonElement>('[data-action="bundled"]')!;
   const resultEl = root.querySelector<HTMLElement>('[data-testid="subscription-result"]')!;
+  const panelBody = root.querySelector<HTMLElement>(".panel__body")!;
+  const agentBar = mountPanelAgentBar(panelBody, client, "panel.compliance");
+  const selectedPackId = () => agentBar.getSelectedPackId();
 
   let subscriptionType: SubscriptionType = "pharma-compliance";
   let subscriptionMethod: SubscriptionMethod = "bundled";
@@ -260,7 +281,11 @@ export function renderCompliance(
     bundledBtn.disabled = !consented;
 
     if (subscriptionType === "pharma-compliance" && subscriptionMethod === "file") {
-      importBtn.disabled = !(consented && pendingPackage !== null && lastPreview?.status === "success");
+      importBtn.disabled = !(
+        consented &&
+        pendingPackage !== null &&
+        lastPreview?.status === "success"
+      );
       return;
     }
 
@@ -289,7 +314,7 @@ export function renderCompliance(
 
   async function refreshDeviceStatus(): Promise<void> {
     try {
-      const response = await client.auditEvents("compliance", 40);
+      const response = await client.auditEvents("compliance", 40, selectedPackId());
       const last = [...(response.events ?? [])]
         .reverse()
         .find((event) => event.step === "DEVICE_IMPORT" && event.status === "SUCCESS");
@@ -316,7 +341,7 @@ export function renderCompliance(
   }
 
   async function refreshPharmaStatus(): Promise<void> {
-    const response = await client.complianceStandards();
+    const response = await client.complianceStandards(selectedPackId());
     const active = response.standards?.find((row) => row.is_active === 1);
     if (!active) {
       activeTag.textContent = m.noStandard;
@@ -330,6 +355,7 @@ export function renderCompliance(
       <dl class="compliance-meta">
         <div><dt>${escapeHtml(m.metaVersion)}</dt><dd>${escapeHtml(active.standard_id)}</dd></div>
         <div><dt>${escapeHtml(m.metaPublisher)}</dt><dd>${escapeHtml(active.publisher)}</dd></div>
+        <div><dt>${escapeHtml(m.metaPublisherSignature)}</dt><dd><code>${escapeHtml(active.publisher_signature ? `${active.publisher_signature.slice(0, 24)}…` : "—")}</code></dd></div>
         <div><dt>${escapeHtml(m.metaRelease)}</dt><dd>${escapeHtml(active.release_date)}</dd></div>
         <div><dt>${escapeHtml(m.metaSource)}</dt><dd>${escapeHtml(active.source_label ?? "—")}</dd></div>
       </dl>
@@ -337,7 +363,7 @@ export function renderCompliance(
   }
 
   async function refreshReferenceStatus(): Promise<void> {
-    const status = await client.referenceStatus();
+    const status = await client.referenceStatus(selectedPackId());
     const last = status.last_sync;
     if (!last) {
       activeTag.textContent = m.noStandard;
@@ -461,6 +487,7 @@ export function renderCompliance(
             subscriptionMethod === "api"
               ? { url: pendingDeviceUrl, deviceHint: hint }
               : { package: pendingDevicePackage, deviceHint: hint },
+            selectedPackId(),
           );
           resultEl.textContent = JSON.stringify(lastDevicePreview, null, 2);
           syncActionEnabled();
@@ -472,22 +499,24 @@ export function renderCompliance(
         return;
       }
 
-      resultEl.textContent =
-        subscriptionType === "pharma-compliance" ? m.previewing : r.previewing;
+      resultEl.textContent = subscriptionType === "pharma-compliance" ? m.previewing : r.previewing;
       try {
         if (subscriptionType === "pharma-compliance") {
           const payload = await readPharmaFile();
           if (!payload) {
             return;
           }
-          lastPreview = await client.compliancePreview(payload.package);
+          lastPreview = await client.compliancePreview(payload.package, selectedPackId());
           resultEl.textContent = JSON.stringify(lastPreview, null, 2);
         } else if (subscriptionType === "nrdl-reference") {
           const payload = await readReferenceFile();
           if (!payload) {
             return;
           }
-          lastReferencePreview = await client.referencePreview({ package: payload.package });
+          lastReferencePreview = await client.referencePreview(
+            { package: payload.package },
+            selectedPackId(),
+          );
           resultEl.textContent = JSON.stringify(lastReferencePreview, null, 2);
         }
         syncActionEnabled();
@@ -514,12 +543,15 @@ export function renderCompliance(
       }
       resultEl.textContent = m.importing;
       try {
-        const result = await client.complianceImport({
-          consentGranted: true,
-          sessionId: createConsentSessionId(),
-          sourceLabel: pendingSourceLabel || undefined,
-          package: pendingPackage,
-        });
+        const result = await client.complianceImport(
+          {
+            consentGranted: true,
+            sessionId: createConsentSessionId(),
+            sourceLabel: pendingSourceLabel || undefined,
+            package: pendingPackage,
+          },
+          selectedPackId(),
+        );
         resultEl.textContent = JSON.stringify(result, null, 2);
         if (result.status === "success") {
           await refreshSubscriptionStatus();
@@ -543,12 +575,15 @@ export function renderCompliance(
       }
       resultEl.textContent = r.syncing;
       try {
-        const result = await client.referenceSync({
-          consentGranted: true,
-          sessionId: createConsentSessionId(),
-          sourceLabel: pendingReferenceSourceLabel || undefined,
-          package: pendingReferencePackage,
-        });
+        const result = await client.referenceSync(
+          {
+            consentGranted: true,
+            sessionId: createConsentSessionId(),
+            sourceLabel: pendingReferenceSourceLabel || undefined,
+            package: pendingReferencePackage,
+          },
+          selectedPackId(),
+        );
         resultEl.textContent = result.skipped_unchanged
           ? `${r.unchanged}\n${JSON.stringify(result, null, 2)}`
           : JSON.stringify(result, null, 2);
@@ -575,12 +610,15 @@ export function renderCompliance(
       }
       resultEl.textContent = r.syncing;
       try {
-        const result = await client.referenceSync({
-          consentGranted: true,
-          sessionId: createConsentSessionId(),
-          url,
-          saveSubscriptionUrl: true,
-        });
+        const result = await client.referenceSync(
+          {
+            consentGranted: true,
+            sessionId: createConsentSessionId(),
+            url,
+            saveSubscriptionUrl: true,
+          },
+          selectedPackId(),
+        );
         resultEl.textContent = result.skipped_unchanged
           ? `${r.unchanged}\n${JSON.stringify(result, null, 2)}`
           : JSON.stringify(result, null, 2);
@@ -607,16 +645,19 @@ export function renderCompliance(
       resultEl.textContent = d.importing;
       try {
         const hint = deviceHint();
-        const result = await client.deviceImport({
-          consentGranted: true,
-          sessionId: createConsentSessionId(),
-          sourceLabel: pendingDeviceSourceLabel || pendingDeviceUrl || undefined,
-          package: pendingDevicePackage ?? undefined,
-          url: pendingDeviceUrl || undefined,
-          deviceHint: hint,
-          sql_statements: lastDevicePreview.sql_statements,
-          sql_hash: lastDevicePreview.sql_hash ?? "",
-        });
+        const result = await client.deviceImport(
+          {
+            consentGranted: true,
+            sessionId: createConsentSessionId(),
+            sourceLabel: pendingDeviceSourceLabel || pendingDeviceUrl || undefined,
+            package: pendingDevicePackage ?? undefined,
+            url: pendingDeviceUrl || undefined,
+            deviceHint: hint,
+            sql_statements: lastDevicePreview.sql_statements,
+            sql_hash: lastDevicePreview.sql_hash ?? "",
+          },
+          selectedPackId(),
+        );
         resultEl.textContent = JSON.stringify(result, null, 2);
         if (result.status === "success") {
           resetPending();
@@ -648,10 +689,13 @@ export function renderCompliance(
       resultEl.textContent = subscriptionType === "pharma-compliance" ? m.importing : r.syncing;
       try {
         if (subscriptionType === "pharma-compliance") {
-          const result = await client.complianceImportBundled({
-            consentGranted: true,
-            sessionId: createConsentSessionId(),
-          });
+          const result = await client.complianceImportBundled(
+            {
+              consentGranted: true,
+              sessionId: createConsentSessionId(),
+            },
+            selectedPackId(),
+          );
           resultEl.textContent = JSON.stringify(result, null, 2);
           if (result.status === "success") {
             resetPending();
@@ -660,10 +704,13 @@ export function renderCompliance(
             handlers.onImported();
           }
         } else {
-          const result = await client.referenceSyncBundled({
-            consentGranted: true,
-            sessionId: createConsentSessionId(),
-          });
+          const result = await client.referenceSyncBundled(
+            {
+              consentGranted: true,
+              sessionId: createConsentSessionId(),
+            },
+            selectedPackId(),
+          );
           resultEl.textContent = result.skipped_unchanged
             ? `${r.unchanged}\n${JSON.stringify(result, null, 2)}`
             : JSON.stringify(result, null, 2);
@@ -686,6 +733,7 @@ export function renderCompliance(
 
   return {
     async refresh() {
+      await agentBar.refresh();
       await refreshSubscriptionStatus();
     },
   };

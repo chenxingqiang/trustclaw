@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { readAuditEvents } from "./read-events.js";
+import { missingChatPipelineSteps, readAuditEvents } from "./read-events.js";
 
 describe("readAuditEvents", () => {
   it("returns empty when audit file is missing", () => {
@@ -60,6 +60,52 @@ describe("readAuditEvents", () => {
     expect(events).toHaveLength(2);
     expect(events[0]?.step).toBe("DATA_CONSENT");
     expect(events[1]?.step).toBe("COMPLIANCE_IMPORT");
+
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("reports missing chat pipeline steps for a trail", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-audit-missing-"));
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      path.join(dir, "events.jsonl"),
+      [
+        JSON.stringify({
+          event_id: "evt_1",
+          audit_trail_id: "aud_partial",
+          step: "TEXT2SQL_GEN",
+          timestamp: 1,
+          component: "AgentRuntime.Text2SQL",
+          input: {},
+          output: {},
+          status: "SUCCESS",
+        }),
+        JSON.stringify({
+          event_id: "evt_2",
+          audit_trail_id: "aud_partial",
+          step: "DB_QUERY",
+          timestamp: 2,
+          component: "PTDS.Query",
+          input: {},
+          output: {},
+          status: "SUCCESS",
+        }),
+      ].join("\n"),
+      "utf8",
+    );
+
+    expect(missingChatPipelineSteps(dir, "aud_partial")).toEqual([
+      "RULE_EVAL",
+      "AGENT_DECISION",
+      "LEDGER_COMMIT",
+    ]);
+    expect(missingChatPipelineSteps(dir, "aud_missing")).toEqual([
+      "TEXT2SQL_GEN",
+      "DB_QUERY",
+      "RULE_EVAL",
+      "AGENT_DECISION",
+      "LEDGER_COMMIT",
+    ]);
 
     rmSync(dir, { recursive: true, force: true });
   });

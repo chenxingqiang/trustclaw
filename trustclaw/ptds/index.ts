@@ -10,7 +10,13 @@ export {
   openPtdsDatabase,
   seedNrdlGlp1RulesIfEmpty,
 } from "./db.js";
-export { recordComplianceImportAudit, recordDeviceImportAudit, recordPtdsConsentAudit, recordReferenceSyncAudit, type PtdsConsentDecision } from "./consent-audit.js";
+export {
+  recordComplianceImportAudit,
+  recordDeviceImportAudit,
+  recordPtdsConsentAudit,
+  recordReferenceSyncAudit,
+  type PtdsConsentDecision,
+} from "./consent-audit.js";
 export {
   getActiveComplianceStandard,
   importComplianceStandardPackage,
@@ -56,6 +62,16 @@ export type {
   ReferenceSyncStateRow,
 } from "./reference-types.js";
 export {
+  clearAgentDomainGrants,
+  getAgentDomainGrant,
+  hasAgentDomainGrant,
+  listAgentDomainGrants,
+  revokeAgentDomainGrant,
+  setAgentDomainGrant,
+} from "./agent-domain-grants.js";
+export { deriveAgentDomainScopes, type AgentDomainScope } from "./agent-domain-scopes.js";
+export { recordAgentDomainGrantAudit } from "./agent-domain-grant-audit.js";
+export {
   clearPtdsDataAccessGrants,
   grantPtdsDataAccess,
   hasPtdsDataAccessGrant,
@@ -90,6 +106,21 @@ export {
   queryPtds,
   readGlp1CheckSnapshot,
 } from "./query.js";
+export {
+  PTDS_BROWSER_DEFAULT_TABLES,
+  PTDS_TABLE_CATALOG,
+  classifyPtdsTable,
+  getTableCatalogEntry,
+  isSubscribedTable,
+  type PtdsSubscriptionType,
+  type PtdsTableKind,
+  type TableCatalogEntry,
+} from "./table-catalog.js";
+export {
+  buildTableLineage,
+  summarizeTableCatalog,
+  type TableLineageSnapshot,
+} from "./table-lineage.js";
 export type {
   Glp1CheckSnapshot,
   PtdsInitRequest,

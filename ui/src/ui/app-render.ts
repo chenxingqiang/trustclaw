@@ -153,6 +153,10 @@ import {
   updateSkillEdit,
   updateSkillEnabled,
 } from "./controllers/skills.ts";
+import {
+  ensureTrustclawPtdsAgentPackState,
+  saveTrustclawSessionAgentPack,
+} from "./controllers/trustclaw-ptds.ts";
 import { captureSessionToWorkboard, getWorkboardState } from "./controllers/workboard.ts";
 import { getCronJobPayload } from "./cron-payload.ts";
 import { buildExternalLinkRel, EXTERNAL_LINK_TARGET } from "./external-link.ts";
@@ -173,6 +177,7 @@ import {
 } from "./navigation.ts";
 import { isPluginEnabledInConfigSnapshot } from "./plugin-activation.ts";
 import { isCronSessionKey, resolveSessionDisplayName } from "./session-display.ts";
+import "./components/dashboard-header.ts";
 import {
   buildAgentMainSessionKey,
   isSessionKeyTiedToAgent,
@@ -181,11 +186,11 @@ import {
   parseAgentSessionKey,
   resolveAgentIdFromSessionKey,
 } from "./session-key.ts";
-import "./components/dashboard-header.ts";
 import type { SidebarContent } from "./sidebar-content.ts";
 import { loadLocalAssistantIdentity } from "./storage.ts";
 import { normalizeStringEntries } from "./string-coerce.ts";
 import { normalizeOptionalString } from "./string-coerce.ts";
+import { extractTrustclawEvidenceCitations } from "./trustclaw-ptds-bridge.ts";
 import type {
   ArtifactDownloadResult,
   GatewaySessionRow,
@@ -219,10 +224,6 @@ import { renderLoginGate } from "./views/login-gate.ts";
 import { renderMcp } from "./views/mcp.ts";
 import { renderOverview } from "./views/overview.ts";
 import { renderTrustclawPtdsWorkbench } from "./views/trustclaw-ptds-workbench.ts";
-import {
-  ensureTrustclawPtdsAgentPackState,
-  saveTrustclawSessionAgentPack,
-} from "./controllers/trustclaw-ptds.ts";
 
 let pendingUpdate: (() => void) | undefined;
 
@@ -2478,6 +2479,7 @@ export function renderApp(state: AppViewState) {
       streamSegments: state.chatStreamSegments,
       stream: state.chatStream,
       streamStartedAt: state.chatStreamStartedAt,
+      trustclawEvidenceCitations: extractTrustclawEvidenceCitations(state.trustclawRuntimeContext),
       draft: state.chatMessage,
       queue: state.chatQueue,
       realtimeTalkActive: state.realtimeTalkActive,

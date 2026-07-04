@@ -2,11 +2,11 @@ import type { OpenClawPluginToolContext } from "openclaw/plugin-sdk/core";
 import type { TrustclawPluginConfig } from "../../../trustclaw/ptds/config.js";
 import { resolveTrustclawPaths } from "../../../trustclaw/ptds/config.js";
 import { executePersonalWrite } from "../../../trustclaw/ptds/personal-write.js";
-import { TRUSTCLAW_PTDS_WRITE_TOOL } from "../../../trustclaw/runtime/constants.js";
 import {
   loadAgentPackPersonalWriteTemplate,
   resolveBoundAgentPack,
 } from "../../../trustclaw/runtime/agent-pack/index.js";
+import { TRUSTCLAW_PTDS_WRITE_TOOL } from "../../../trustclaw/runtime/constants.js";
 import type { Text2SqlLlmCaller } from "../../../trustclaw/runtime/pipeline/index.js";
 
 export type TrustclawPtdsWriteToolDeps = {
@@ -65,6 +65,7 @@ export function createTrustclawPtdsWriteToolFactory(
             message,
             consentGranted: true,
             sessionId,
+            agentPackId: agentPack.id,
           },
           {
             llm: deps.llm,

@@ -67,6 +67,7 @@ export type ReferencePreviewResult = {
 export type ReferenceSyncRequest = {
   consentGranted: boolean;
   sessionId: string;
+  agentPackId: string;
   sourceLabel?: string;
   package?: unknown;
   url?: string;

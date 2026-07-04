@@ -1,7 +1,14 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { PTDS_COMPLIANCE_STANDARDS_SQL, PTDS_REFERENCE_SYNC_SQL, PTDS_SCHEMA_V11_SQL, PTDS_SEED_NRDL_GLP1_SQL, resolvePtdsDbPath } from "./paths.js";
+import {
+  PTDS_COMPLIANCE_STANDARDS_SQL,
+  PTDS_PRESCRIPTION_CONTEXT_SQL,
+  PTDS_REFERENCE_SYNC_SQL,
+  PTDS_SCHEMA_V11_SQL,
+  PTDS_SEED_NRDL_GLP1_SQL,
+  resolvePtdsDbPath,
+} from "./paths.js";
 
 /** Canonical user_id for the local personal PTDS owner (V1 single-user space). */
 export const PTDS_LOCAL_USER_ID = "local_user";
@@ -48,10 +55,15 @@ export function applyReferenceSyncSchema(db: DatabaseSync): void {
   db.exec(schemaSql);
 }
 
+export function applyPrescriptionContextSchema(db: DatabaseSync): void {
+  const schemaSql = readFileSync(PTDS_PRESCRIPTION_CONTEXT_SQL, "utf8");
+  db.exec(schemaSql);
+}
+
 export function seedNrdlGlp1RulesIfEmpty(db: DatabaseSync): void {
-  const row = db
-    .prepare("SELECT COUNT(*) AS count FROM nrdl_drug_registry")
-    .get() as { count: number };
+  const row = db.prepare("SELECT COUNT(*) AS count FROM nrdl_drug_registry").get() as {
+    count: number;
+  };
   if (row.count > 0) {
     return;
   }
@@ -64,6 +76,7 @@ export function bootstrapPtdsDatabase(dbPath = resolvePtdsDbPath()): DatabaseSyn
   applyPtdsSchema(db);
   applyComplianceStandardsSchema(db);
   applyReferenceSyncSchema(db);
+  applyPrescriptionContextSchema(db);
   seedNrdlGlp1RulesIfEmpty(db);
   return db;
 }

@@ -1,6 +1,10 @@
 import type { DatabaseSync } from "node:sqlite";
 import { bootstrapPtdsDatabase, PTDS_LOCAL_USER_ID } from "./db.js";
 import { resolvePtdsDbPath, type PtdsPathOverrides } from "./paths.js";
+import {
+  resolvePrescriptionContextFromInit,
+  upsertPrescriptionContext,
+} from "./prescription-context.js";
 import { PTDS_INIT_DEFAULTS, type PtdsInitRequest, type PtdsInitResult } from "./types.js";
 
 function clearPtdsPersonalData(db: DatabaseSync): void {
@@ -8,6 +12,7 @@ function clearPtdsPersonalData(db: DatabaseSync): void {
   db.prepare("DELETE FROM medication_history").run();
   db.prepare("DELETE FROM lab_test_results").run();
   db.prepare("DELETE FROM body_anthropometrics").run();
+  db.prepare("DELETE FROM prescription_context WHERE user_id = ?").run(PTDS_LOCAL_USER_ID);
   db.prepare("DELETE FROM user_profile WHERE user_id = ?").run(PTDS_LOCAL_USER_ID);
 }
 
@@ -24,11 +29,7 @@ function insertDiagnosis(db: DatabaseSync, icd10Code: string, diagnosisName: str
   ).run(icd10Code, diagnosisName);
 }
 
-function insertIneffectiveMedication(
-  db: DatabaseSync,
-  drugName: string,
-  atcCode: string,
-): void {
+function insertIneffectiveMedication(db: DatabaseSync, drugName: string, atcCode: string): void {
   db.prepare(
     `INSERT INTO medication_history (
        drug_name, atc_code, start_date, end_date, termination_reason, source_id, provenance_level
@@ -101,6 +102,9 @@ export function applyPtdsInitRequest(db: DatabaseSync, request: PtdsInitRequest)
     insertIneffectiveMedication(db, drugName, atcCode);
     inserted += 1;
   }
+
+  upsertPrescriptionContext(db, resolvePrescriptionContextFromInit(request));
+  inserted += 1;
 
   return inserted;
 }

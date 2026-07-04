@@ -16,17 +16,106 @@ const children = [];
 const gatewayPort = resolveTrustclawGatewayPort();
 const uiPort = process.env.TRUSTCLAW_UI_PORT ?? TRUSTCLAW_DEFAULT_UI_PORT;
 
-function listenerPid(port) {
+function listenerPids(port) {
   try {
     const out = execSync(`lsof -nP -iTCP:${port} -sTCP:LISTEN -t`, {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     }).trim();
-    const pid = out.split("\n").find((line) => /^\d+$/.test(line.trim()));
-    return pid ? Number(pid) : null;
+    return out
+      .split("\n")
+      .map((line) => Number(line.trim()))
+      .filter((pid) => Number.isInteger(pid) && pid > 0);
   } catch {
-    return null;
+    return [];
   }
+}
+
+function listenerPid(port) {
+  return listenerPids(port)[0] ?? null;
+}
+
+function stopPortListeners(port) {
+  for (const pid of listenerPids(port)) {
+    try {
+      process.kill(pid, "SIGTERM");
+    } catch {
+      // ignore stale PID
+    }
+  }
+}
+
+async function waitForPortFree(port, timeoutMs = 5_000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    if (listenerPid(port) == null) {
+      return true;
+    }
+    await sleep(200);
+  }
+  return listenerPid(port) == null;
+}
+
+async function resolveDevPorts() {
+  const gatewayPid = listenerPid(gatewayPort);
+  const uiPid = listenerPid(uiPort);
+  const restartRequested =
+    process.env.TRUSTCLAW_DEV_RESTART === "1" || process.argv.includes("--restart");
+
+  if (gatewayPid == null && uiPid == null) {
+    return;
+  }
+
+  if (restartRequested) {
+    console.log("[trustclaw:dev] Restart requested — stopping existing listeners…");
+    if (gatewayPid != null) {
+      stopPortListeners(gatewayPort);
+    }
+    if (uiPid != null) {
+      stopPortListeners(uiPort);
+    }
+    const gatewayFree = gatewayPid == null || (await waitForPortFree(gatewayPort));
+    const uiFree = uiPid == null || (await waitForPortFree(uiPort));
+    if (!gatewayFree || !uiFree) {
+      console.error(
+        `[trustclaw:dev] Could not free dev ports after SIGTERM. Try: kill ${gatewayPid ?? uiPid}`,
+      );
+      process.exit(1);
+    }
+    return;
+  }
+
+  if (gatewayPid != null && uiPid != null) {
+    console.log("[trustclaw:dev] Dev stack already running — reusing existing session:\n");
+    console.log(`  TrustClaw UI: http://127.0.0.1:${uiPort}/trustclaw/`);
+    console.log(`  Gateway:      http://127.0.0.1:${gatewayPort}/`);
+    console.log(`  PIDs: gateway ${gatewayPid}, UI ${uiPid}`);
+    console.log(
+      `\nTo restart: TRUSTCLAW_DEV_RESTART=1 pnpm trustclaw:dev\n` +
+        `Or another UI port: TRUSTCLAW_UI_PORT=5175 pnpm trustclaw:dev\n`,
+    );
+    process.exit(0);
+  }
+
+  const conflicts = [];
+  if (gatewayPid != null) {
+    conflicts.push({ label: "Gateway", port: gatewayPort, pid: gatewayPid });
+  }
+  if (uiPid != null) {
+    conflicts.push({ label: "TrustClaw UI (Vite)", port: uiPort, pid: uiPid });
+  }
+
+  console.error(
+    "[trustclaw:dev] Dev ports partially in use — stop the old session or restart cleanly:\n",
+  );
+  for (const { label, port, pid } of conflicts) {
+    console.error(`  ${label}: :${port} (PID ${pid})`);
+  }
+  console.error(
+    `\nRestart everything: TRUSTCLAW_DEV_RESTART=1 pnpm trustclaw:dev\n` +
+      `Or use another UI port: TRUSTCLAW_UI_PORT=5175 pnpm trustclaw:dev\n`,
+  );
+  process.exit(1);
 }
 
 function sleep(ms) {
@@ -47,35 +136,8 @@ async function waitForGatewayListen(port, timeoutMs = 120_000) {
   );
 }
 
-function assertDevPortsFree() {
-  const conflicts = [];
-  for (const [label, port] of [
-    ["Gateway", gatewayPort],
-    ["TrustClaw UI (Vite)", uiPort],
-  ]) {
-    const pid = listenerPid(port);
-    if (pid != null) {
-      conflicts.push({ label, port, pid });
-    }
-  }
-  if (conflicts.length === 0) {
-    return;
-  }
-
-  console.error(
-    "[trustclaw:dev] Dev ports already in use — another dev session may still be running:\n",
-  );
-  for (const { label, port, pid } of conflicts) {
-    console.error(`  ${label}: :${port} (PID ${pid})`);
-  }
-  console.error(
-    `\nIf that session is yours, open:\n` +
-      `  http://127.0.0.1:${uiPort}/trustclaw/\n` +
-      `  http://127.0.0.1:${gatewayPort}/\n` +
-      `\nTo restart, stop the old process first (example: kill ${conflicts[0]?.pid}).\n` +
-      `Or use another UI port: TRUSTCLAW_UI_PORT=5175 pnpm trustclaw:dev\n`,
-  );
-  process.exit(1);
+async function assertDevPortsReady() {
+  await resolveDevPorts();
 }
 
 function ensureControlUiPublicAssets() {
@@ -86,7 +148,9 @@ function ensureControlUiPublicAssets() {
     return;
   }
   if (!existsSync(publicUiDir)) {
-    console.warn("[trustclaw:dev] ui/public missing; chat logos may not load until `pnpm ui:build`.");
+    console.warn(
+      "[trustclaw:dev] ui/public missing; chat logos may not load until `pnpm ui:build`.",
+    );
     return;
   }
   mkdirSync(distUiDir, { recursive: true });
@@ -143,7 +207,7 @@ if ((setup.status ?? 1) !== 0) {
 
 ensureControlUiPublicAssets();
 
-assertDevPortsFree();
+await assertDevPortsReady();
 
 console.log("[trustclaw:dev] Starting Gateway (channels skipped)…");
 console.log(`[trustclaw:dev] Waiting for gateway :${gatewayPort} before TrustClaw UI (Vite)…`);

@@ -1,6 +1,10 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
 import { readFileSync } from "node:fs";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
+import {
+  resolveTrustclawPaths,
+  type TrustclawPluginConfig,
+} from "../../../trustclaw/ptds/config.js";
 import {
   bootstrapPtdsDatabase,
   importComplianceStandardPackage,
@@ -8,7 +12,7 @@ import {
   loadComplianceAstRules,
   previewComplianceStandardPackage,
 } from "../../../trustclaw/ptds/index.js";
-import { resolveTrustclawPaths, type TrustclawPluginConfig } from "../../../trustclaw/ptds/config.js";
+import { requireAgentDomainGrant } from "./agent-grant-guard.js";
 import { methodIs, readJsonBody, sendJson } from "./http-utils.js";
 
 const importRequestSchema = z
@@ -36,6 +40,11 @@ export function createCompliancePreviewHandler(pluginConfig: TrustclawPluginConf
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
       return true;
     }
+    const guard = requireAgentDomainGrant(req, "panel.compliance", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
+      return true;
+    }
     const parsed = await readJsonBody(req);
     if (!parsed.ok) {
       sendJson(res, 400, { status: "error", message: parsed.message });
@@ -58,6 +67,11 @@ export function createComplianceImportHandler(pluginConfig: TrustclawPluginConfi
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
       return true;
     }
+    const guard = requireAgentDomainGrant(req, "panel.compliance", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
+      return true;
+    }
     const parsed = await readJsonBody(req);
     if (!parsed.ok) {
       sendJson(res, 400, { status: "error", message: parsed.message });
@@ -73,6 +87,7 @@ export function createComplianceImportHandler(pluginConfig: TrustclawPluginConfi
       {
         consentGranted: body.data.consentGranted,
         sessionId: body.data.sessionId,
+        agentPackId: guard.pack.id,
         sourceLabel: body.data.sourceLabel,
         package: body.data.package as never,
       },
@@ -87,6 +102,11 @@ export function createComplianceStandardsHandler(pluginConfig: TrustclawPluginCo
   return async (req: IncomingMessage, res: ServerResponse): Promise<boolean> => {
     if (!methodIs(req, "GET")) {
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
+      return true;
+    }
+    const guard = requireAgentDomainGrant(req, "panel.compliance", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
       return true;
     }
     const paths = pathOverrides(pluginConfig);
@@ -107,6 +127,11 @@ export function createComplianceRulesHandler(pluginConfig: TrustclawPluginConfig
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
       return true;
     }
+    const guard = requireAgentDomainGrant(req, "panel.compliance", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
+      return true;
+    }
     const url = new URL(req.url ?? "/", "http://localhost");
     const standardId = url.searchParams.get("standard_id")?.trim() ?? "";
     const drugId = url.searchParams.get("drug_id")?.trim() || undefined;
@@ -118,7 +143,12 @@ export function createComplianceRulesHandler(pluginConfig: TrustclawPluginConfig
     const db = bootstrapPtdsDatabase(paths.dbPath);
     try {
       const rules = loadComplianceAstRules(db, standardId, drugId);
-      sendJson(res, 200, { status: "success", standard_id: standardId, drug_id: drugId ?? null, rules });
+      sendJson(res, 200, {
+        status: "success",
+        standard_id: standardId,
+        drug_id: drugId ?? null,
+        rules,
+      });
     } finally {
       db.close();
     }
@@ -134,6 +164,11 @@ export function createComplianceImportBundledHandler(
   return async (req: IncomingMessage, res: ServerResponse): Promise<boolean> => {
     if (!methodIs(req, "POST")) {
       sendJson(res, 405, { status: "error", message: "Method not allowed." });
+      return true;
+    }
+    const guard = requireAgentDomainGrant(req, "panel.compliance", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
       return true;
     }
     const parsed = await readJsonBody(req);
@@ -165,6 +200,7 @@ export function createComplianceImportBundledHandler(
       {
         consentGranted: body.data.consentGranted,
         sessionId: body.data.sessionId,
+        agentPackId: guard.pack.id,
         sourceLabel: "glp1-nrdl-ast-handshake-v2.json",
         package: pkg as never,
       },
