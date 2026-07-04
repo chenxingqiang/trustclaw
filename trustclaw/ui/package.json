@@ -1,0 +1,16 @@
+{
+  "name": "trustclaw-demo-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "devDependencies": {
+    "jsdom": "29.1.1",
+    "vite": "8.0.16",
+    "vitest": "4.1.8"
+  }
+}

@@ -13,7 +13,17 @@ V1 demo scope: **GLP-1 assessment agent** on a frozen PTDS architecture (init �
 
 **TrustClaw docs**
 
-[Vision](../VISION.md) · [Product plan](PLAN.md) · [Decisions (审核)](DECISIONS.md) · [OpenClaw reuse](OPENCLAW_REUSE.md) · [Product spec](PRODUCT_SPEC.md) · [5-day roadmap](ROADMAP.md) · [Agent loop guide](AGENTS.md) · [Spec source](docs/SPEC-V1-source.md)
+[Getting started](trustclaw/GETTING_STARTED.md) · [Vision](VISION.md) · [Product plan](trustclaw/PLAN.md) · [Decisions (审核)](trustclaw/DECISIONS.md) · [OpenClaw reuse](trustclaw/OPENCLAW_REUSE.md) · [Product spec](trustclaw/PRODUCT_SPEC.md) · [5-day roadmap](trustclaw/ROADMAP.md) · [Agent loop guide](trustclaw/AGENTS.md) · [Spec source](trustclaw/docs/SPEC-V1-source.md)
+
+## TrustClaw quick start
+
+```bash
+pnpm install
+pnpm trustclaw:setup
+pnpm trustclaw:dev
+```
+
+Open **PTDS Runtime 控制台** at `http://127.0.0.1:5174/trustclaw/` (dev) or Control UI → **PTDS Console** at `http://127.0.0.1:18789/`. Requires `OPENAI_API_KEY` for Text2SQL chat.
 
 **Demo APIs (frozen V1)**
 

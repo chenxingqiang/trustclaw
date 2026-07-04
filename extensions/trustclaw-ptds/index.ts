@@ -2,6 +2,7 @@ import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 import type { TrustclawPluginConfig } from "../../trustclaw/ptds/config.js";
 import { createOpenAiText2SqlLlm } from "../../trustclaw/runtime/text2sql/openai-llm.js";
 import { createAgentChatHandler } from "./src/agent-routes.js";
+import { createTrustclawUiHandler } from "./src/ui-routes.js";
 import {
   createPtdsBrowseHandler,
   createPtdsInitHandler,
@@ -67,8 +68,15 @@ export default definePluginEntry({
       match: "exact",
       handler: createAgentChatHandler(cfg, { llm: text2sqlLlm }),
     });
+    const uiHandler = createTrustclawUiHandler();
+    api.registerHttpRoute({
+      path: "/trustclaw",
+      auth: "plugin",
+      match: "prefix",
+      handler: uiHandler,
+    });
     api.logger.info?.(
-      "[trustclaw-ptds] registered PTDS HTTP routes under /api/ptds/* and POST /api/agent/chat",
+      "[trustclaw-ptds] registered PTDS HTTP routes under /api/ptds/*, POST /api/agent/chat, and /trustclaw/* UI",
     );
   },
 });

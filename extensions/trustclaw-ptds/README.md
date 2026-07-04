@@ -14,16 +14,28 @@ Enable in `openclaw.json`:
 }
 ```
 
+Or run `pnpm trustclaw:setup`.
+
+## Dev / demo
+
+```bash
+pnpm trustclaw:dev          # gateway + Vite UI
+pnpm trustclaw:ui:build     # static assets → served at /trustclaw/
+```
+
+Control UI (TrustClaw-first fork) opens **PTDS Console** tab by default; standalone console also at `/trustclaw/`.
+
 Start Gateway:
 
 ```bash
 pnpm openclaw gateway run
 ```
 
-## HTTP routes (Task 102)
+## HTTP routes (Task 102+)
 
 | Method | Path | Purpose |
 | --- | --- | --- |
+| GET | `/trustclaw/*` | TrustClaw PTDS Runtime Console (built SPA) |
 | POST | `/api/ptds/init` | Initialize local PTDS personal data (v1.1 schema mapping) |
 | POST | `/api/ptds/reset` | Clear personal PTDS rows |
 | GET | `/api/ptds/status` | Mounted status + GLP-1 snapshot |

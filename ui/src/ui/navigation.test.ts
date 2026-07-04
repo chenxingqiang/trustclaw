@@ -181,8 +181,9 @@ describe("tabFromPath", () => {
     expect(tabFromPath("/dreams")).toBe("dreams");
   });
 
-  it("returns chat for root path", () => {
-    expect(tabFromPath("/")).toBe("chat");
+  it("returns ptds for root path (TrustClaw-first default)", () => {
+    expect(tabFromPath("/")).toBe("ptds");
+    expect(tabFromPath("/ptds")).toBe("ptds");
   });
 
   it("handles base paths", () => {

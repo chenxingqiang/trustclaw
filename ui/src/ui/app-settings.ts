@@ -641,7 +641,7 @@ export function syncTabWithLocation(host: SettingsHost, replace: boolean) {
   if (typeof window === "undefined") {
     return;
   }
-  const resolved = tabFromPath(window.location.pathname, host.basePath) ?? "chat";
+  const resolved = tabFromPath(window.location.pathname, host.basePath) ?? "ptds";
   setTabFromRoute(host, resolved);
   syncUrlWithTab(host, resolved, replace);
 }

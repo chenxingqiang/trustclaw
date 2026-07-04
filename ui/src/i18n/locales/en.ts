@@ -390,6 +390,7 @@ export const en: TranslationMap = {
     builtIn: "Built-in",
   },
   nav: {
+    trustclaw: "TrustClaw",
     chat: "Chat",
     control: "Control",
     agent: "Agent",
@@ -399,6 +400,7 @@ export const en: TranslationMap = {
     resize: "Resize sidebar",
   },
   tabs: {
+    ptds: "PTDS Console",
     agents: "Agents",
     activity: "Activity",
     overview: "Overview",
@@ -424,6 +426,7 @@ export const en: TranslationMap = {
     dreams: "Dreaming",
   },
   subtitles: {
+    ptds: "Personal trusted data space — init, chat, audit, and evidence.",
     agents: "Workspaces, tools, identities.",
     activity: "Browser-local tool activity summaries.",
     overview: "Status, entry points, health.",

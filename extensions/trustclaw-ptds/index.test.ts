@@ -53,8 +53,11 @@ describe("trustclaw-ptds plugin", () => {
       "/api/ptds/tables",
       "/api/ptds/browse",
       "/api/agent/chat",
+      "/trustclaw",
     ]);
-    expect(routes.every((route) => route.auth === "plugin" && route.match === "exact")).toBe(true);
+    expect(routes.every((route) => route.auth === "plugin")).toBe(true);
+    expect(routes.filter((route) => route.match === "exact").length).toBe(6);
+    expect(routes.find((route) => route.path === "/trustclaw")?.match).toBe("prefix");
   });
 
   it("handles POST /api/ptds/init with frozen contract shape", async () => {

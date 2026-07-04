@@ -1316,6 +1316,28 @@
   margin-top: 0;
 }
 
+.content--ptds {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.trustclaw-console {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.trustclaw-console__frame {
+  border: 0;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  background: var(--bg);
+}
+
 .content--workboard {
   display: flex;
   flex-direction: column;

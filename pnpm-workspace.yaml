@@ -1,6 +1,7 @@
 packages:
   - .
   - ui
+  - trustclaw/ui
   - packages/*
   - extensions/*
 

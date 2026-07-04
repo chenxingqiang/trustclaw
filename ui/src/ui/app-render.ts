@@ -213,6 +213,7 @@ import {
 } from "./views/cron-quick-create.ts";
 import { renderDreamingRestartConfirmation } from "./views/dreaming-restart-confirmation.ts";
 import { renderDreaming } from "./views/dreaming.ts";
+import { renderTrustclawConsole } from "./views/trustclaw-console.ts";
 import { renderExecApprovalPrompt } from "./views/exec-approval.ts";
 import { renderGatewayUrlConfirmation } from "./views/gateway-url-confirmation.ts";
 import { renderLoginGate } from "./views/login-gate.ts";
@@ -1397,6 +1398,7 @@ export function renderApp(state: AppViewState) {
   const cronNext = state.cronStatus?.nextWakeAtMs ?? null;
   const chatDisabledReason = state.connected ? null : t("chat.disconnected");
   const isChat = state.tab === "chat";
+  const isPtds = state.tab === "ptds";
   const headerError = !isChat && state.lastError !== state.chatError ? state.lastError : null;
   const chatViewError = state.lastError;
   const chatHeaderHidden = isChat && (state.onboarding || state.chatHeaderControlsHidden);
@@ -2649,7 +2651,7 @@ export function renderApp(state: AppViewState) {
         </aside>
       </div>
       <main
-        class="content ${isChat ? "content--chat" : ""} ${state.tab === "logs"
+        class="content ${isChat ? "content--chat" : ""} ${isPtds ? "content--ptds" : ""} ${state.tab === "logs"
           ? "content--logs"
           : ""} ${state.tab === "workboard" ? "content--workboard" : ""} ${state.tab ===
         "skillWorkshop"
@@ -3742,6 +3744,9 @@ export function renderApp(state: AppViewState) {
                 },
               }),
             )
+          : nothing}
+        ${state.tab === "ptds"
+          ? renderTrustclawConsole({ basePath: state.basePath })
           : nothing}
         ${state.tab === "chat"
           ? renderMeasured(

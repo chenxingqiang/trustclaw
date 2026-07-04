@@ -1948,6 +1948,13 @@
     "ui:i18n:report": "node --import tsx scripts/control-ui-i18n-report.ts",
     "ui:i18n:sync": "node --import tsx scripts/control-ui-i18n.ts sync --write",
     "ui:install": "node scripts/ui.js install",
+    "trustclaw:setup": "node scripts/trustclaw-setup.mjs",
+    "trustclaw:ui:install": "node scripts/trustclaw-ui.js install",
+    "trustclaw:ui:dev": "node scripts/trustclaw-ui.js dev",
+    "trustclaw:ui:build": "node scripts/trustclaw-ui.js build",
+    "trustclaw:ui:test": "node scripts/trustclaw-ui.js test",
+    "trustclaw:dev": "node scripts/trustclaw-dev.mjs",
+    "trustclaw:build": "pnpm trustclaw:ui:build",
     "verify": "node scripts/verify.mjs"
   },
   "dependencies": {

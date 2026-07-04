@@ -1,0 +1,111 @@
+/* TrustClaw demo SPA theme tokens — copied verbatim from
+ * `ui/src/styles/base.css` (Control UI, root `ui/` package) as of 2026-07-04.
+ * Keep visual language aligned with OpenClaw Control UI without importing
+ * across workspace packages (that would trip the plugin-boundary rule in
+ * root AGENTS.md). When Control UI shifts tokens, resync this file.
+ */
+
+:root {
+  /* Background */
+  --bg: #0e1015;
+  --bg-accent: #13151b;
+  --bg-elevated: #191c24;
+  --bg-hover: #1f2330;
+  --bg-muted: #1f2330;
+
+  /* Card / Surface */
+  --card: #161920;
+  --card-foreground: #f0f0f2;
+  --card-highlight: rgba(255, 255, 255, 0.04);
+  --popover: #191c24;
+
+  /* Panel */
+  --panel: #0e1015;
+  --panel-strong: #191c24;
+  --panel-hover: #1f2330;
+  --chrome: rgba(14, 16, 21, 0.96);
+
+  /* Text */
+  --text: #d4d4d8;
+  --text-strong: #f4f4f5;
+  --muted: #8b8b94;
+  --muted-strong: #898990;
+
+  /* Border */
+  --border: #1e2028;
+  --border-strong: #2e3040;
+  --border-hover: #3e4050;
+  --input: #1e2028;
+  --ring: #ff5c5c;
+
+  /* Accent - Signature OpenClaw red */
+  --accent: #ff5c5c;
+  --accent-hover: #ff7070;
+  --accent-subtle: rgba(255, 92, 92, 0.1);
+  --accent-foreground: #fafafa;
+  --accent-glow: rgba(255, 92, 92, 0.2);
+  --primary: #ff5c5c;
+  --primary-foreground: #ffffff;
+  --accent-2: #14b8a6;
+  --accent-2-subtle: rgba(20, 184, 166, 0.1);
+
+  /* Semantic */
+  --ok: #22c55e;
+  --ok-subtle: rgba(34, 197, 94, 0.08);
+  --warn: #f59e0b;
+  --warn-subtle: rgba(245, 158, 11, 0.08);
+  --danger: #ef4444;
+  --danger-subtle: rgba(239, 68, 68, 0.08);
+  --info: #3b82f6;
+
+  /* Focus */
+  --focus: rgba(255, 92, 92, 0.2);
+
+  /* Typography */
+  --mono:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 14px;
+  --text-lg: 16px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius: 10px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 100ms;
+  --duration-normal: 180ms;
+}
+
+/* Light theme — matches Control UI's `theme-claw-light` class so a shared
+ * theme switcher (future D5 merge) will Just Work. */
+html.theme-light,
+html.theme-claw-light {
+  --bg: #fafafa;
+  --bg-accent: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-hover: #f0f0f2;
+  --bg-muted: #f0f0f2;
+  --card: #ffffff;
+  --card-foreground: #0e1015;
+  --popover: #ffffff;
+  --panel: #fafafa;
+  --panel-strong: #ffffff;
+  --panel-hover: #f0f0f2;
+  --text: #0e1015;
+  --text-strong: #000000;
+  --muted: #6b6b74;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --input: #e4e4e7;
+}
