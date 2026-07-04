@@ -2,6 +2,14 @@
   "id": "trustclaw-ptds",
   "name": "TrustClaw PTDS",
   "description": "TrustClaw Personal Trusted Data Space HTTP APIs and runtime integration.",
+  "contracts": {
+    "tools": ["trustclaw_ptds_query"]
+  },
+  "toolMetadata": {
+    "trustclaw_ptds_query": {
+      "optional": true
+    }
+  },
   "activation": {
     "onStartup": false,
     "onConfigPaths": ["plugins.entries.trustclaw-ptds"]

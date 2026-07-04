@@ -18,6 +18,7 @@ export default function trustclawUiViteConfig(): UserConfig {
       sourcemap: true,
     },
     server: {
+      host: "127.0.0.1",
       port: Number(process.env.TRUSTCLAW_UI_PORT ?? "5174"),
       strictPort: true,
       proxy: {
