@@ -3,6 +3,10 @@
 import type { PtdsTableCatalogRow, TrustclawApiClient } from "../api.js";
 import { msg } from "../i18n/index.js";
 import { formatProvenanceCell, renderBrowserLineage } from "./browser-lineage.js";
+import {
+  renderBrowserSubscriptions,
+  renderBrowserSubscriptionsHint,
+} from "./browser-subscriptions.js";
 import { filterTablesByCategory } from "./browser-table-filter.js";
 import type { BrowserCategory } from "./browser-table-filter.js";
 import { mountPanelAgentBar } from "./panel-agent-bar.js";
@@ -27,6 +31,7 @@ export function renderBrowser(
           ${escapeHtml(m.mountNote)}
           <span class="tag tag--muted" data-testid="browser-mounted">${escapeHtml(m.unknown)}</span>
         </p>
+        <div data-testid="browser-subscriptions-wrap"></div>
         <div class="controls browser-controls">
           <label class="browser-controls__field">
             ${escapeHtml(m.categoryLabel)}
@@ -52,6 +57,9 @@ export function renderBrowser(
   const select = root.querySelector<HTMLSelectElement>('[data-testid="browser-table"]')!;
   const container = root.querySelector<HTMLElement>('[data-testid="browser-table-container"]')!;
   const lineageWrap = root.querySelector<HTMLElement>('[data-testid="browser-lineage-wrap"]')!;
+  const subscriptionsWrap = root.querySelector<HTMLElement>(
+    '[data-testid="browser-subscriptions-wrap"]',
+  )!;
   const reloadBtn = root.querySelector<HTMLButtonElement>('[data-action="reload"]')!;
   const mountedEl = root.querySelector<HTMLElement>('[data-testid="browser-mounted"]')!;
   const panelBody = root.querySelector<HTMLElement>(".panel__body")!;
@@ -107,10 +115,51 @@ export function renderBrowser(
     }
   }
 
+  async function loadSubscriptions(): Promise<void> {
+    if (!agentBar.hasScope("panel.browse")) {
+      renderBrowserSubscriptionsHint(subscriptionsWrap, msg().panels.agentBar.notGrantedHint);
+      return;
+    }
+    try {
+      const snapshot = await client.browseSubscriptions(agentBar.getSelectedPackId());
+      if (snapshot.status !== "success") {
+        renderBrowserSubscriptionsHint(
+          subscriptionsWrap,
+          snapshot.message ?? m.subscriptionsLoadError,
+        );
+        return;
+      }
+      renderBrowserSubscriptions(subscriptionsWrap, snapshot, jumpToTable);
+    } catch (error) {
+      renderBrowserSubscriptionsHint(
+        subscriptionsWrap,
+        `${m.subscriptionsLoadError}: ${(error as Error).message}`,
+      );
+    }
+  }
+
+  function jumpToTable(table: string): void {
+    const row = catalog.find((entry) => entry.table === table);
+    const category: BrowserCategory =
+      row?.kind === "subscribed"
+        ? "subscribed"
+        : row?.kind === "personal" || row?.kind === "view"
+          ? "personal"
+          : "all";
+    categorySelect.value = category;
+    const filtered = filterTablesByCategory(allTables, catalog, category);
+    populateTableSelect(filtered.length > 0 ? filtered : allTables);
+    if (allTables.includes(table)) {
+      select.value = table;
+    }
+    void loadRows();
+  }
+
   async function loadTables(): Promise<void> {
     if (!agentBar.hasScope("panel.browse")) {
       container.textContent = msg().panels.agentBar.notGrantedHint;
       lineageWrap.innerHTML = "";
+      renderBrowserSubscriptionsHint(subscriptionsWrap, msg().panels.agentBar.notGrantedHint);
       return;
     }
     try {
@@ -183,16 +232,19 @@ export function renderBrowser(
   root
     .querySelector<HTMLSelectElement>('[data-testid="panel-agent-select"]')
     ?.addEventListener("change", () => {
-      void loadTables().then(() => loadRows());
+      void loadSubscriptions().then(() => loadTables().then(() => loadRows()));
     });
 
-  void agentBar.refresh().then(() => loadTables().then(() => loadRows()));
+  void agentBar
+    .refresh()
+    .then(() => loadSubscriptions().then(() => loadTables().then(() => loadRows())));
   void refreshMounted();
 
   return {
     async refresh() {
       await refreshMounted();
       await agentBar.refresh();
+      await loadSubscriptions();
       await loadTables();
       await loadRows();
     },

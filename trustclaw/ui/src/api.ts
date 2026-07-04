@@ -140,6 +140,32 @@ export interface PtdsTablesResponse {
   subscribed_tables?: string[];
 }
 
+export interface PtdsBrowseSubscriptionsResponse {
+  status: "success" | "error";
+  agent_pack_id?: string;
+  pharma: {
+    active: boolean;
+    standard_id?: string;
+    publisher?: string;
+    ruleset_hash?: string;
+  };
+  nrdl: {
+    synced: boolean;
+    version_id?: string;
+    package_hash?: string;
+    drug_count: number;
+    rule_count: number;
+  };
+  quick_tables?: Array<{
+    table: string;
+    kind: string;
+    subscription_type?: PtdsTableLineage["subscription_type"];
+    label_en: string;
+    label_zh: string;
+  }>;
+  message?: string;
+}
+
 export interface PtdsBrowseResponse {
   status: "success" | "error";
   table: string;
@@ -532,6 +558,7 @@ export interface TrustclawApiClient {
   reset(): Promise<PtdsResetResponse>;
   status(): Promise<PtdsStatusResponse>;
   tables(agentPackId?: string): Promise<PtdsTablesResponse>;
+  browseSubscriptions(agentPackId?: string): Promise<PtdsBrowseSubscriptionsResponse>;
   browse(table: string, limit?: number, agentPackId?: string): Promise<PtdsBrowseResponse>;
   agentGrants(): Promise<AgentGrantsResponse>;
   putAgentGrant(body: PutAgentGrantRequest): Promise<PutAgentGrantResponse>;
@@ -603,6 +630,13 @@ export function createApiClient(
     },
     tables(agentPackId) {
       return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/tables", agentPackId));
+    },
+    browseSubscriptions(agentPackId) {
+      return callJson(
+        fetchImpl,
+        baseUrl,
+        scopedPath("/api/ptds/browse/subscriptions", agentPackId),
+      );
     },
     browse(table, limit, agentPackId) {
       return callJson(fetchImpl, baseUrl, buildBrowseUrl("http://x", table, limit, agentPackId));

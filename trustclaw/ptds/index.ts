@@ -121,6 +121,11 @@ export {
   summarizeTableCatalog,
   type TableLineageSnapshot,
 } from "./table-lineage.js";
+export {
+  getBrowseSubscriptionSnapshot,
+  type BrowseSubscriptionQuickTable,
+  type BrowseSubscriptionSnapshot,
+} from "./browse-subscriptions.js";
 export type {
   Glp1CheckSnapshot,
   PtdsInitRequest,

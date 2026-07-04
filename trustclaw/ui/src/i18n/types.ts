@@ -142,6 +142,19 @@ export type TrustclawMessages = {
       lineageLiveReference: string;
       lineageLiveSources: string;
       lineageProvenanceFields: string;
+      lineageFlowTitle: string;
+      subscriptionsTitle: string;
+      subscriptionsPharma: string;
+      subscriptionsNrdl: string;
+      subscriptionsActive: string;
+      subscriptionsInactive: string;
+      subscriptionsSynced: string;
+      subscriptionsNotSynced: string;
+      subscriptionsPharmaHint: string;
+      subscriptionsNrdlHint: string;
+      subscriptionsDrugCount: string;
+      subscriptionsRuleCount: string;
+      subscriptionsQuickJump: string;
       provenanceLevel: string;
       mounted: string;
       notMounted: string;
@@ -152,6 +165,7 @@ export type TrustclawMessages = {
       noData: string;
       listError: string;
       loadError: string;
+      subscriptionsLoadError: string;
     };
     chat: {
       title: string;

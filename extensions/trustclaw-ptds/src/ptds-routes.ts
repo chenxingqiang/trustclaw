@@ -18,6 +18,7 @@ import {
   readGlp1CheckSnapshot,
   resetPtds,
   buildTableLineage,
+  getBrowseSubscriptionSnapshot,
   summarizeTableCatalog,
 } from "../../../trustclaw/ptds/index.js";
 import { requireAgentDomainGrant } from "./agent-grant-guard.js";
@@ -172,6 +173,33 @@ export function createPtdsTablesHandler(pluginConfig: TrustclawPluginConfig | un
         .filter((row) => row.kind === "personal" || row.kind === "view")
         .map((r) => r.table),
       subscribed_tables: catalog.filter((row) => row.kind === "subscribed").map((r) => r.table),
+    });
+    return true;
+  };
+}
+
+export function createPtdsBrowseSubscriptionsHandler(
+  pluginConfig: TrustclawPluginConfig | undefined,
+) {
+  return async (req: IncomingMessage, res: ServerResponse): Promise<boolean> => {
+    if (!methodIs(req, "GET")) {
+      sendJson(res, 405, { status: "error", message: "Method not allowed." });
+      return true;
+    }
+    const guard = requireAgentDomainGrant(req, "panel.browse", pluginConfig);
+    if (!guard.ok) {
+      sendJson(res, guard.status, { status: "error", message: guard.message });
+      return true;
+    }
+    const snapshot = getBrowseSubscriptionSnapshot({ dbPath: guard.paths.dbPath });
+    const packTables = new Set(resolveAgentBrowseTables(guard.pack));
+    const quickTables = snapshot.quick_tables.filter((row) => packTables.has(row.table));
+    sendJson(res, 200, {
+      status: "success",
+      agent_pack_id: guard.pack.id,
+      pharma: snapshot.pharma,
+      nrdl: snapshot.nrdl,
+      quick_tables: quickTables,
     });
     return true;
   };

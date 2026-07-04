@@ -1,4 +1,5 @@
-import { openPtdsDatabase, resolvePtdsDbPath, type PtdsPathOverrides } from "./db.js";
+import { openPtdsDatabase } from "./db.js";
+import { resolvePtdsDbPath, type PtdsPathOverrides } from "./paths.js";
 import {
   classifyPtdsTable,
   getTableCatalogEntry,

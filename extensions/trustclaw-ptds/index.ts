@@ -27,6 +27,7 @@ import { createPtdsLedgerHandler } from "./src/ledger-routes.js";
 import { createTrustclawPtdsQueryToolFactory } from "./src/ptds-query-tool.js";
 import {
   createPtdsBrowseHandler,
+  createPtdsBrowseSubscriptionsHandler,
   createPtdsInitHandler,
   createPtdsProfileSummaryHandler,
   createPtdsResetHandler,
@@ -179,6 +180,12 @@ export default definePluginEntry({
       auth: "plugin",
       match: "exact",
       handler: createPtdsTablesHandler(cfg),
+    });
+    api.registerHttpRoute({
+      path: "/api/ptds/browse/subscriptions",
+      auth: "plugin",
+      match: "exact",
+      handler: createPtdsBrowseSubscriptionsHandler(cfg),
     });
     api.registerHttpRoute({
       path: "/api/ptds/browse",

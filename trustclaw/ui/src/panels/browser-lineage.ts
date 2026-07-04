@@ -1,5 +1,6 @@
 import type { PtdsTableLineage, PtdsTableCatalogRow } from "../api.js";
 import { msg } from "../i18n/index.js";
+import { buildLineageFlowSteps, renderLineageFlowHtml } from "./browser-lineage-flow.js";
 import type { BrowserCategory } from "./browser-table-filter.js";
 
 export type { BrowserCategory };
@@ -71,6 +72,9 @@ export function renderBrowserLineage(
       ? `<p class="panel-note panel-note--compact">${escapeHtml(m.lineageProvenanceFields)}: <code>${lineage.provenance_fields.map(escapeHtml).join("</code>, <code>")}</code></p>`
       : "";
 
+  const flowSteps = buildLineageFlowSteps(lineage);
+  const flowHtml = flowSteps.length > 1 ? renderLineageFlowHtml(flowSteps, m.lineageFlowTitle) : "";
+
   root.innerHTML = `
     <div class="browser-lineage" data-testid="browser-lineage">
       <div class="browser-lineage__head">
@@ -78,6 +82,7 @@ export function renderBrowserLineage(
         ${lineage.subscription_type ? `<span class="tag tag--accent">${escapeHtml(lineage.subscription_type)}</span>` : ""}
         <code class="browser-lineage__table">${escapeHtml(lineage.table)}</code>
       </div>
+      ${flowHtml}
       <div class="browser-lineage__grid">
         <div>
           <h4>${escapeHtml(m.lineageUpstream)}</h4>
