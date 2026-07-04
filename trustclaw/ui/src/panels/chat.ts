@@ -1,9 +1,8 @@
-// Panel C — Trustworthy Chat. Speaks `POST /api/agent/chat` (Task 203). The
-// panel emits the raw Runtime Context to Panel D (audit) so we do not need a
-// separate audit fetch until Task 401/502 land the receipt view.
+// Panel C — Trustworthy Chat.
 
 import type { AgentChatResponse, RuntimeContextResponse, TrustclawApiClient } from "../api.js";
 import { isAgentChatError } from "../api.js";
+import { msg } from "../i18n/index.js";
 
 export interface ChatHandlers {
   onRuntimeContext(context: RuntimeContextResponse): void;
@@ -14,14 +13,15 @@ export function renderChat(
   client: TrustclawApiClient,
   handlers: ChatHandlers,
 ): { setSessionId(next: string): void } {
+  const m = msg().panels.chat;
   let sessionId = randomSessionId();
 
   root.innerHTML = `
     <section class="panel" data-panel="chat">
-      <header><h2>C · 可信问答交互区</h2><span class="session" data-testid="chat-session"></span></header>
+      <header><h2>${escapeHtml(m.title)}</h2><span class="session" data-testid="chat-session"></span></header>
       <form data-testid="chat-form">
-        <textarea name="message" required rows="2" placeholder="我可以用司美格鲁肽吗？"></textarea>
-        <button type="submit">发送</button>
+        <textarea name="message" required rows="2" placeholder="${escapeHtml(m.placeholder)}"></textarea>
+        <button type="submit">${escapeHtml(m.send)}</button>
       </form>
       <div class="chat-log" data-testid="chat-log"></div>
     </section>
@@ -52,7 +52,8 @@ export function renderChat(
       appendMessage(log, "error", `${response.status}: ${response.message}`);
       return;
     }
-    const decision = response.pipeline_stages.agent_decision?.response ?? "(no response)";
+    const decision =
+      response.pipeline_stages.agent_decision?.response ?? msg().panels.chat.noResponse;
     appendMessage(log, "assistant", decision);
     handlers.onRuntimeContext(response);
   });
@@ -77,4 +78,12 @@ function appendMessage(log: HTMLElement, role: "user" | "assistant" | "error", t
   bubble.className = `bubble bubble-${role}`;
   bubble.textContent = text;
   log.append(bubble);
+}
+
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

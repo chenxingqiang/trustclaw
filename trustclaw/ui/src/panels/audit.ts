@@ -1,17 +1,16 @@
-// Panel D — Runtime Audit. Reads `pipeline_stages` directly from the Runtime
-// Context returned by `/api/agent/chat`. This matches spec DoD item 3
-// ("every pipeline stage emits audit events visible in UI"). Real JSONL replay
-// from `state/ptds-audit/*.jsonl` is out of scope until Task 502.
+// Panel D — Runtime Audit.
 
 import type { RuntimeContextResponse } from "../api.js";
+import { msg } from "../i18n/index.js";
 
 export function renderAudit(root: HTMLElement): {
   render(context: RuntimeContextResponse): void;
   clear(): void;
 } {
+  const m = msg().panels.audit;
   root.innerHTML = `
     <section class="panel" data-panel="audit">
-      <header><h2>D · 运行时审计面板</h2><span data-testid="audit-trail-id"></span></header>
+      <header><h2>${escapeHtml(m.title)}</h2><span data-testid="audit-trail-id"></span></header>
       <ol class="audit-timeline" data-testid="audit-timeline"></ol>
     </section>
   `;
@@ -24,13 +23,13 @@ export function renderAudit(root: HTMLElement): {
       trailIdEl.textContent = context.audit_trail_id;
       const stages = context.pipeline_stages;
       const items: Array<{ label: string; body: unknown }> = [
-        { label: "1 · Text2SQL", body: stages.text2sql },
-        { label: "2 · PTDS Query", body: stages.db_query },
-        { label: "3 · Rule Evaluation", body: stages.rule_evaluation },
-        { label: "4 · GLP-1 Decision", body: stages.agent_decision },
+        { label: m.stepText2sql, body: stages.text2sql },
+        { label: m.stepQuery, body: stages.db_query },
+        { label: m.stepRules, body: stages.rule_evaluation },
+        { label: m.stepDecision, body: stages.agent_decision },
         {
-          label: "5 · Ledger Receipt",
-          body: context.evidence_ledger_receipt ?? { pending: "Task 401" },
+          label: m.stepLedger,
+          body: context.evidence_ledger_receipt ?? { pending: m.ledgerPending },
         },
       ];
       timelineEl.innerHTML = items

@@ -1,8 +1,7 @@
-// Panel A — Landing & PTDS Init. Renders the frozen `POST /api/ptds/init` form
-// (spec `PRODUCT_SPEC.md` §Frozen API contracts). Refuses to fetch until the
-// user submits; on success, notifies the rest of the app via `onInitialized`.
+// Panel A — Landing & PTDS Init.
 
 import type { PtdsInitRequest, TrustclawApiClient } from "../api.js";
+import { msg } from "../i18n/index.js";
 
 export interface LandingHandlers {
   onInitialized(): void;
@@ -14,23 +13,24 @@ export function renderLanding(
   client: TrustclawApiClient,
   handlers: LandingHandlers,
 ): void {
+  const m = msg().panels.landing;
   root.innerHTML = `
     <section class="panel" data-panel="landing">
-      <header><h2>A · PTDS 初始化区</h2><span class="status" data-testid="landing-status">未挂载</span></header>
+      <header><h2>${escapeHtml(m.title)}</h2><span class="status" data-testid="landing-status">${escapeHtml(m.notMounted)}</span></header>
       <form data-testid="init-form">
-        <label>姓名 <input name="name" type="text" value="张三" /></label>
-        <label>体重 (kg) <input name="weight" type="number" step="0.1" value="82" required /></label>
-        <label>身高 (cm) <input name="height" type="number" step="0.1" value="170" required /></label>
-        <label>血糖 HbA1c (%) <input name="hba1c" type="number" step="0.1" value="6.8" required /></label>
+        <label>${escapeHtml(m.name)} <input name="name" type="text" value="张三" /></label>
+        <label>${escapeHtml(m.weight)} <input name="weight" type="number" step="0.1" value="82" required /></label>
+        <label>${escapeHtml(m.height)} <input name="height" type="number" step="0.1" value="170" required /></label>
+        <label>${escapeHtml(m.hba1c)} <input name="hba1c" type="number" step="0.1" value="6.8" required /></label>
         <fieldset class="history-fieldset">
-          <legend>既往病史选择</legend>
-          <label><input name="thyroid_cancer_history" type="checkbox" /> 甲状腺髓样癌病史</label>
-          <label><input name="pancreatitis_history" type="checkbox" /> 胰腺炎历史</label>
-          <label><input name="include_t2dm_diagnosis" type="checkbox" checked /> 2 型糖尿病诊断</label>
+          <legend>${escapeHtml(m.historyLegend)}</legend>
+          <label><input name="thyroid_cancer_history" type="checkbox" /> ${escapeHtml(m.thyroid)}</label>
+          <label><input name="pancreatitis_history" type="checkbox" /> ${escapeHtml(m.pancreatitis)}</label>
+          <label><input name="include_t2dm_diagnosis" type="checkbox" checked /> ${escapeHtml(m.t2dm)}</label>
         </fieldset>
         <div class="actions">
-          <button type="submit">初始化并加载数据空间</button>
-          <button type="button" data-action="reset">Reset PTDS</button>
+          <button type="submit">${escapeHtml(m.initBtn)}</button>
+          <button type="button" data-action="reset">${escapeHtml(m.resetBtn)}</button>
         </div>
         <pre data-testid="landing-result" class="result"></pre>
       </form>
@@ -44,7 +44,7 @@ export function renderLanding(
 
   void client.status().then((s) => {
     if (s.mounted) {
-      statusEl.textContent = "已挂载";
+      statusEl.textContent = m.mounted;
     }
   });
 
@@ -63,28 +63,36 @@ export function renderLanding(
     if (name) {
       body.name = name;
     }
-    resultEl.textContent = "挂载中…";
+    resultEl.textContent = m.mounting;
     try {
       const response = await client.init(body);
       resultEl.textContent = JSON.stringify(response, null, 2);
       if (response.status === "success") {
-        statusEl.textContent = "已挂载";
+        statusEl.textContent = m.mounted;
         handlers.onInitialized();
       }
     } catch (error) {
-      resultEl.textContent = `Error: ${(error as Error).message}`;
+      resultEl.textContent = `${msg().panels.browser.loadError}: ${(error as Error).message}`;
     }
   });
 
   resetBtn.addEventListener("click", async () => {
-    resultEl.textContent = "Reset 中…";
+    resultEl.textContent = m.resetting;
     try {
       const response = await client.reset();
       resultEl.textContent = JSON.stringify(response, null, 2);
-      statusEl.textContent = "未挂载";
+      statusEl.textContent = m.notMounted;
       handlers.onReset();
     } catch (error) {
-      resultEl.textContent = `Error: ${(error as Error).message}`;
+      resultEl.textContent = `${msg().panels.browser.loadError}: ${(error as Error).message}`;
     }
   });
+}
+
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

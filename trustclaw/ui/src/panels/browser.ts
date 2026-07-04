@@ -1,20 +1,22 @@
-// Panel B — PTDS Data Browser. Reuses the D12 default tables surfaced by
-// `/api/ptds/tables` (`body_anthropometrics`, `lab_test_results`,
-// `nrdl_payment_rules`, `v_glp1_nrdl_check_snapshot`). Table names come from
-// the server; do not hardcode a parallel list here.
+// Panel B — PTDS Data Browser.
 
 import type { TrustclawApiClient } from "../api.js";
+import { msg } from "../i18n/index.js";
 
-export function renderBrowser(root: HTMLElement, client: TrustclawApiClient): {
+export function renderBrowser(
+  root: HTMLElement,
+  client: TrustclawApiClient,
+): {
   refresh(): Promise<void>;
 } {
+  const m = msg().panels.browser;
   root.innerHTML = `
     <section class="panel" data-panel="browser">
-      <header><h2>B · 个人数据空间 (PTDS) 状态浏览器</h2></header>
-      <p class="panel-note">当前 SQLite 数据库文件状态：<strong data-testid="browser-mounted">检查中…</strong></p>
+      <header><h2>${escapeHtml(m.title)}</h2></header>
+      <p class="panel-note">${escapeHtml(m.mountNote)}<strong data-testid="browser-mounted">${escapeHtml(m.unknown)}</strong></p>
       <div class="controls">
         <select data-testid="browser-table"></select>
-        <button data-action="reload">刷新</button>
+        <button data-action="reload">${escapeHtml(m.reload)}</button>
       </div>
       <div class="table-container" data-testid="browser-table-container"></div>
     </section>
@@ -28,9 +30,9 @@ export function renderBrowser(root: HTMLElement, client: TrustclawApiClient): {
   async function refreshMounted(): Promise<void> {
     try {
       const status = await client.status();
-      mountedEl.textContent = status.mounted ? "已挂载" : "未挂载";
+      mountedEl.textContent = status.mounted ? m.mounted : m.notMounted;
     } catch {
-      mountedEl.textContent = "未知";
+      mountedEl.textContent = m.unknown;
     }
   }
 
@@ -46,21 +48,21 @@ export function renderBrowser(root: HTMLElement, client: TrustclawApiClient): {
         select.append(option);
       }
     } catch (error) {
-      container.textContent = `Error listing tables: ${(error as Error).message}`;
+      container.textContent = `${m.listError}: ${(error as Error).message}`;
     }
   }
 
   async function loadRows(): Promise<void> {
     const table = select.value;
     if (!table) {
-      container.textContent = "请选择表";
+      container.textContent = m.selectTable;
       return;
     }
-    container.textContent = "加载中…";
+    container.textContent = m.loading;
     try {
       const result = await client.browse(table, 100);
       if (result.status !== "success" || !result.rows) {
-        container.textContent = result.message ?? "无数据";
+        container.textContent = result.message ?? m.noData;
         return;
       }
       const columns = result.columns ?? Object.keys((result.rows[0] as object | undefined) ?? {});
@@ -76,7 +78,7 @@ export function renderBrowser(root: HTMLElement, client: TrustclawApiClient): {
         .join("")}</tbody>`;
       container.innerHTML = `<table>${thead}${tbody}</table>`;
     } catch (error) {
-      container.textContent = `Error: ${(error as Error).message}`;
+      container.textContent = `${m.loadError}: ${(error as Error).message}`;
     }
   }
 

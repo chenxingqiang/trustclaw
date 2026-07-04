@@ -213,12 +213,12 @@ import {
 } from "./views/cron-quick-create.ts";
 import { renderDreamingRestartConfirmation } from "./views/dreaming-restart-confirmation.ts";
 import { renderDreaming } from "./views/dreaming.ts";
-import { renderTrustclawConsole } from "./views/trustclaw-console.ts";
 import { renderExecApprovalPrompt } from "./views/exec-approval.ts";
 import { renderGatewayUrlConfirmation } from "./views/gateway-url-confirmation.ts";
 import { renderLoginGate } from "./views/login-gate.ts";
 import { renderMcp } from "./views/mcp.ts";
 import { renderOverview } from "./views/overview.ts";
+import { renderTrustclawConsole } from "./views/trustclaw-console.ts";
 
 let pendingUpdate: (() => void) | undefined;
 
@@ -2651,10 +2651,11 @@ export function renderApp(state: AppViewState) {
         </aside>
       </div>
       <main
-        class="content ${isChat ? "content--chat" : ""} ${isPtds ? "content--ptds" : ""} ${state.tab === "logs"
-          ? "content--logs"
-          : ""} ${state.tab === "workboard" ? "content--workboard" : ""} ${state.tab ===
-        "skillWorkshop"
+        class="content ${isChat ? "content--chat" : ""} ${isPtds
+          ? "content--ptds"
+          : ""} ${state.tab === "logs" ? "content--logs" : ""} ${state.tab === "workboard"
+          ? "content--workboard"
+          : ""} ${state.tab === "skillWorkshop"
           ? `content--skill-workshop ${
               state.skillWorkshopMode === "today" ? "content--skill-workshop-today" : ""
             }`
@@ -3746,7 +3747,7 @@ export function renderApp(state: AppViewState) {
             )
           : nothing}
         ${state.tab === "ptds"
-          ? renderTrustclawConsole({ basePath: state.basePath })
+          ? renderTrustclawConsole({ basePath: state.basePath, locale: i18n.getLocale() })
           : nothing}
         ${state.tab === "chat"
           ? renderMeasured(

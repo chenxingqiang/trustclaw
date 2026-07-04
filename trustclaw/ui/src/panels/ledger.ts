@@ -1,9 +1,7 @@
-// Panel E — Evidence Ledger. R5 only renders the placeholder receipt already
-// present on Runtime Context. Task 401 will replace this with the real
-// hash-linked receipt stream from `state/ptds-evidence/*.json`; this panel is
-// wired now so 401 can drop in a richer render without touching main.ts.
+// Panel E — Evidence Ledger.
 
 import type { RuntimeContextResponse } from "../api.js";
+import { msg } from "../i18n/index.js";
 
 interface ReceiptRow {
   block_height?: number;
@@ -15,9 +13,10 @@ export function renderLedger(root: HTMLElement): {
   append(context: RuntimeContextResponse): void;
   clear(): void;
 } {
+  const m = msg().panels.ledger;
   root.innerHTML = `
     <section class="panel" data-panel="ledger">
-      <header><h2>E · 凭证账本面板</h2><span class="badge" data-testid="ledger-verified">占位 (Task 401)</span></header>
+      <header><h2>${escapeHtml(m.title)}</h2><span class="badge" data-testid="ledger-verified">${escapeHtml(m.placeholder)}</span></header>
       <ul class="ledger-list" data-testid="ledger-list"></ul>
     </section>
   `;

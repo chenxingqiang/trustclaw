@@ -12,13 +12,25 @@ pnpm trustclaw:dev            # gateway :18789 + Vite UI :5174
 
 Open either:
 
-| URL | Experience |
-| --- | --- |
-| `http://127.0.0.1:5174/trustclaw/` | Standalone PTDS Runtime Console (dev, hot reload) |
-| `http://127.0.0.1:18789/` | OpenClaw Control UI → **PTDS Console** tab (iframe) |
+| URL                                 | Experience                                                         |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| `http://127.0.0.1:5174/trustclaw/`  | Standalone PTDS Runtime Console (dev, hot reload)                  |
+| `http://127.0.0.1:18789/`           | OpenClaw Control UI → **PTDS Console** tab (iframe)                |
 | `http://127.0.0.1:18789/trustclaw/` | Production-style bundled console (after `pnpm trustclaw:ui:build`) |
 
 Set `OPENAI_API_KEY` for Text2SQL in chat.
+
+## Language (i18n)
+
+TrustClaw console shares OpenClaw's locale storage key **`openclaw.i18n.locale`**:
+
+| Where you switch                     | Effect                                                                 |
+| ------------------------------------ | ---------------------------------------------------------------------- |
+| Control UI → Appearance → Language   | PTDS iframe updates via `storage` + `postMessage`                      |
+| PTDS console topbar language select  | Updates console + persists same key (Control UI picks it up on reload) |
+| URL `?locale=zh-CN` on `/trustclaw/` | Initial locale for standalone console                                  |
+
+Supported console bundles: **English (`en`)** and **简体中文 (`zh-CN`)**; `zh-TW` maps to `zh-CN`.
 
 ## Demo flow (frozen V1)
 
@@ -50,6 +62,6 @@ pnpm openclaw gateway run
 
 ## Branding note (D13)
 
-- **Product brand:** TrustClaw  
-- **CLI / package:** still `openclaw` during V1  
+- **Product brand:** TrustClaw
+- **CLI / package:** still `openclaw` during V1
 - **Mac DMG:** upstream OpenClaw app; TrustClaw value is Gateway plugin + console UI

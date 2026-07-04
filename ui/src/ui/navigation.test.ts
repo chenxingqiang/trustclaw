@@ -28,6 +28,7 @@ const leadingSlashNormalizerCases = [
 describe("iconForTab", () => {
   it("returns stable icons for every tab", () => {
     expect(Object.fromEntries(ALL_TABS.map((tab) => [tab, iconForTab(tab)]))).toEqual({
+      ptds: "shield",
       chat: "messageSquare",
       overview: "barChart",
       activity: "activity",
@@ -64,6 +65,7 @@ describe("iconForTab", () => {
 describe("titleForTab", () => {
   it("returns expected titles for every tab", () => {
     expect(Object.fromEntries(ALL_TABS.map((tab) => [tab, titleForTab(tab)]))).toEqual({
+      ptds: "PTDS Console",
       chat: "Chat",
       overview: "Overview",
       activity: "Activity",
@@ -94,6 +96,7 @@ describe("titleForTab", () => {
 describe("subtitleForTab", () => {
   it("returns expected subtitles for every tab", () => {
     expect(Object.fromEntries(ALL_TABS.map((tab) => [tab, subtitleForTab(tab)]))).toEqual({
+      ptds: "Personal trusted data space — init, chat, audit, and evidence.",
       chat: "Gateway chat for quick interventions.",
       overview: "Status, entry points, health.",
       activity: "Browser-local tool activity summaries.",
@@ -226,7 +229,13 @@ describe("inferBasePathFromPathname", () => {
 
 describe("TAB_GROUPS", () => {
   it("contains all expected groups", () => {
-    expect(TAB_GROUPS.map((g) => g.label)).toEqual(["chat", "control", "agent", "settings"]);
+    expect(TAB_GROUPS.map((g) => g.label)).toEqual([
+      "trustclaw",
+      "chat",
+      "control",
+      "agent",
+      "settings",
+    ]);
   });
 
   it("all tabs are unique", () => {

@@ -108,6 +108,18 @@ function depsInstalled(kind) {
   }
 }
 
+function resolveViteBin() {
+  const fromUi = path.join(repoRoot, "ui", "node_modules", "vite", "bin", "vite.js");
+  if (fs.existsSync(fromUi)) {
+    return fromUi;
+  }
+  const fromTrustclawUi = path.join(uiDir, "node_modules", "vite", "bin", "vite.js");
+  if (fs.existsSync(fromTrustclawUi)) {
+    return fromTrustclawUi;
+  }
+  throw new Error("vite not found; run pnpm install in repo root (ui package provides vite).");
+}
+
 function main(argv = process.argv.slice(2)) {
   const [action, ...rest] = argv;
   if (!action) {
@@ -118,17 +130,33 @@ function main(argv = process.argv.slice(2)) {
     runPnpm(["install", ...rest]);
     return;
   }
-  const script = action === "dev" ? "dev" : action === "build" ? "build" : action === "test" ? "test" : null;
+  const script =
+    action === "dev" ? "dev" : action === "build" ? "build" : action === "test" ? "test" : null;
   if (!script) {
     usage();
     process.exit(2);
   }
-  if (!depsInstalled(action === "test" ? "test" : "build")) {
+  if (script === "dev" || script === "build") {
+    runSpawnCall(
+      resolveSpawnCall(process.execPath, [
+        resolveViteBin(),
+        script,
+        "--config",
+        path.join(uiDir, "vite.config.ts"),
+        ...rest,
+      ]),
+    );
+    return;
+  }
+  if (!depsInstalled("test")) {
     runPnpmSync(["install"]);
   }
   runPnpm(["run", script, ...rest]);
 }
 
-if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {
+if (
+  process.argv[1] &&
+  fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))
+) {
   main();
 }
