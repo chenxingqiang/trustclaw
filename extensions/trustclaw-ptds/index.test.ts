@@ -1,13 +1,13 @@
 // TrustClaw PTDS plugin tests cover HTTP route registration and init handler.
 import { mkdtempSync, rmSync } from "node:fs";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import type { IncomingMessage, ServerResponse } from "node:http";
 import { describe, expect, it, vi } from "vitest";
-import { createAgentChatHandler } from "./src/agent-routes.js";
-import { createPtdsInitHandler } from "./src/ptds-routes.js";
 import plugin from "./index.js";
 import manifest from "./openclaw.plugin.json" with { type: "json" };
+import { createAgentChatHandler } from "./src/agent-routes.js";
+import { createPtdsInitHandler } from "./src/ptds-routes.js";
 
 function createMockResponse(): ServerResponse & { getBody: () => string } {
   const state = { statusCode: 200, body: "" };
@@ -38,10 +38,14 @@ describe("trustclaw-ptds plugin", () => {
 
   it("registers PTDS HTTP routes", () => {
     const routes: Array<{ path: string; auth: string; match: string }> = [];
+    const registerTool = vi.fn();
+    const on = vi.fn();
     plugin.register({
       registerHttpRoute(route) {
         routes.push(route as { path: string; auth: string; match: string });
       },
+      registerTool,
+      on,
       pluginConfig: {},
       logger: { info: vi.fn() },
     } as Parameters<typeof plugin.register>[0]);
@@ -58,6 +62,8 @@ describe("trustclaw-ptds plugin", () => {
     expect(routes.every((route) => route.auth === "plugin")).toBe(true);
     expect(routes.filter((route) => route.match === "exact").length).toBe(6);
     expect(routes.find((route) => route.path === "/trustclaw")?.match).toBe("prefix");
+    expect(registerTool).toHaveBeenCalledTimes(1);
+    expect(on).toHaveBeenCalledWith("before_prompt_build", expect.any(Function));
   });
 
   it("handles POST /api/ptds/init with frozen contract shape", async () => {

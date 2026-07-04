@@ -11,6 +11,10 @@ import {
   parseAgentSessionKey,
 } from "./session-key.ts";
 import { normalizeLowercaseStringOrEmpty } from "./string-coerce.ts";
+import {
+  syncTrustclawPtdsRuntimeContext,
+  TRUSTCLAW_PTDS_QUERY_TOOL,
+} from "./trustclaw-ptds-bridge.ts";
 
 const TOOL_STREAM_LIMIT = 50;
 const TOOL_STREAM_THROTTLE_MS = 80;
@@ -68,6 +72,9 @@ type ToolStreamHost = {
   activityEntries?: ActivityEntry[];
   toolStreamSyncTimer: number | null;
   chatModelOverrides?: Record<string, ChatModelOverride | null>;
+  trustclawRuntimeContext?:
+    | import("./trustclaw-ptds-bridge.ts").TrustclawRuntimeContextPayload
+    | null;
 };
 
 type SessionDefaultsSnapshot = {
@@ -779,6 +786,9 @@ export function handleAgentEvent(host: ToolStreamHost, payload?: AgentEventPaylo
         : undefined;
   if (name === "session_status" && phase === "result") {
     syncSessionStatusModelOverride(host, data);
+  }
+  if (name === TRUSTCLAW_PTDS_QUERY_TOOL && phase === "result") {
+    syncTrustclawPtdsRuntimeContext(host, data);
   }
 
   const now = Date.now();

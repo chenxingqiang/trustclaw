@@ -1,8 +1,9 @@
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 import type { TrustclawPluginConfig } from "../../trustclaw/ptds/config.js";
 import { createOpenAiText2SqlLlm } from "../../trustclaw/runtime/text2sql/openai-llm.js";
+import { TRUSTCLAW_PTDS_AGENT_GUIDANCE } from "./src/agent-guidance.js";
 import { createAgentChatHandler } from "./src/agent-routes.js";
-import { createTrustclawUiHandler } from "./src/ui-routes.js";
+import { createTrustclawPtdsQueryToolFactory } from "./src/ptds-query-tool.js";
 import {
   createPtdsBrowseHandler,
   createPtdsInitHandler,
@@ -10,6 +11,7 @@ import {
   createPtdsStatusHandler,
   createPtdsTablesHandler,
 } from "./src/ptds-routes.js";
+import { createTrustclawUiHandler } from "./src/ui-routes.js";
 
 function readPluginConfig(
   pluginConfig: Record<string, unknown> | undefined,
@@ -68,6 +70,12 @@ export default definePluginEntry({
       match: "exact",
       handler: createAgentChatHandler(cfg, { llm: text2sqlLlm }),
     });
+    api.registerTool(createTrustclawPtdsQueryToolFactory(cfg, { llm: text2sqlLlm }), {
+      name: "trustclaw_ptds_query",
+    });
+    api.on("before_prompt_build", async () => ({
+      prependSystemContext: TRUSTCLAW_PTDS_AGENT_GUIDANCE,
+    }));
     const uiHandler = createTrustclawUiHandler();
     api.registerHttpRoute({
       path: "/trustclaw",

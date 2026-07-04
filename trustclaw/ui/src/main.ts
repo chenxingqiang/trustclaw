@@ -1,12 +1,18 @@
 // TrustClaw PTDS side panels — center chat uses OpenClaw Control UI (iframe or native in workbench).
 
 import "./styles.css";
-import { buildControlUiChatSrc, createApiClient, resolveApiBaseUrl } from "./api.js";
+import {
+  buildControlUiChatSrc,
+  createApiClient,
+  resolveApiBaseUrl,
+  resolveGatewayControlUiOrigin,
+} from "./api.js";
 import { i18n, msg } from "./i18n/index.js";
 import { renderAudit } from "./panels/audit.js";
 import { renderBrowser } from "./panels/browser.js";
 import { renderLanding } from "./panels/landing.js";
 import { renderLedger } from "./panels/ledger.js";
+import { bindTrustclawRuntimeContextListener } from "./runtime-bridge.js";
 
 const env = (import.meta as ImportMeta & { env?: { VITE_GATEWAY_URL?: string } }).env;
 const client = createApiClient(resolveApiBaseUrl(env, window.location));
@@ -54,8 +60,12 @@ function mountEmbed(mode: EmbedMode): void {
     const audit = document.createElement("div");
     const ledger = document.createElement("div");
     col.append(audit, ledger);
-    renderAudit(audit);
-    renderLedger(ledger);
+    const auditPanel = renderAudit(audit);
+    const ledgerPanel = renderLedger(ledger);
+    bindTrustclawRuntimeContextListener({
+      renderAudit: (context) => auditPanel.render(context),
+      appendLedger: (context) => ledgerPanel.append(context),
+    });
     return;
   }
 
@@ -136,8 +146,13 @@ function mountFullConsole(): void {
   centerCol.append(chatPanel);
 
   const browser = renderBrowser(browserSection, client);
-  renderAudit(auditSection);
-  renderLedger(ledgerSection);
+  const auditPanel = renderAudit(auditSection);
+  const ledgerPanel = renderLedger(ledgerSection);
+  bindTrustclawRuntimeContextListener({
+    renderAudit: (context) => auditPanel.render(context),
+    appendLedger: (context) => ledgerPanel.append(context),
+    allowedOrigins: [window.location.origin, resolveGatewayControlUiOrigin(env, window.location)],
+  });
 
   renderLanding(landingSection, client, {
     onInitialized() {
@@ -147,6 +162,8 @@ function mountFullConsole(): void {
     onReset() {
       void browser.refresh();
       setSystemStatus(false, m.console.statusReset);
+      auditPanel.clear();
+      ledgerPanel.clear();
     },
   });
 

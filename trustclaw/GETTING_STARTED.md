@@ -47,7 +47,7 @@ Supported console bundles: **English (`en`)** and **简体中文 (`zh-CN`)**; `z
 
 1. **A · PTDS 初始化区** — `POST /api/ptds/init`
 2. **B · 数据浏览器** — browse local SQLite tables
-3. **C · 可信问答** — OpenClaw Chat (center); PTDS pipeline also available via `POST /api/agent/chat`
+3. **C · 可信问答** — OpenClaw Chat calls `trustclaw_ptds_query`; audit/ledger rails refresh from tool Runtime Context
 4. **D · 运行时审计** — pipeline stages from Runtime Context
 5. **E · 凭证账本** — receipt placeholder (Task 401)
 
