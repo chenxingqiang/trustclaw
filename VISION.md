@@ -1,27 +1,33 @@
 ## TrustClaw Vision
 
-TrustClaw is a **Personal Trusted Data Space Runtime (PTDS Runtime)** — a lightweight local runtime where personal health data, AI-ready reference datasets, and trustworthy agents collaborate under full runtime audit.
+TrustClaw is a **Personal Trusted Data Space Runtime (PTDS Runtime)** — a local-first platform where personal health data, subscribed reference datasets, and auditable agents collaborate under explicit consent and immutable evidence.
 
-This is **not** a single GLP-1 Q&A app. GLP-1 is the first **business agent** demo on the runtime. The platform is designed to host future agents (medication, insurance, training, sleep, nutrition) without rewriting core infrastructure.
+Business agents (clinical eligibility, reimbursement, compliance review, and others) are **packs on the runtime**, not the platform identity. The runtime stays vertical-agnostic; vertical logic ships as declarative Agent Packs and imported rule sets.
 
 **Core principles**
 
-1. **Personal data never leaves PTDS** — raw personal data stays in local SQLite; external agents only receive controlled, de-identified query results.
-2. **Every AI answer must be supported by evidence** — conclusions trace to local data sources or rule entries with an immutable evidence chain.
-3. **Every agent action must be auditable** — reasoning, tool calls, and queries are captured in runtime audit logs.
-4. **Agents decouple from platform** — runtime provides isolation, tools, audit, and ledger; business logic lives in upper-layer agents.
+1. **Personal data never leaves PTDS** — raw personal data stays in local SQLite; external models and tools only receive controlled, consented query surfaces.
+2. **Every conclusion must be evidenced** — outputs trace to local data, imported standards, or deterministic rule evaluation with a replayable chain.
+3. **Every agent action must be auditable** — consent, tool calls, queries, and commits are recorded with closed step/component semantics.
+4. **Agents decouple from platform** — runtime owns isolation, tools, audit, and ledger; business behavior lives in packs and coordinators.
 
-**V1 baseline (delivered 2026-07-05)**
+**Platform architecture (production)**
 
-Closed loop shipped:
+TrustClaw is organized by **planes**, not by a single demo chat script:
 
-`PTDS init → chat → Text2SQL → rule evaluation → GLP-1 decision → audit → evidence ledger → dashboard`
+| Plane | Responsibility |
+| --- | --- |
+| **Data** | PTDS schema, personal store, reference sync, SELECT guards, table lineage |
+| **Policy** | Consent, domain grants, compliance import, fail-closed gates |
+| **Agent** | Agent Pack contract, coordinators, session binding, tool-gated access |
+| **Evidence** | Audit trail, hash-chain ledger, operator replay |
+| **Operator** | Runtime Console (data/audit/compliance) + Agent workbench (chat/tools) |
 
-Further work follows `trustclaw/AGENTS.md` Loop + `DECISIONS.md` open items (channels, branding, full domain-agent registry import).
+A typical production interaction flows through these planes — mount data → grant scope → run pack tools → evaluate rules → commit evidence — but **no fixed vertical pipeline** is canonical at the vision layer. Concrete flows are owned by packs, `DECISIONS.md`, and `trustclaw/AGENTS.md`.
 
 **Technical foundation**
 
-TrustClaw is forked from [OpenClaw](https://github.com/openclaw/openclaw). We reuse its Gateway, agent runner, SQLite/Kysely storage patterns, Control UI shell, and plugin SDK seams. PTDS-specific systems (personal data space, evidence ledger, rule pipeline, demo dashboard) are built as scoped extensions documented in `trustclaw/`.
+TrustClaw is forked from [OpenClaw](https://github.com/openclaw/openclaw). We reuse Gateway, agent runner, SQLite/Kysely patterns, Control UI shell, and plugin SDK seams. PTDS-specific systems are scoped extensions under `trustclaw/` and `extensions/trustclaw-ptds/`.
 
 **Docs**
 
@@ -31,14 +37,15 @@ TrustClaw is forked from [OpenClaw](https://github.com/openclaw/openclaw). We re
 - OpenClaw reuse: `trustclaw/OPENCLAW_REUSE.md`
 - Upstream overview: `README.md`
 
-**What we optimize for (V1)**
+**What we optimize for**
 
-- Runnable local demo in Chrome with one command
-- Auditable pipeline with no missing steps in the UI
-- Evidence receipts with hash-chain integrity
-- Declarative GLP-1 agent (prompts + tools, no hardcoded clinical rules in prod)
+- **Local-first operations** — single-node install, SQLite state, no silent cloud egress
+- **Production auditability** — attributable steps, BLOCKED paths recorded, operator replay
+- **Evidence integrity** — hash-chained receipts; no read-through fallback on policy failure
+- **Declarative verticals** — rules and packs in data/SQLite, not hardcoded clinical paths in core
+- **Catalog scale** — domain agent registry and coordinators without one-process-per-logical-agent
 
-**What we defer**
+**Roadmap deferrals**
 
 - Channel integrations (Telegram/WhatsApp/WebChat) — D5
 - Compliance package cryptographic verification — D21

@@ -112,19 +112,21 @@ After setup, **start a new chat session** (or `/new`) so the updated system prom
 
 In **PTDS Console**, use the **领域 Agent** dropdown above chat to bind a pack per session (`PUT /api/ptds/session/agent-pack`), or switch the OpenClaw agent in the chat sidebar. Restart Gateway after `trustclaw:setup` so new agents appear.
 
-## Demo flow (frozen V1)
+## Operator smoke — platform regression
+
+典型运维路径（非架构 canonical 流程；垂直细节由 Agent Pack 决定）：
 
 1. **A · PTDS 初始化区** — `POST /api/ptds/init`
-2. **C · 领域 Agent 赋权** — per-pack `panel.*` / `ptds.*` scopes (`GET/PUT /api/ptds/agent-grants`)
+2. **C · 领域 Agent 赋权** — per-pack scopes (`GET/PUT /api/ptds/agent-grants`)
 3. **B · 数据浏览器** — browse local SQLite tables
-4. **Audited Chat (Control UI)** — OpenClaw Chat calls `trustclaw_ptds_query`; audit/ledger rails refresh from tool Runtime Context
+4. **Audited Chat (Control UI)** — pack 工具链（如 `trustclaw_ptds_query`）；审计/账本侧栏随 Runtime Context 刷新
 5. **D · 运行时审计** — pipeline stages from Runtime Context
-6. **E · 凭证账本** — SHA-256 链式 receipt（`state/ptds-evidence/ledger.jsonl`）；Reset 清空 PTDS + audit + ledger
-7. **F · 合规订阅** — NRDL / device import with consent
+6. **E · 凭证账本** — SHA-256 链式 receipt；Reset 清空 PTDS + audit + ledger
+7. **F · 合规订阅** — 外部标准 import with consent
 
-### V1 DoD smoke — two full passes (manual)
+### Two-pass manual regression
 
-Run the frozen demo **twice** without code changes. No orchestrator script — follow this checklist (see `AGENTS.md` §V1 DoD 闸门).
+上线前或重大改动后，**手工跑两遍**以下清单（无 orchestrator）。对照 `AGENTS.md` [生产就绪闸门](AGENTS.md#生产就绪闸门production-readiness)。
 
 **Pass 1 — happy path**
 

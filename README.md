@@ -1,15 +1,13 @@
 # TrustClaw — Personal Trusted Data Space Runtime
 
-**TrustClaw** is a local-first runtime where personal health data, AI-ready clinical datasets, and trustworthy agents collaborate under full audit and evidence ledger guarantees.
-
-V1 demo scope: **GLP-1 assessment agent** on a frozen PTDS architecture (init → chat → Text2SQL → rules → decision → audit → ledger → dashboard).
+**TrustClaw** is a local-first **PTDS Runtime**: personal health data, subscribed reference datasets, and auditable Agent Packs collaborate under explicit consent and immutable evidence.
 
 | Principle | Meaning |
 | --- | --- |
 | 个人数据不出域 | Raw data stays in local SQLite only |
-| 凡答必有据 | Every answer cites local data + rules |
-| 凡行必审计 | Every pipeline step is logged |
-| Agent 与平台解耦 | GLP-1 is the first business agent, not the platform |
+| 凡答必有据 | Conclusions trace to data, rules, and evidence chain |
+| 凡行必审计 | Every data access and agent action is logged |
+| Agent 与平台解耦 | Vertical logic ships as Agent Packs, not platform hardcoding |
 
 **TrustClaw docs**
 
@@ -48,10 +46,13 @@ pnpm openclaw models auth paste-api-key --provider anthropic --dev
 pnpm openclaw models status --dev
 ```
 
-**Demo APIs (frozen V1)**
+**Platform APIs** (`extensions/trustclaw-ptds`)
 
-- `POST /api/ptds/init` — initialize local personal data space
-- `POST /api/agent/chat` — run audited GLP-1 pipeline
+- `POST /api/ptds/init` — mount local personal data space
+- `POST /api/agent/chat` — run audited Agent Pack pipeline
+- `GET /api/ptds/domain-agents` — logical agent catalog
+
+See `trustclaw/GETTING_STARTED.md` and `trustclaw/docs/AGENT_PLATFORM.md`.
 
 Implementation lives under `trustclaw/`. Runtime still uses the OpenClaw Gateway stack during transition (`openclaw` CLI).
 

@@ -9,7 +9,7 @@
 | --- | --- | --- |
 | **Inherit 继承** | 直接沿用，不改或极少配置 | Gateway 进程、频道插件、Provider 认证、macOS/iOS/Android/Windows 应用 |
 | **Extend 扩展** | 通过官方 Plugin SDK / HTTP / WS 接缝接入 | PTDS API、审计、账本、Pipeline 注册为 `extensions/trustclaw-ptds` |
-| **Build 新建** | OpenClaw 无等价物，TrustClaw 自有模块 | PTDS v1.1 SQLite、GLP-1 Pipeline、Evidence 哈希链、Demo Dashboard |
+| **Build 新建** | OpenClaw 无等价物，TrustClaw 自有模块 | PTDS SQLite、Pack 管线、Evidence 哈希链、Runtime Console |
 
 ## 系统级映射
 
@@ -75,7 +75,7 @@ trustclaw/                # 可单测的核心库（无 OpenClaw 深依赖）
   audit/
   ledger/
   agents/
-  ui/                     # V1 demo SPA static assets → plugin 可 serve
+  ui/                     # Runtime Console SPA → plugin 可 serve
 ```
 
 ## 反模式（禁止）
