@@ -78,6 +78,19 @@ export {
   type DomainAgentRow,
   type DomainAgentSummary,
 } from "./domain-agents.js";
+export {
+  DOMAIN_AGENTS_FULL_REGISTRY_TARGET,
+  importBundledDomainAgentsMigration,
+  importDomainAgentsRegistryPackage,
+  importDomainAgentsRegistrySql,
+  seedDomainAgentsRegistryIfEmpty,
+  type DomainAgentsImportResult,
+} from "./domain-agents-import.js";
+export {
+  migrateLegacyDomainAgentsTable,
+  migrateLegacyTraStateFiles,
+  normalizeLegacyTraNaming,
+} from "./legacy-state-migration.js";
 export { recordAgentDomainGrantAudit } from "./agent-domain-grant-audit.js";
 export {
   clearTraDataAccessGrants,
@@ -99,6 +112,8 @@ export {
   TRA_SEED_GLP1_AST_V2_JSON,
   TRA_SEED_NRDL_GLP1_SQL,
   TRA_SEED_NRDL_REFERENCE_GLP1_JSON,
+  TRA_DOMAIN_AGENTS_MIGRATION_SQL,
+  TRA_DOMAIN_AGENTS_REGISTRY_SQL,
   TRA_TEMPLATE_DB,
   resolveTraAuditDir,
   resolveTraDbPath,

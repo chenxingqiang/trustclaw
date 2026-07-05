@@ -20,6 +20,7 @@ import {
   TRUSTCLAW_DEFAULT_GATEWAY_PORT,
   TRUSTCLAW_DEFAULT_GATEWAY_TOKEN,
   buildTrustclawDashboardUrl,
+  migrateTrustclawPluginEntry,
   resolveTrustclawPackagedGatewayToken,
 } from "./lib/trustclaw-defaults.mjs";
 
@@ -150,7 +151,7 @@ function applyTrustclawDefaults(config) {
     };
   }
   const plugins = next.plugins ?? {};
-  const entries = { ...(plugins.entries ?? {}) };
+  const entries = migrateTrustclawPluginEntry({ ...(plugins.entries ?? {}) });
   const tra = entries["trustclaw-tra"] ?? {};
   entries["trustclaw-tra"] = {
     ...tra,

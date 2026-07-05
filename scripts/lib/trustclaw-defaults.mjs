@@ -18,3 +18,24 @@ export function buildTrustclawDashboardUrl(port, token, env = process.env) {
   const resolvedToken = token ?? resolveTrustclawPackagedGatewayToken(env);
   return `http://127.0.0.1:${resolvedPort}/#token=${encodeURIComponent(resolvedToken)}`;
 }
+
+/** Migrate legacy plugins.entries.trustclaw-ptds → trustclaw-tra and drop stale id. */
+export function migrateTrustclawPluginEntry(entries) {
+  const legacy = entries["trustclaw-ptds"];
+  if (!legacy) {
+    return entries;
+  }
+  const tra = entries["trustclaw-tra"] ?? {};
+  const next = { ...entries };
+  delete next["trustclaw-ptds"];
+  next["trustclaw-tra"] = {
+    ...legacy,
+    ...tra,
+    enabled: tra.enabled ?? legacy.enabled ?? true,
+    config: {
+      ...(legacy.config ?? {}),
+      ...(tra.config ?? {}),
+    },
+  };
+  return next;
+}

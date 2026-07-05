@@ -2,13 +2,21 @@ import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import {
+  migrateLegacyDomainAgentsTable,
+  migrateLegacyTraStateFiles,
+  normalizeLegacyTraNaming,
+} from "./legacy-state-migration.js";
+import {
   TRA_COMPLIANCE_STANDARDS_SQL,
+  TRA_DOMAIN_AGENTS_REGISTRY_SQL,
   TRA_PRESCRIPTION_CONTEXT_SQL,
   TRA_REFERENCE_SYNC_SQL,
   TRA_SCHEMA_V11_SQL,
   TRA_SEED_NRDL_GLP1_SQL,
   resolveTraDbPath,
 } from "./paths.js";
+
+const DOMAIN_AGENTS_FULL_REGISTRY_TARGET = 1000;
 
 /** Canonical user_id for the local personal TRA owner (V1 single-user space). */
 export const TRA_LOCAL_USER_ID = "local_user";
@@ -71,13 +79,45 @@ export function seedNrdlGlp1RulesIfEmpty(db: DatabaseSync): void {
   db.exec(seedSql);
 }
 
+function countDomainAgentsTableRows(db: DatabaseSync): number {
+  const table = db
+    .prepare(
+      "SELECT 1 AS ok FROM sqlite_master WHERE type = 'table' AND name = 'domain_agents' LIMIT 1",
+    )
+    .get() as { ok: number } | undefined;
+  if (table?.ok !== 1) {
+    return 0;
+  }
+  const row = db.prepare("SELECT COUNT(*) AS count FROM domain_agents").get() as { count: number };
+  return row.count ?? 0;
+}
+
+function seedDomainAgentsRegistryIfEmpty(db: DatabaseSync): void {
+  migrateLegacyDomainAgentsTable(db);
+  const existing = countDomainAgentsTableRows(db);
+  if (existing >= DOMAIN_AGENTS_FULL_REGISTRY_TARGET) {
+    return;
+  }
+  const replacePartial = existing > 0;
+  if (replacePartial) {
+    db.exec("DROP TABLE IF EXISTS domain_agents");
+    db.exec("DROP TABLE IF EXISTS domain_agent_packs");
+  }
+  const seedSql = readFileSync(TRA_DOMAIN_AGENTS_REGISTRY_SQL, "utf8");
+  db.exec(normalizeLegacyTraNaming(seedSql));
+  migrateLegacyDomainAgentsTable(db);
+}
+
 export function bootstrapTraDatabase(dbPath = resolveTraDbPath()): DatabaseSync {
+  migrateLegacyTraStateFiles(path.dirname(dbPath));
   const db = openTraDatabase(dbPath);
   applyTraSchema(db);
   applyComplianceStandardsSchema(db);
   applyReferenceSyncSchema(db);
   applyPrescriptionContextSchema(db);
   seedNrdlGlp1RulesIfEmpty(db);
+  migrateLegacyDomainAgentsTable(db);
+  seedDomainAgentsRegistryIfEmpty(db);
   return db;
 }
 

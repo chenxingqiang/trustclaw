@@ -39,6 +39,14 @@ export const TRA_SEED_NRDL_REFERENCE_GLP1_JSON = path.join(
   "tra/seeds/external/nrdl-reference-glp1-v1.json",
 );
 export const TRA_TEMPLATE_DB = path.join(TRUSTCLAW_ROOT, "tra/seeds/local_tra.template.db");
+export const TRA_DOMAIN_AGENTS_REGISTRY_SQL = path.join(
+  TRUSTCLAW_ROOT,
+  "tra/seeds/domain-agents/domain_agents_registry.sql",
+);
+export const TRA_DOMAIN_AGENTS_MIGRATION_SQL = path.join(
+  TRUSTCLAW_ROOT,
+  "tra/seeds/domain-agents/tra-domain-agents-migration.sql",
+);
 
 /** Mirrors OpenClaw `resolveOpenClawStateSqliteDir` without importing core. */
 export function resolveTraStateDir(env: NodeJS.ProcessEnv = process.env): string {

@@ -4,7 +4,10 @@ import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node
 import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { TRUSTCLAW_DEFAULT_GATEWAY_PORT } from "./lib/trustclaw-defaults.mjs";
+import {
+  TRUSTCLAW_DEFAULT_GATEWAY_PORT,
+  migrateTrustclawPluginEntry,
+} from "./lib/trustclaw-defaults.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "..");
@@ -149,8 +152,9 @@ function syncClaudeModelService(profileArgs) {
 function applyTrustclawConfig(profileArgs) {
   const { configPath, config } = loadProfileConfig(profileArgs);
   const plugins = config.plugins ?? {};
-  const entries = plugins.entries ?? {};
+  const entries = migrateTrustclawPluginEntry({ ...(plugins.entries ?? {}) });
   const existing = entries["trustclaw-tra"] ?? {};
+  const hadLegacyPtds = Boolean(plugins.entries?.["trustclaw-ptds"]);
 
   config.plugins = {
     ...plugins,
@@ -161,7 +165,7 @@ function applyTrustclawConfig(profileArgs) {
         enabled: true,
         config: {
           ...(existing.config ?? {}),
-          defaultAgentPack: "glp1-eligibility",
+          defaultAgentPack: existing.config?.defaultAgentPack ?? "glp1-eligibility",
         },
       },
     },
@@ -172,6 +176,12 @@ function applyTrustclawConfig(profileArgs) {
   };
 
   saveProfileConfig(configPath, config);
+  if (hadLegacyPtds) {
+    const profileLabel = profileArgs.includes("--dev") ? "dev" : "default";
+    console.log(
+      `[trustclaw:setup] Migrated plugins.entries.trustclaw-ptds → trustclaw-tra (${profileLabel} profile)`,
+    );
+  }
   return 0;
 }
 

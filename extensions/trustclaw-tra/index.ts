@@ -22,7 +22,11 @@ import {
 } from "./src/compliance-routes.js";
 import { createTrustclawTraDataConsentHook } from "./src/data-consent-hook.js";
 import { createDeviceImportHandler, createDevicePreviewHandler } from "./src/device-routes.js";
-import { createDomainAgentsHandler } from "./src/domain-agent-routes.js";
+import {
+  createDomainAgentsBundledMigrationHandler,
+  createDomainAgentsHandler,
+  createDomainAgentsImportHandler,
+} from "./src/domain-agent-routes.js";
 import { methodIs, sendJson } from "./src/http-utils.js";
 import { createTraLedgerHandler } from "./src/ledger-routes.js";
 import {
@@ -204,7 +208,24 @@ export default definePluginEntry({
       path: "/api/tra/domain-agents",
       auth: "plugin",
       match: "exact",
-      handler: createDomainAgentsHandler(cfg),
+      handler: async (req, res) => {
+        const listHandler = createDomainAgentsHandler(cfg);
+        const importHandler = createDomainAgentsImportHandler(cfg);
+        if (methodIs(req, "GET")) {
+          return listHandler(req, res);
+        }
+        if (methodIs(req, "POST")) {
+          return importHandler(req, res);
+        }
+        sendJson(res, 405, { status: "error", message: "Method not allowed." });
+        return true;
+      },
+    });
+    api.registerHttpRoute({
+      path: "/api/tra/domain-agents/import/bundled-migration",
+      auth: "plugin",
+      match: "exact",
+      handler: createDomainAgentsBundledMigrationHandler(cfg),
     });
     api.registerHttpRoute({
       path: "/api/tra/agent-grants",

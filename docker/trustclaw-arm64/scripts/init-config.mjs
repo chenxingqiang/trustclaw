@@ -4,6 +4,7 @@
  * Merges app.env into ~/.openclaw/openclaw.json and syncs workspace templates.
  */
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 
 const stateDir = process.env.OPENCLAW_STATE_DIR ?? "/home/node/.openclaw";
@@ -98,10 +99,23 @@ function applyEnvToConfig(config) {
     },
   };
 
+  const rawEntries = { ...(config.plugins?.entries ?? {}) };
+  const legacyPtds = rawEntries["trustclaw-ptds"];
+  if (legacyPtds) {
+    delete rawEntries["trustclaw-ptds"];
+    const tra = rawEntries["trustclaw-tra"] ?? {};
+    rawEntries["trustclaw-tra"] = {
+      ...legacyPtds,
+      ...tra,
+      enabled: tra.enabled ?? legacyPtds.enabled ?? true,
+      config: { ...(legacyPtds.config ?? {}), ...(tra.config ?? {}) },
+    };
+  }
+
   config.plugins = {
     ...config.plugins,
     entries: {
-      ...(config.plugins?.entries ?? {}),
+      ...rawEntries,
       "trustclaw-tra": {
         ...(config.plugins?.entries?.["trustclaw-tra"] ?? {}),
         enabled: true,
@@ -211,6 +225,17 @@ function main() {
   saveJson(configPath, merged);
   syncTrustclawWorkspaces();
   warnMissingModelAuth(merged);
+
+  const bootstrapScript = path.join(appRoot, "scripts/lib/tra-state-bootstrap.mjs");
+  if (existsSync(bootstrapScript)) {
+    const result = spawnSync(process.execPath, [bootstrapScript], {
+      env: { ...process.env, OPENCLAW_STATE_DIR: stateDir, TRUSTCLAW_APP_ROOT: appRoot },
+      stdio: "inherit",
+    });
+    if ((result.status ?? 1) !== 0) {
+      process.exit(result.status ?? 1);
+    }
+  }
 
   console.log(`[trustclaw:docker] Config ready at ${configPath}`);
 }

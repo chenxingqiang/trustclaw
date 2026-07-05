@@ -13,7 +13,7 @@ if ! docker inspect "$CONTAINER" >/dev/null 2>&1; then
   exit 1
 fi
 
-mkdir -p "$STATE_ROOT"/{state,workspace,npm}
+mkdir -p "$STATE_ROOT"/{state,workspace,npm,state/tra-audit}
 
 echo "==> Pull openclaw.json (secrets redacted)"
 docker cp "$CONTAINER:$REMOTE_STATE/openclaw.json" "$STATE_ROOT/openclaw.json.raw"
@@ -36,9 +36,12 @@ NODE
 rm -f "$STATE_ROOT/openclaw.json.raw"
 
 echo "==> Pull TRA state"
-docker cp "$CONTAINER:$REMOTE_STATE/state/local_tra.db" "$STATE_ROOT/state/local_tra.db"
+docker cp "$CONTAINER:$REMOTE_STATE/state/local_tra.db" "$STATE_ROOT/state/local_tra.db" 2>/dev/null \
+  || docker cp "$CONTAINER:$REMOTE_STATE/state/local_ptds.db" "$STATE_ROOT/state/local_tra.db"
 docker cp "$CONTAINER:$REMOTE_STATE/state/trustclaw-agents-merged/." "$STATE_ROOT/state/trustclaw-agents-merged/"
-docker cp "$CONTAINER:$REMOTE_STATE/state/tra-audit/." "$STATE_ROOT/state/tra-audit/"
+echo "==> Pull TRA audit (tra-audit or legacy ptds-audit)"
+docker cp "$CONTAINER:$REMOTE_STATE/state/tra-audit/." "$STATE_ROOT/state/tra-audit/" 2>/dev/null \
+  || docker cp "$CONTAINER:$REMOTE_STATE/state/ptds-audit/." "$STATE_ROOT/state/tra-audit/" 2>/dev/null || true
 
 echo "==> Pull workspace agent registry"
 docker cp "$CONTAINER:$REMOTE_STATE/workspace/domain-agents/." "$STATE_ROOT/workspace/domain-agents/"
@@ -50,6 +53,9 @@ docker cp "$CONTAINER:$REMOTE_STATE/npm/." "$STATE_ROOT/npm/" 2>/dev/null || tru
 echo "==> Promote domain-agents seeds into repo"
 mkdir -p "$SEEDS_DIR"
 rsync -a --delete "$STATE_ROOT/workspace/domain-agents/" "$SEEDS_DIR/"
+
+echo "==> Normalize pulled TRA state (legacy PTDS → TRA naming)"
+OPENCLAW_STATE_DIR="$STATE_ROOT" TRUSTCLAW_APP_ROOT="$ROOT" node "$ROOT/scripts/lib/tra-state-bootstrap.mjs"
 
 echo "==> Done. Local mirror: $STATE_ROOT"
 echo "    Seeds: $SEEDS_DIR"
