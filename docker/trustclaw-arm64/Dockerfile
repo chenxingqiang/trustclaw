@@ -6,6 +6,17 @@ USER root
 COPY docker/trustclaw-arm64/scripts/entrypoint.sh /usr/local/bin/trustclaw-entrypoint.sh
 COPY docker/trustclaw-arm64/scripts/init-config.mjs /opt/trustclaw/init-config.mjs
 COPY docker/trustclaw-arm64/config/openclaw.json.seed /opt/trustclaw/config/openclaw.json.seed
+# Full product tree (~1.5MB): ptds schema/seeds, agents, runtime, workspace, ui/dist fallback.
+COPY trustclaw /app/trustclaw
+# Bundled plugin resolves UI from dist/extensions/.../dist/ui (see ui-routes.ts).
+RUN mkdir -p /app/dist/extensions/trustclaw-ptds/dist/ui /app/dist/extensions/dist/ui && \
+    if [ -d /app/extensions/trustclaw-ptds/dist/ui ]; then \
+      cp -R /app/extensions/trustclaw-ptds/dist/ui/. /app/dist/extensions/trustclaw-ptds/dist/ui/ && \
+      cp -R /app/extensions/trustclaw-ptds/dist/ui/. /app/dist/extensions/dist/ui/; \
+    elif [ -d /app/trustclaw/ui/dist ]; then \
+      cp -R /app/trustclaw/ui/dist/. /app/dist/extensions/trustclaw-ptds/dist/ui/ && \
+      cp -R /app/trustclaw/ui/dist/. /app/dist/extensions/dist/ui/; \
+    fi
 RUN chmod 755 /usr/local/bin/trustclaw-entrypoint.sh /opt/trustclaw/init-config.mjs
 
 USER node

@@ -27,7 +27,9 @@ function isPathInside(root: string, target: string): boolean {
 export function resolveTrustclawUiRoot(): string | null {
   const pluginDir = path.dirname(fileURLToPath(import.meta.url));
   const candidates = [
+    path.resolve(pluginDir, "dist", "ui"),
     path.resolve(pluginDir, "..", "dist", "ui"),
+    path.resolve(pluginDir, "..", "..", "..", "extensions", "trustclaw-ptds", "dist", "ui"),
     path.resolve(pluginDir, "..", "..", "..", "trustclaw", "ui", "dist"),
   ];
   for (const root of candidates) {
