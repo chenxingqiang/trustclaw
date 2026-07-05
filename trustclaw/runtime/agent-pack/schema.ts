@@ -1,5 +1,16 @@
 import { z } from "zod";
 
+export const AGENT_PACK_STARTER_QUESTION_COUNT = 3;
+
+export const agentPackStarterQuestionSchema = z
+  .object({
+    "zh-CN": z.string().min(1),
+    en: z.string().min(1),
+  })
+  .strict();
+
+export type AgentPackStarterQuestion = z.infer<typeof agentPackStarterQuestionSchema>;
+
 export const AGENT_PACK_PIPELINE_STAGES = [
   "TEXT2SQL_GEN",
   "DB_QUERY",
@@ -17,6 +28,10 @@ export const agentPackDocumentSchema = z
       en: z.string().min(1),
     }),
     domain: z.array(z.string().min(1)).optional(),
+    starterQuestions: z
+      .array(agentPackStarterQuestionSchema)
+      .length(AGENT_PACK_STARTER_QUESTION_COUNT)
+      .optional(),
     openclaw: z
       .object({
         agentId: z.string().min(1).optional(),

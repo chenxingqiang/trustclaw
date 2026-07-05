@@ -67,6 +67,85 @@ function saveProfileConfig(configPath, config) {
   writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
 }
 
+const CLAUDE_SETTINGS_PATH = path.join(homedir(), ".claude", "settings.json");
+
+/** Read Anthropic proxy + API key from Claude Code settings (never log secrets). */
+function readClaudeModelEnv() {
+  if (!existsSync(CLAUDE_SETTINGS_PATH)) {
+    return null;
+  }
+  try {
+    const settings = JSON.parse(readFileSync(CLAUDE_SETTINGS_PATH, "utf8"));
+    const env = settings?.env ?? {};
+    const baseUrl =
+      typeof env.ANTHROPIC_BASE_URL === "string" ? env.ANTHROPIC_BASE_URL.trim() : "";
+    const apiKey =
+      (typeof env.ANTHROPIC_AUTH_TOKEN === "string" ? env.ANTHROPIC_AUTH_TOKEN.trim() : "") ||
+      (typeof env.ANTHROPIC_API_KEY === "string" ? env.ANTHROPIC_API_KEY.trim() : "");
+    if (!baseUrl && !apiKey) {
+      return null;
+    }
+    return { baseUrl: baseUrl || undefined, apiKey: apiKey || undefined };
+  } catch {
+    return null;
+  }
+}
+
+/** Mirror Claude Code model proxy into OpenClaw config.env + models.providers. */
+function syncClaudeModelService(profileArgs) {
+  const claude = readClaudeModelEnv();
+  if (!claude) {
+    return 0;
+  }
+
+  const { configPath, config } = loadProfileConfig(profileArgs);
+  let changed = false;
+  const profileLabel = profileArgs.includes("--dev") ? "dev" : "default";
+
+  config.env = { ...(config.env ?? {}) };
+  if (claude.baseUrl && config.env.ANTHROPIC_BASE_URL !== claude.baseUrl) {
+    config.env.ANTHROPIC_BASE_URL = claude.baseUrl;
+    changed = true;
+  }
+  if (claude.apiKey && config.env.ANTHROPIC_API_KEY !== claude.apiKey) {
+    config.env.ANTHROPIC_API_KEY = claude.apiKey;
+    changed = true;
+  }
+
+  const providers = { ...(config.models?.providers ?? {}) };
+  if (claude.baseUrl) {
+    const anthropic = { ...(providers.anthropic ?? {}) };
+    if (anthropic.baseUrl !== claude.baseUrl) {
+      providers.anthropic = { ...anthropic, baseUrl: claude.baseUrl };
+      changed = true;
+    }
+  }
+  if (claude.apiKey && providers["openai-next"]) {
+    const openaiNext = { ...providers["openai-next"] };
+    let providerChanged = false;
+    if (claude.baseUrl && openaiNext.baseUrl !== claude.baseUrl) {
+      openaiNext.baseUrl = claude.baseUrl;
+      providerChanged = true;
+    }
+    if (openaiNext.apiKey !== claude.apiKey) {
+      openaiNext.apiKey = claude.apiKey;
+      providerChanged = true;
+    }
+    if (providerChanged) {
+      providers["openai-next"] = openaiNext;
+      changed = true;
+    }
+  }
+  if (changed) {
+    config.models = { ...(config.models ?? {}), providers };
+    saveProfileConfig(configPath, config);
+    console.log(
+      `[trustclaw:setup] Synced Claude model service → ${profileLabel} profile (${configPath})`,
+    );
+  }
+  return 0;
+}
+
 /** Writes TrustClaw defaults directly to openclaw.json (avoids repeated dev rebuilds). */
 function applyTrustclawConfig(profileArgs) {
   const { configPath, config } = loadProfileConfig(profileArgs);
@@ -179,6 +258,10 @@ function syncDevWorkspace() {
 const profiles = devArgs.length > 0 ? [devArgs] : [[], ["--dev"]];
 let exitCode = 0;
 for (const profileArgs of profiles) {
+  exitCode = syncClaudeModelService(profileArgs);
+  if (exitCode !== 0) {
+    break;
+  }
   exitCode = applyTrustclawConfig(profileArgs);
   if (exitCode !== 0) {
     break;

@@ -7,6 +7,7 @@ export type TrustclawAgentPackSummary = {
   version: string;
   displayName: { "zh-CN": string; en: string };
   domain?: string[];
+  starterQuestions?: { "zh-CN": string; en: string }[];
   openclaw?: { agentId?: string; persona?: string };
   tools: { read: string; write?: string };
 };

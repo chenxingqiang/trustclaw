@@ -2628,6 +2628,22 @@ export function renderApp(state: AppViewState) {
 
   const renderMeasuredMainChat = () =>
     renderMeasured(state, "chat", chatMeasureMetrics, renderMainChat);
+
+  const trustclawStarterQuestions = {
+    packs: state.ptdsAgentPacks,
+    selectedPackId: state.ptdsSessionAgentPackId ?? "glp1-eligibility",
+    onSelect: (text: string) => {
+      state.chatMessage = text;
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLTextAreaElement>(
+            ".trustclaw-ptds-workbench .agent-chat__composer-combobox > textarea",
+          )
+          ?.focus();
+      });
+    },
+  };
+
   return html`
     ${renderCommandPalette({
       open: state.paletteOpen,
@@ -3957,6 +3973,7 @@ export function renderApp(state: AppViewState) {
                   void saveTrustclawSessionAgentPack(state, packId);
                 },
               },
+              starterQuestions: trustclawStarterQuestions,
               chatContent: renderMeasuredMainChat(),
             })
           : nothing}

@@ -465,6 +465,7 @@ export const en: TranslationMap = {
     agentPackFromDefault: "Using default agent pack",
     agentPackLocked: "Domain agent locked for this session",
     agentPackMismatch: "OpenClaw agent differs from locked pack; locked pack wins",
+    starterQuestionsTitle: "Try asking",
   },
   skillWorkshop: {
     header: {

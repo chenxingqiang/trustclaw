@@ -5,6 +5,7 @@ import {
   loadAgentPackFromFile,
   resetAgentPackRegistryCache,
   resolveDefaultAgentsDir,
+  summarizeAgentPack,
 } from "../../../trustclaw/runtime/agent-pack/index.js";
 import path from "node:path";
 
@@ -15,6 +16,21 @@ describe("agent pack registry", () => {
     expect(pack.id).toBe(DEFAULT_AGENT_PACK_ID);
     expect(pack.tools.read).toBe("trustclaw_ptds_query");
     expect(pack.tools.write).toBe("trustclaw_ptds_write");
+    expect(pack.starterQuestions).toHaveLength(3);
+    const zh = pack.starterQuestions?.map((question) => question["zh-CN"]) ?? [];
+    expect(zh[0]).toContain("GLP-1");
+    expect(zh[0]).toContain("司美格鲁肽");
+    expect(zh[1]).toContain("度拉糖肽");
+    expect(zh[2]).toContain("90 天后");
+  });
+
+  it("summarizes starter questions for agent pack API", () => {
+    resetAgentPackRegistryCache();
+    const registry = AgentPackRegistry.load();
+    const pack = registry.get("glp1-eligibility");
+    expect(pack).toBeDefined();
+    const summary = summarizeAgentPack(pack!);
+    expect(summary.starterQuestions).toHaveLength(3);
   });
 
   it("discovers multiple healthcare agent packs", () => {

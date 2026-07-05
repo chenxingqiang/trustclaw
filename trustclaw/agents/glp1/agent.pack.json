@@ -6,6 +6,20 @@
     "en": "GLP-1 eligibility & NRDL coverage"
   },
   "domain": ["endocrine", "weight-management", "nrdl"],
+  "starterQuestions": [
+    {
+      "zh-CN": "我的情况是否适合报销 GLP-1 药物/是否适合报销司美格鲁肽",
+      "en": "Given my profile, am I eligible for NRDL reimbursement of GLP-1 drugs, including semaglutide?"
+    },
+    {
+      "zh-CN": "根据我的情况，度拉糖肽、聚乙二醇洛塞那肽、依苏帕格鲁肽α、司美格鲁肽哪种更适合我？",
+      "en": "Based on my data, which fits me better: dulaglutide, polyethylene glycol loxenatide, efsubaglutide alfa, or semaglutide?"
+    },
+    {
+      "zh-CN": "90 天后，我的体重下降了 X，空腹血糖下降了 Y，糖化血红蛋白下降了 Z，帮我记录一下",
+      "en": "After 90 days, my weight dropped by X, fasting glucose by Y, and HbA1c by Z — please record these outcomes for me"
+    }
+  ],
   "openclaw": {
     "agentId": "main",
     "persona": "C3-PO"

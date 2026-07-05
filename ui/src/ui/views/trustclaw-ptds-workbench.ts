@@ -4,6 +4,8 @@ import { t } from "../../i18n/index.ts";
 import { icons } from "../icons.ts";
 import { renderTrustclawAgentPackSelector } from "./trustclaw-agent-pack-selector.ts";
 import type { TrustclawAgentPackSelectorParams } from "./trustclaw-agent-pack-selector.ts";
+import { renderTrustclawAgentStarterQuestions } from "./trustclaw-agent-starter-questions.ts";
+import type { TrustclawAgentStarterQuestionsParams } from "./trustclaw-agent-starter-questions.ts";
 
 function buildTrustclawEmbedSrc(basePath: string, locale: string, embed: "left" | "right"): string {
   const prefix = basePath ? `${basePath.replace(/\/$/, "")}/trustclaw/` : "/trustclaw/";
@@ -60,6 +62,7 @@ export type TrustclawPtdsWorkbenchParams = {
   onToggleRight: () => void;
   chatContent: TemplateResult;
   agentPackSelector?: TrustclawAgentPackSelectorParams;
+  starterQuestions?: TrustclawAgentStarterQuestionsParams;
 };
 
 function renderRailHeader(params: {
@@ -179,6 +182,9 @@ export function renderTrustclawPtdsWorkbench(params: TrustclawPtdsWorkbenchParam
       <div class="trustclaw-ptds-workbench__chat">
         ${params.agentPackSelector
           ? renderTrustclawAgentPackSelector(params.agentPackSelector)
+          : nothing}
+        ${params.starterQuestions
+          ? renderTrustclawAgentStarterQuestions(params.starterQuestions)
           : nothing}
         <div class="trustclaw-ptds-workbench__chat-main">${params.chatContent}</div>
       </div>

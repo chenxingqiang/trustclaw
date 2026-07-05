@@ -77,6 +77,7 @@ export function summarizeAgentPack(pack: AgentPackDocument): {
   version: string;
   displayName: AgentPackDocument["displayName"];
   domain?: string[];
+  starterQuestions?: AgentPackDocument["starterQuestions"];
   openclaw?: AgentPackDocument["openclaw"];
   tools: AgentPackDocument["tools"];
 } {
@@ -85,6 +86,7 @@ export function summarizeAgentPack(pack: AgentPackDocument): {
     version: pack.version,
     displayName: pack.displayName,
     domain: pack.domain,
+    starterQuestions: pack.starterQuestions,
     openclaw: pack.openclaw,
     tools: pack.tools,
   };
