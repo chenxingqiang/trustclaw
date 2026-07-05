@@ -190,6 +190,16 @@ else
   echo "🖥  Skipping Control UI build (SKIP_UI_BUILD=1)"
 fi
 
+# pnpm build cleans dist/; stage TrustClaw bundled state after build so it survives into the .app.
+if [[ "$MAC_APP_NAME" == "TrustClaw" ]]; then
+  echo "📋 Staging TrustClaw bundled OpenClaw state (config + auth + workspaces)"
+  TRUSTCLAW_BUNDLE_ARGS=()
+  if [[ "${TRUSTCLAW_MAC_CONFIG_DEV:-0}" == "1" ]]; then
+    TRUSTCLAW_BUNDLE_ARGS=(--dev)
+  fi
+  TRUSTCLAW_PACKAGED_DIST="${TRUSTCLAW_PACKAGED_DIST:-1}" node "$ROOT_DIR/scripts/trustclaw-bundle-mac-config.mjs" "${TRUSTCLAW_BUNDLE_ARGS[@]}"
+fi
+
 cd "$ROOT_DIR/apps/macos"
 
 SWIFT_RESOLUTION_FLAGS=()
