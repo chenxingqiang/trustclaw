@@ -123,6 +123,12 @@ RUN if printf '%s\n' "$OPENCLAW_EXTENSIONS" | tr ',' ' ' | tr ' ' '\n' | grep -q
 # Force pnpm for UI build (Bun may fail on ARM/Synology architectures)
 ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm_config_verify_deps_before_run=false pnpm ui:build
+ARG OPENCLAW_TRUSTCLAW_UI=""
+RUN if [ -n "$OPENCLAW_TRUSTCLAW_UI" ]; then \
+      pnpm_config_verify_deps_before_run=false pnpm trustclaw:ui:build && \
+      mkdir -p extensions/trustclaw-ptds/dist/ui && \
+      cp -R trustclaw/ui/dist/. extensions/trustclaw-ptds/dist/ui/; \
+    fi
 RUN if printf '%s\n' "$OPENCLAW_EXTENSIONS" | tr ',' ' ' | tr ' ' '\n' | grep -qx 'qa-lab'; then \
       pnpm_config_verify_deps_before_run=false pnpm qa:lab:build && \
       mkdir -p dist/extensions/qa-lab/web && \
@@ -198,6 +204,8 @@ COPY --from=runtime-assets --chown=node:node /app/patches ./patches
 COPY --from=runtime-assets --chown=node:node /app/openclaw.mjs .
 COPY --from=runtime-assets --chown=node:node /app/src/agents/templates ./src/agents/templates
 COPY --from=runtime-assets --chown=node:node /app/${OPENCLAW_BUNDLED_PLUGIN_DIR} ./${OPENCLAW_BUNDLED_PLUGIN_DIR}
+COPY --from=runtime-assets --chown=node:node /app/trustclaw/agents ./trustclaw/agents
+COPY --from=runtime-assets --chown=node:node /app/trustclaw/workspace ./trustclaw/workspace
 COPY --from=runtime-assets --chown=node:node /app/skills ./skills
 COPY --from=runtime-assets --chown=node:node /app/docs ./docs
 COPY --from=runtime-assets --chown=node:node /app/qa ./qa

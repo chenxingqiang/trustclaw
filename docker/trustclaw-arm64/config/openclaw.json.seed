@@ -1,0 +1,64 @@
+{
+  "gateway": {
+    "mode": "local",
+    "bind": "lan",
+    "port": 19001,
+    "auth": {
+      "mode": "token",
+      "token": "REPLACE_ME_GATEWAY_TOKEN"
+    }
+  },
+  "plugins": {
+    "entries": {
+      "trustclaw-ptds": {
+        "enabled": true,
+        "config": {
+          "agentPacksDir": "/app/trustclaw/agents",
+          "defaultAgentPack": "glp1-eligibility"
+        }
+      },
+      "acpx": {
+        "enabled": false
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "anthropic/claude-sonnet-4-6",
+        "fallbacks": []
+      },
+      "models": {
+        "anthropic/claude-sonnet-4-6": {
+          "alias": "sonnet"
+        }
+      },
+      "workspace": "/home/node/.openclaw/workspace",
+      "compaction": {
+        "mode": "safeguard"
+      }
+    },
+    "list": [
+      {
+        "id": "main",
+        "default": true,
+        "workspace": "/home/node/.openclaw/workspace",
+        "agentDir": "/home/node/.openclaw/agents/main/agent"
+      }
+    ]
+  },
+  "models": {
+    "providers": {
+      "anthropic": {
+        "baseUrl": "https://api.openai-next.com"
+      }
+    }
+  },
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://api.openai-next.com"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  }
+}
