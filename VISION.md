@@ -26,6 +26,7 @@ TrustClaw is forked from [OpenClaw](https://github.com/openclaw/openclaw). We re
 **Docs**
 
 - **Product loops (canonical):** `trustclaw/AGENTS.md`
+- Product features: `trustclaw/PRODUCT.md`
 - Getting started: `trustclaw/GETTING_STARTED.md`
 - Decisions (审核): `trustclaw/DECISIONS.md`
 - Task IDs: `trustclaw/ROADMAP.md`
