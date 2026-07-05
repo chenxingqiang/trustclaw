@@ -46,7 +46,7 @@ if ! curl -fsS "http://127.0.0.1:${PORT}/healthz" >/dev/null; then
   exit 1
 fi
 
-echo "==> PTDS Console http://127.0.0.1:${UI_PORT}/trustclaw/"
+echo "==> TRA Console http://127.0.0.1:${UI_PORT}/trustclaw/"
 for _ in $(seq 1 15); do
   if curl -fsS "http://127.0.0.1:${UI_PORT}/trustclaw/" >/dev/null; then
     echo "trustclaw UI OK"

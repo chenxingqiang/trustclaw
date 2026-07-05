@@ -86,7 +86,7 @@ import {
 import { normalizeOptionalString } from "./string-coerce.ts";
 import { startThemeTransition, type ThemeTransitionContext } from "./theme-transition.ts";
 import { resolveTheme, type ResolvedTheme, type ThemeMode, type ThemeName } from "./theme.ts";
-import { notifyTrustclawPtdsTheme } from "./trustclaw-ptds-bridge.ts";
+import { notifyTrustclawTraTheme } from "./trustclaw-tra-bridge.ts";
 import type { AgentsListResult, AttentionItem } from "./types.ts";
 import { normalizeLocalUserIdentity } from "./user-identity.ts";
 import { resetChatViewState } from "./views/chat.ts";
@@ -601,7 +601,7 @@ export function applyResolvedTheme(host: SettingsHost, resolved: ResolvedTheme) 
   root.dataset.theme = resolved;
   root.dataset.themeMode = themeMode;
   root.style.colorScheme = themeMode;
-  notifyTrustclawPtdsTheme(resolved, themeMode);
+  notifyTrustclawTraTheme(resolved, themeMode);
 }
 
 function syncSystemThemeListener(host: SettingsHost) {
@@ -643,7 +643,7 @@ export function syncTabWithLocation(host: SettingsHost, replace: boolean) {
   if (typeof window === "undefined") {
     return;
   }
-  const resolved = tabFromPath(window.location.pathname, host.basePath) ?? "ptds";
+  const resolved = tabFromPath(window.location.pathname, host.basePath) ?? "tra";
   setTabFromRoute(host, resolved);
   syncUrlWithTab(host, resolved, replace);
 }

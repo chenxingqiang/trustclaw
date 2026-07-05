@@ -94,7 +94,7 @@ function pipelineDefs(m: ReturnType<typeof msg>["panels"]["audit"]): ChatPipelin
       component: "AgentRuntime.Text2SQL",
       gate: m.gateText2sql,
     },
-    { step: "DB_QUERY", label: m.stepQuery, component: "PTDS.Query", gate: m.gateQuery },
+    { step: "DB_QUERY", label: m.stepQuery, component: "TRA.Query", gate: m.gateQuery },
     {
       step: "RULE_EVAL",
       label: m.stepRules,
@@ -347,7 +347,7 @@ export function renderAudit(
           audit_trail_id: context.audit_trail_id,
           step: "DB_QUERY",
           timestamp: Date.now() / 1000,
-          component: "PTDS.Query",
+          component: "TRA.Query",
           input: {},
           output: stages.db_query as Record<string, unknown>,
           status: "SUCCESS",

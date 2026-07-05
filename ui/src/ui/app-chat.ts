@@ -65,8 +65,8 @@ import {
 } from "./controllers/sessions.ts";
 import {
   clearTrustclawSessionAgentPack,
-  type TrustclawPtdsAgentPackState,
-} from "./controllers/trustclaw-ptds.ts";
+  type TrustclawTraAgentPackState,
+} from "./controllers/trustclaw-tra.ts";
 import { GatewayRequestError, type GatewayBrowserClient, type GatewayHelloOk } from "./gateway.ts";
 import { normalizeBasePath } from "./navigation.ts";
 import {
@@ -1210,7 +1210,7 @@ async function sendQueuedChatMessage(
           ...scopedAgentListParamsForRefreshTarget(host, refreshTarget),
         });
         void clearTrustclawSessionAgentPack(
-          host as unknown as TrustclawPtdsAgentPackState,
+          host as unknown as TrustclawTraAgentPackState,
           sessionKey,
         );
       } else if (isNonTerminalAgentRunStatus(ack.status)) {

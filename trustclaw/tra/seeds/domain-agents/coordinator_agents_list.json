@@ -1,0 +1,322 @@
+[
+  {
+    "id": "tra-outpatient",
+    "name": "门诊报销协调器",
+    "description": "TrustClaw TRA 医保域协调 Agent — 门诊报销协调器（管辖 144 个子 Agent）",
+    "identity": {
+      "name": "门诊报销协调器",
+      "emoji": "🏥"
+    },
+    "model": "sonnet",
+    "tools": {
+      "allow": [
+        "trustclaw_tra_query",
+        "trustclaw_tra_write",
+        "exec",
+        "read",
+        "write"
+      ]
+    },
+    "params": {
+      "tra_domain": "outpatient",
+      "tra_scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit",
+        "panel.ledger"
+      ],
+      "tra_write_allowed": true,
+      "managed_agent_count": 144,
+      "pack_version": "2.0.0"
+    }
+  },
+  {
+    "id": "tra-inpatient",
+    "name": "住院结算协调器",
+    "description": "TrustClaw TRA 医保域协调 Agent — 住院结算协调器（管辖 144 个子 Agent）",
+    "identity": {
+      "name": "住院结算协调器",
+      "emoji": "🛏️"
+    },
+    "model": "sonnet",
+    "tools": {
+      "allow": [
+        "trustclaw_tra_query",
+        "trustclaw_tra_write",
+        "exec",
+        "read",
+        "write"
+      ]
+    },
+    "params": {
+      "tra_domain": "inpatient",
+      "tra_scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit",
+        "panel.ledger"
+      ],
+      "tra_write_allowed": true,
+      "managed_agent_count": 144,
+      "pack_version": "2.0.0"
+    }
+  },
+  {
+    "id": "tra-pharmacy",
+    "name": "药店购药协调器",
+    "description": "TrustClaw TRA 医保域协调 Agent — 药店购药协调器（管辖 120 个子 Agent）",
+    "identity": {
+      "name": "药店购药协调器",
+      "emoji": "💊"
+    },
+    "model": "sonnet",
+    "tools": {
+      "allow": [
+        "trustclaw_tra_query",
+        "trustclaw_tra_write",
+        "exec",
+        "read",
+        "write"
+      ]
+    },
+    "params": {
+      "tra_domain": "pharmacy",
+      "tra_scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit",
+        "panel.ledger"
+      ],
+      "tra_write_allowed": true,
+      "managed_agent_count": 120,
+      "pack_version": "2.0.0"
+    }
+  },
+  {
+    "id": "tra-cross-region",
+    "name": "异地就医协调器",
+    "description": "TrustClaw TRA 医保域协调 Agent — 异地就医协调器（管辖 114 个子 Agent）",
+    "identity": {
+      "name": "异地就医协调器",
+      "emoji": "🗺️"
+    },
+    "model": "sonnet",
+    "tools": {
+      "allow": [
+        "trustclaw_tra_query",
+        "trustclaw_tra_write",
+        "exec",
+        "read",
+        "write"
+      ]
+    },
+    "params": {
+      "tra_domain": "cross-region",
+      "tra_scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit",
+        "panel.ledger"
+      ],
+      "tra_write_allowed": true,
+      "managed_agent_count": 114,
+      "pack_version": "2.0.0"
+    }
+  },
+  {
+    "id": "tra-audit",
+    "name": "医保稽核协调器",
+    "description": "TrustClaw TRA 医保域协调 Agent — 医保稽核协调器（管辖 132 个子 Agent）",
+    "identity": {
+      "name": "医保稽核协调器",
+      "emoji": "🔍"
+    },
+    "model": "sonnet",
+    "tools": {
+      "allow": [
+        "trustclaw_tra_query",
+        "trustclaw_tra_write",
+        "exec",
+        "read",
+        "write"
+      ]
+    },
+    "params": {
+      "tra_domain": "audit",
+      "tra_scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit",
+        "panel.ledger"
+      ],
+      "tra_write_allowed": true,
+      "managed_agent_count": 132,
+      "pack_version": "2.0.0"
+    }
+  },
+  {
+    "id": "tra-drg",
+    "name": "DRG分组协调器",
+    "description": "TrustClaw TRA 医保域协调 Agent — DRG分组协调器（管辖 110 个子 Agent）",
+    "identity": {
+      "name": "DRG分组协调器",
+      "emoji": "📊"
+    },
+    "model": "sonnet",
+    "tools": {
+      "allow": [
+        "trustclaw_tra_query",
+        "trustclaw_tra_write",
+        "exec",
+        "read",
+        "write"
+      ]
+    },
+    "params": {
+      "tra_domain": "drg",
+      "tra_scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit",
+        "panel.ledger"
+      ],
+      "tra_write_allowed": true,
+      "managed_agent_count": 110,
+      "pack_version": "2.0.0"
+    }
+  },
+  {
+    "id": "tra-maternity",
+    "name": "生育保险协调器",
+    "description": "TrustClaw TRA 医保域协调 Agent — 生育保险协调器（管辖 110 个子 Agent）",
+    "identity": {
+      "name": "生育保险协调器",
+      "emoji": "🍼"
+    },
+    "model": "sonnet",
+    "tools": {
+      "allow": [
+        "trustclaw_tra_query",
+        "trustclaw_tra_write",
+        "exec",
+        "read",
+        "write"
+      ]
+    },
+    "params": {
+      "tra_domain": "maternity",
+      "tra_scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit",
+        "panel.ledger"
+      ],
+      "tra_write_allowed": true,
+      "managed_agent_count": 110,
+      "pack_version": "2.0.0"
+    }
+  },
+  {
+    "id": "tra-catastrophic",
+    "name": "大病保险协调器",
+    "description": "TrustClaw TRA 医保域协调 Agent — 大病保险协调器（管辖 110 个子 Agent）",
+    "identity": {
+      "name": "大病保险协调器",
+      "emoji": "🏨"
+    },
+    "model": "sonnet",
+    "tools": {
+      "allow": [
+        "trustclaw_tra_query",
+        "trustclaw_tra_write",
+        "exec",
+        "read",
+        "write"
+      ]
+    },
+    "params": {
+      "tra_domain": "catastrophic",
+      "tra_scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit",
+        "panel.ledger"
+      ],
+      "tra_write_allowed": true,
+      "managed_agent_count": 110,
+      "pack_version": "2.0.0"
+    }
+  },
+  {
+    "id": "tra-medical-assistance",
+    "name": "医疗救助协调器",
+    "description": "TrustClaw TRA 医保域协调 Agent — 医疗救助协调器（管辖 8 个子 Agent）",
+    "identity": {
+      "name": "医疗救助协调器",
+      "emoji": "🤝"
+    },
+    "model": "sonnet",
+    "tools": {
+      "allow": [
+        "trustclaw_tra_query",
+        "trustclaw_tra_write",
+        "exec",
+        "read",
+        "write"
+      ]
+    },
+    "params": {
+      "tra_domain": "medical-assistance",
+      "tra_scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit",
+        "panel.ledger"
+      ],
+      "tra_write_allowed": true,
+      "managed_agent_count": 8,
+      "pack_version": "2.0.0"
+    }
+  },
+  {
+    "id": "tra-tcm",
+    "name": "中医药报销协调器",
+    "description": "TrustClaw TRA 医保域协调 Agent — 中医药报销协调器（管辖 8 个子 Agent）",
+    "identity": {
+      "name": "中医药报销协调器",
+      "emoji": "🌿"
+    },
+    "model": "sonnet",
+    "tools": {
+      "allow": [
+        "trustclaw_tra_query",
+        "trustclaw_tra_write",
+        "exec",
+        "read",
+        "write"
+      ]
+    },
+    "params": {
+      "tra_domain": "tcm",
+      "tra_scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit",
+        "panel.ledger"
+      ],
+      "tra_write_allowed": true,
+      "managed_agent_count": 8,
+      "pack_version": "2.0.0"
+    }
+  }
+]

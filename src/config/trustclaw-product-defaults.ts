@@ -1,7 +1,7 @@
-// TrustClaw fork product defaults (PTDS plugin + gateway port).
+// TrustClaw fork product defaults (TRA plugin + gateway port).
 import type { OpenClawConfig } from "./types.openclaw.js";
 
-export const TRUSTCLAW_PLUGIN_ID = "trustclaw-ptds";
+export const TRUSTCLAW_PLUGIN_ID = "trustclaw-tra";
 export const TRUSTCLAW_DEFAULT_GATEWAY_PORT = 19001;
 
 /** Applies TrustClaw product defaults without overriding explicit operator choices. */

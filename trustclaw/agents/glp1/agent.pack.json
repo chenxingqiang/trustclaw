@@ -25,11 +25,11 @@
     "persona": "C3-PO"
   },
   "tools": {
-    "read": "trustclaw_ptds_query",
-    "write": "trustclaw_ptds_write"
+    "read": "trustclaw_tra_query",
+    "write": "trustclaw_tra_write"
   },
   "prompts": {
-    "system": "prompts/c3po-ptds-system.v1.md",
+    "system": "prompts/c3po-tra-system.v1.md",
     "text2sql": "prompts/text2sql.v1.md",
     "personalWrite": "prompts/personal-write-sql.v1.md"
   },
@@ -70,7 +70,7 @@
     "write": { "allowAlways": false }
   },
   "audit": {
-    "businessComponent": "PTDS.Agent.GLP1",
+    "businessComponent": "TRA.Agent.GLP1",
     "decisionComponent": "Agent.GLP1Decision",
     "ruleEvalComponent": "AgentRuntime.ExecRule"
   }

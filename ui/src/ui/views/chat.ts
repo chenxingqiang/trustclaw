@@ -119,7 +119,7 @@ export type ChatProps = {
   streamSegments: Array<{ text: string; ts: number }>;
   stream: string | null;
   streamStartedAt: number | null;
-  trustclawEvidenceCitations?: import("../trustclaw-ptds-bridge.ts").TrustclawEvidenceCitation[];
+  trustclawEvidenceCitations?: import("../trustclaw-tra-bridge.ts").TrustclawEvidenceCitation[];
   assistantAvatarUrl?: string | null;
   draft: string;
   queue: ChatQueueItem[];

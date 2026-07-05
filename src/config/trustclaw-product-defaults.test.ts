@@ -6,7 +6,7 @@ import {
 } from "./trustclaw-product-defaults.js";
 
 describe("applyTrustclawProductDefaults", () => {
-  it("sets gateway port and enables trustclaw-ptds when unset", () => {
+  it("sets gateway port and enables trustclaw-tra when unset", () => {
     const next = applyTrustclawProductDefaults({});
     expect(next.gateway?.port).toBe(TRUSTCLAW_DEFAULT_GATEWAY_PORT);
     expect(next.plugins?.entries?.[TRUSTCLAW_PLUGIN_ID]?.enabled).toBe(true);

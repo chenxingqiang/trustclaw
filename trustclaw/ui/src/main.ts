@@ -1,4 +1,4 @@
-// TrustClaw PTDS side panels — standalone console (A/B left, D/E/F right; chat via Control UI when needed).
+// TrustClaw TRA side panels — standalone console (A/B left, D/E/F right; chat via Control UI when needed).
 
 import "./styles.css";
 import { createApiClient, resolveApiBaseUrl } from "./api.js";

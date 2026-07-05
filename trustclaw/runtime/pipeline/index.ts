@@ -1,4 +1,4 @@
-export { buildGlp1Decision, PTDS_MISSING_VITALS_MESSAGE } from "./glp1-decision.js";
+export { buildGlp1Decision, TRA_MISSING_VITALS_MESSAGE } from "./glp1-decision.js";
 export { buildPackAgentDecision, packIncludesStage } from "./pack-decision.js";
 export { runTrustclawChat } from "./run-chat.js";
 export type {

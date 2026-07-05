@@ -3,7 +3,7 @@ export { generateText2Sql } from "./generate.js";
 export { buildText2SqlPrompt } from "./prompt.js";
 export { extractSqlFromLlmOutput } from "./sanitize.js";
 export { extractReferencedTables } from "./extract-tables.js";
-export { loadPtdsSchemaSnippet, TEXT2SQL_SCHEMA_OBJECTS } from "./schema-context.js";
+export { loadTraSchemaSnippet, TEXT2SQL_SCHEMA_OBJECTS } from "./schema-context.js";
 export type {
   Text2SqlGenerateInput,
   Text2SqlGenerateOptions,

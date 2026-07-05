@@ -4,8 +4,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { missingChatPipelineSteps } from "../../audit/index.js";
 import { readEvidenceReceipts, verifyEvidenceChain } from "../../ledger/index.js";
-import { initializePtds } from "../../ptds/init.js";
-import { PTDS_INIT_DEFAULTS } from "../../ptds/types.js";
+import { initializeTra } from "../../tra/init.js";
+import { TRA_INIT_DEFAULTS } from "../../tra/types.js";
 import { buildGlp1Decision } from "./glp1-decision.js";
 import { runTrustclawChat } from "./run-chat.js";
 
@@ -46,13 +46,13 @@ describe("trustclaw/runtime/pipeline", () => {
     expect(decision.response).toContain("尚不满足");
   });
 
-  it("runs chat pipeline end-to-end on initialized PTDS", async () => {
+  it("runs chat pipeline end-to-end on initialized TRA", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-pipeline-"));
-    const dbPath = path.join(dir, "local_ptds.db");
+    const dbPath = path.join(dir, "local_tra.db");
     try {
-      initializePtds(
+      initializeTra(
         {
-          ...PTDS_INIT_DEFAULTS,
+          ...TRA_INIT_DEFAULTS,
           weight: 85,
           height: 170,
           hba1c: 6.8,
@@ -68,8 +68,8 @@ describe("trustclaw/runtime/pipeline", () => {
         },
         {
           dbPath,
-          auditDir: path.join(dir, "ptds-audit"),
-          evidenceDir: path.join(dir, "ptds-evidence"),
+          auditDir: path.join(dir, "tra-audit"),
+          evidenceDir: path.join(dir, "tra-evidence"),
           llm: async () =>
             "SELECT * FROM v_glp1_nrdl_check_snapshot WHERE user_id = 'local_user' LIMIT 1",
         },
@@ -92,16 +92,16 @@ describe("trustclaw/runtime/pipeline", () => {
       expect(result.context.evidence_ledger_receipt?.block_height).toBe(0);
       expect(result.context.evidence_ledger_receipt?.previous_evidence_hash).toBeNull();
 
-      const receipts = readEvidenceReceipts(path.join(dir, "ptds-evidence"));
+      const receipts = readEvidenceReceipts(path.join(dir, "tra-evidence"));
       expect(receipts).toHaveLength(1);
       expect(verifyEvidenceChain(receipts)).toEqual({ ok: true });
 
-      const auditLines = readFileSync(path.join(dir, "ptds-audit", "events.jsonl"), "utf8")
+      const auditLines = readFileSync(path.join(dir, "tra-audit", "events.jsonl"), "utf8")
         .trim()
         .split("\n");
       expect(auditLines.length).toBeGreaterThanOrEqual(5);
       expect(
-        missingChatPipelineSteps(path.join(dir, "ptds-audit"), result.context.audit_trail_id),
+        missingChatPipelineSteps(path.join(dir, "tra-audit"), result.context.audit_trail_id),
       ).toEqual([]);
       const trailIds = auditLines.map(
         (line) => (JSON.parse(line) as { audit_trail_id: string }).audit_trail_id,
@@ -119,12 +119,12 @@ describe("trustclaw/runtime/pipeline", () => {
 
   it("links consecutive chat receipts in the evidence ledger", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-pipeline-chain-"));
-    const dbPath = path.join(dir, "local_ptds.db");
-    const evidenceDir = path.join(dir, "ptds-evidence");
+    const dbPath = path.join(dir, "local_tra.db");
+    const evidenceDir = path.join(dir, "tra-evidence");
     try {
-      initializePtds(
+      initializeTra(
         {
-          ...PTDS_INIT_DEFAULTS,
+          ...TRA_INIT_DEFAULTS,
           weight: 85,
           height: 170,
           hba1c: 6.8,
@@ -135,7 +135,7 @@ describe("trustclaw/runtime/pipeline", () => {
 
       const chatOpts = {
         dbPath,
-        auditDir: path.join(dir, "ptds-audit"),
+        auditDir: path.join(dir, "tra-audit"),
         evidenceDir,
         llm: async () =>
           "SELECT * FROM v_glp1_nrdl_check_snapshot WHERE user_id = 'local_user' LIMIT 1",
@@ -169,7 +169,7 @@ describe("trustclaw/runtime/pipeline", () => {
     }
   });
 
-  it("blocks chat when PTDS is not initialized", async () => {
+  it("blocks chat when TRA is not initialized", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-pipeline-empty-"));
     const dbPath = path.join(dir, "missing.db");
     try {
@@ -181,7 +181,7 @@ describe("trustclaw/runtime/pipeline", () => {
       if (result.ok) {
         return;
       }
-      expect(result.status).toBe("ptds_not_initialized");
+      expect(result.status).toBe("tra_not_initialized");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -189,11 +189,11 @@ describe("trustclaw/runtime/pipeline", () => {
 
   it("blocks chat on Text2SQL security violation", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-pipeline-sec-"));
-    const dbPath = path.join(dir, "local_ptds.db");
+    const dbPath = path.join(dir, "local_tra.db");
     try {
-      initializePtds(
+      initializeTra(
         {
-          ...PTDS_INIT_DEFAULTS,
+          ...TRA_INIT_DEFAULTS,
           weight: 85,
           height: 170,
           hba1c: 6.8,

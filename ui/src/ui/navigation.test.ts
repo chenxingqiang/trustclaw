@@ -28,7 +28,7 @@ const leadingSlashNormalizerCases = [
 describe("iconForTab", () => {
   it("returns stable icons for every tab", () => {
     expect(Object.fromEntries(ALL_TABS.map((tab) => [tab, iconForTab(tab)]))).toEqual({
-      ptds: "shield",
+      tra: "shield",
       chat: "messageSquare",
       overview: "barChart",
       activity: "activity",
@@ -65,7 +65,7 @@ describe("iconForTab", () => {
 describe("titleForTab", () => {
   it("returns expected titles for every tab", () => {
     expect(Object.fromEntries(ALL_TABS.map((tab) => [tab, titleForTab(tab)]))).toEqual({
-      ptds: "TRA Console",
+      tra: "TRA Console",
       chat: "Chat",
       overview: "Overview",
       activity: "Activity",
@@ -96,7 +96,7 @@ describe("titleForTab", () => {
 describe("subtitleForTab", () => {
   it("returns expected subtitles for every tab", () => {
     expect(Object.fromEntries(ALL_TABS.map((tab) => [tab, subtitleForTab(tab)]))).toEqual({
-      ptds: "Personal trusted data space — init, chat, audit, and evidence.",
+      tra: "Trust Runtime for Agent — init, chat, audit, and evidence.",
       chat: "Gateway chat for quick interventions.",
       overview: "Status, entry points, health.",
       activity: "Browser-local tool activity summaries.",
@@ -184,9 +184,9 @@ describe("tabFromPath", () => {
     expect(tabFromPath("/dreams")).toBe("dreams");
   });
 
-  it("returns ptds for root path (TrustClaw-first default)", () => {
-    expect(tabFromPath("/")).toBe("ptds");
-    expect(tabFromPath("/ptds")).toBe("ptds");
+  it("returns tra for root path (TrustClaw-first default)", () => {
+    expect(tabFromPath("/")).toBe("tra");
+    expect(tabFromPath("/tra")).toBe("tra");
   });
 
   it("handles base paths", () => {

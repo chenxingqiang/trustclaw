@@ -105,7 +105,7 @@ describe("audit-events helpers", () => {
           audit_trail_id: "g3",
           step: "AGENT_DOMAIN_GRANT",
           timestamp: 3,
-          input: { agent_pack_id: "glp1-eligibility", scopes: ["ptds.chat"] },
+          input: { agent_pack_id: "glp1-eligibility", scopes: ["tra.chat"] },
           output: { granted: true, scope_count: 1 },
         }),
       ),

@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { PTDS_SCHEMA_V11_SQL } from "../../ptds/paths.js";
+import { TRA_SCHEMA_V11_SQL } from "../../tra/paths.js";
 
 /** Personal / wearable tables writable via device import (no NRDL or compliance tables). */
 export const DEVICE_IMPORT_ALLOWED_TABLES = [
@@ -22,14 +22,14 @@ const OBJECT_PATTERN = new RegExp(
 
 let cachedDeviceSchemaSnippet: string | undefined;
 
-export function loadDeviceImportSchemaSnippet(schemaPath: string = PTDS_SCHEMA_V11_SQL): string {
-  if (cachedDeviceSchemaSnippet && schemaPath === PTDS_SCHEMA_V11_SQL) {
+export function loadDeviceImportSchemaSnippet(schemaPath: string = TRA_SCHEMA_V11_SQL): string {
+  if (cachedDeviceSchemaSnippet && schemaPath === TRA_SCHEMA_V11_SQL) {
     return cachedDeviceSchemaSnippet;
   }
   const ddl = readFileSync(schemaPath, "utf8");
   const matches = ddl.match(OBJECT_PATTERN) ?? [];
   const snippet = matches.join("\n\n").trim();
-  if (schemaPath === PTDS_SCHEMA_V11_SQL) {
+  if (schemaPath === TRA_SCHEMA_V11_SQL) {
     cachedDeviceSchemaSnippet = snippet;
   }
   return snippet;

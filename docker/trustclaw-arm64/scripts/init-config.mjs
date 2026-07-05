@@ -8,8 +8,7 @@ import path from "node:path";
 
 const stateDir = process.env.OPENCLAW_STATE_DIR ?? "/home/node/.openclaw";
 const configPath = process.env.OPENCLAW_CONFIG_PATH ?? path.join(stateDir, "openclaw.json");
-const seedPath =
-  process.env.TRUSTCLAW_CONFIG_SEED ?? "/opt/trustclaw/config/openclaw.json.seed";
+const seedPath = process.env.TRUSTCLAW_CONFIG_SEED ?? "/opt/trustclaw/config/openclaw.json.seed";
 const appRoot = process.env.TRUSTCLAW_APP_ROOT ?? "/app";
 
 function envTrim(key) {
@@ -66,10 +65,7 @@ function buildControlUiOrigins() {
       .map((origin) => origin.trim())
       .filter(Boolean);
   }
-  const hostPorts = [
-    envTrim("APP_PORT") ?? "8080",
-    envTrim("TRUSTCLAW_UI_PORT") ?? "15174",
-  ];
+  const hostPorts = [envTrim("APP_PORT") ?? "8080", envTrim("TRUSTCLAW_UI_PORT") ?? "15174"];
   const origins = new Set();
   for (const port of hostPorts) {
     origins.add(`http://127.0.0.1:${port}`);
@@ -106,11 +102,11 @@ function applyEnvToConfig(config) {
     ...config.plugins,
     entries: {
       ...(config.plugins?.entries ?? {}),
-      "trustclaw-ptds": {
-        ...(config.plugins?.entries?.["trustclaw-ptds"] ?? {}),
+      "trustclaw-tra": {
+        ...(config.plugins?.entries?.["trustclaw-tra"] ?? {}),
         enabled: true,
         config: {
-          ...(config.plugins?.entries?.["trustclaw-ptds"]?.config ?? {}),
+          ...(config.plugins?.entries?.["trustclaw-tra"]?.config ?? {}),
           agentPacksDir: envTrim("TRUSTCLAW_AGENT_PACKS_DIR") ?? "/app/trustclaw/agents",
           defaultAgentPack: envTrim("TRUSTCLAW_DEFAULT_AGENT_PACK") ?? "glp1-eligibility",
         },
@@ -161,16 +157,17 @@ function applyEnvToConfig(config) {
         [primaryModel]: { alias: "sonnet" },
       },
     },
-    list: Array.isArray(config.agents?.list) && config.agents.list.length > 0
-      ? config.agents.list
-      : [
-          {
-            id: "main",
-            default: true,
-            workspace: path.join(stateDir, "workspace"),
-            agentDir: path.join(stateDir, "agents", "main", "agent"),
-          },
-        ],
+    list:
+      Array.isArray(config.agents?.list) && config.agents.list.length > 0
+        ? config.agents.list
+        : [
+            {
+              id: "main",
+              default: true,
+              workspace: path.join(stateDir, "workspace"),
+              agentDir: path.join(stateDir, "agents", "main", "agent"),
+            },
+          ],
   };
 
   return config;

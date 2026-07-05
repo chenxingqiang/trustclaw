@@ -1,20 +1,20 @@
 # TrustClaw Business Agent Platform
 
-TrustClaw separates **PTDS platform capabilities** from **declarative Business Agent packs**. GLP-1/C3-PO is the first pack; additional医保/健康 agents ship as new directories under `trustclaw/agents/`.
+TrustClaw separates **TRA platform capabilities** from **declarative Business Agent packs**. GLP-1/C3-PO is the first pack; additional医保/健康 agents ship as new directories under `trustclaw/agents/`.
 
 ## Architecture
 
-| Layer | Owner | Responsibility |
-| --- | --- | --- |
-| **PTDS platform** | `trustclaw/ptds/`, `trustclaw/runtime/`, `extensions/trustclaw-ptds/` | SQLite, Text2SQL guards, consent, audit, ledger, plugin tools |
-| **Agent Pack** | `trustclaw/agents/<pack>/agent.pack.json` | Persona prompts, tool subset, rule engine, consent policy, audit labels |
-| **OpenClaw binding** | `openclaw.json` `agents.list` + plugin hooks | Maps `agentId` → pack; injects system context per turn |
+| Layer                | Owner                                                               | Responsibility                                                          |
+| -------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **TRA platform**     | `trustclaw/tra/`, `trustclaw/runtime/`, `extensions/trustclaw-tra/` | SQLite, Text2SQL guards, consent, audit, ledger, plugin tools           |
+| **Agent Pack**       | `trustclaw/agents/<pack>/agent.pack.json`                           | Persona prompts, tool subset, rule engine, consent policy, audit labels |
+| **OpenClaw binding** | `openclaw.json` `agents.list` + plugin hooks                        | Maps `agentId` → pack; injects system context per turn                  |
 
 ## Agent Pack contract
 
 Schema: `trustclaw/agents/_schema/agent-pack.v1.json`  
 Loader: `trustclaw/runtime/agent-pack/`  
-Registry: `AgentPackRegistry.load()` / `GET /api/ptds/agent-packs`
+Registry: `AgentPackRegistry.load()` / `GET /api/tra/agent-packs`
 
 ### Minimal pack layout
 
@@ -27,18 +27,18 @@ trustclaw/agents/my-agent/
 
 ### Bundled packs (V1)
 
-| Pack id | OpenClaw `agentId` | Read | Write | Rule engine |
-| --- | --- | --- | --- | --- |
-| `glp1-eligibility` | `main` (default) | ✓ | ✓ | `ast-compliance` |
-| `nrdl-reimburse` | `nrdl-reimburse` | ✓ | — | `nrdl-table` |
-| `compliance-auditor` | `compliance-auditor` | ✓ | — | `none` |
+| Pack id              | OpenClaw `agentId`   | Read | Write | Rule engine      |
+| -------------------- | -------------------- | ---- | ----- | ---------------- |
+| `glp1-eligibility`   | `main` (default)     | ✓    | ✓     | `ast-compliance` |
+| `nrdl-reimburse`     | `nrdl-reimburse`     | ✓    | —     | `nrdl-table`     |
+| `compliance-auditor` | `compliance-auditor` | ✓    | —     | `none`           |
 
 ## Platform tools (shared)
 
-| Tool | Purpose |
-| --- | --- |
-| `trustclaw_ptds_query` | SELECT Text2SQL + GLP-1 pipeline read path |
-| `trustclaw_ptds_write` | INSERT Text2SQL personal/device writes |
+| Tool                  | Purpose                                    |
+| --------------------- | ------------------------------------------ |
+| `trustclaw_tra_query` | SELECT Text2SQL + GLP-1 pipeline read path |
+| `trustclaw_tra_write` | INSERT Text2SQL personal/device writes     |
 
 Packs declare which tools are exposed. Consent policy is pack-scoped (`consent.read.allowAlways`, `consent.write.allowAlways`).
 
@@ -55,7 +55,7 @@ Packs declare which tools are exposed. Consent policy is pack-scoped (`consent.r
   },
   "plugins": {
     "entries": {
-      "trustclaw-ptds": {
+      "trustclaw-tra": {
         "enabled": true,
         "config": {
           "defaultAgentPack": "glp1-eligibility"
@@ -68,7 +68,7 @@ Packs declare which tools are exposed. Consent policy is pack-scoped (`consent.r
 
 Plugin hooks:
 
-- `before_prompt_build` → `buildTrustclawPtdsAgentGuidance({ sessionKey, openclawAgentId })`
+- `before_prompt_build` → `buildTrustclawTraAgentGuidance({ sessionKey, openclawAgentId })`
 - `before_tool_call` → consent gates per pack policy
 
 ## Pipeline Coordinator (D15)
@@ -77,29 +77,29 @@ Plugin hooks:
 
 ### Resolution priority
 
-1. **session** — explicit Panel C `PUT /api/ptds/session/agent-pack`
+1. **session** — explicit Panel C `PUT /api/tra/session/agent-pack`
 2. **lock** — coordinator lock from the first `bindLock` resolve (prompt/tool)
 3. **openclaw_agent** / **default** — only before a lock exists
 4. **request** — `POST /api/agent/chat` with `agent_pack_id` (also binds when `bindLock`)
 
-Storage: `state/ptds-audit/session-agent-packs.json` with `sessions` (UI override) and `locks` (coordinator).
+Storage: `state/tra-audit/session-agent-packs.json` with `sessions` (UI override) and `locks` (coordinator).
 
-| Endpoint | Purpose |
-| --- | --- |
-| `GET /api/ptds/session/agent-pack?session_id=…` | Preview effective pack (`bindLock: false`) |
-| `PUT /api/ptds/session/agent-pack` | User selects pack; sets override **and** lock |
-| `DELETE /api/ptds/session/agent-pack?session_id=…` | Clear override + lock (e.g. after `/new`) |
+| Endpoint                                          | Purpose                                       |
+| ------------------------------------------------- | --------------------------------------------- |
+| `GET /api/tra/session/agent-pack?session_id=…`    | Preview effective pack (`bindLock: false`)    |
+| `PUT /api/tra/session/agent-pack`                 | User selects pack; sets override **and** lock |
+| `DELETE /api/tra/session/agent-pack?session_id=…` | Clear override + lock (e.g. after `/new`)     |
 
-Hot paths (`before_prompt_build`, `before_tool_call`, PTDS tools) call `resolveBoundAgentPack()` (`bindLock: true`).
+Hot paths (`before_prompt_build`, `before_tool_call`, TRA tools) call `resolveBoundAgentPack()` (`bindLock: true`).
 
 ## REST API
 
-| Endpoint | Purpose |
-| --- | --- |
-| `GET /api/ptds/agent-packs` | List installed packs + default id |
-| `GET /api/ptds/session/agent-pack?session_id=…` | Resolved pack for a chat session |
-| `PUT /api/ptds/session/agent-pack` | Bind `{ session_id, agent_pack_id }` for Panel C selector |
-| `POST /api/agent/chat` | Optional `agent_pack_id` overrides pack for HTTP chat demo |
+| Endpoint                                       | Purpose                                                    |
+| ---------------------------------------------- | ---------------------------------------------------------- |
+| `GET /api/tra/agent-packs`                     | List installed packs + default id                          |
+| `GET /api/tra/session/agent-pack?session_id=…` | Resolved pack for a chat session                           |
+| `PUT /api/tra/session/agent-pack`              | Bind `{ session_id, agent_pack_id }` for Panel C selector  |
+| `POST /api/agent/chat`                         | Optional `agent_pack_id` overrides pack for HTTP chat demo |
 
 Runtime Context responses include `agent_pack_id`.
 
@@ -109,15 +109,15 @@ Runtime Context responses include `agent_pack_id`.
 2. Add `prompts/*-system.v1.md` persona (no hardcoded clinical rules — rules live in SQLite/AST).
 3. Map `openclaw.agentId` to an OpenClaw agent profile.
 4. Choose `rules.engine` and `pipeline.decisionBuilder`.
-5. Run `pnpm test extensions/trustclaw-ptds` and restart Gateway.
+5. Run `pnpm test extensions/trustclaw-tra` and restart Gateway.
 
 ## Phase roadmap
 
-| Phase | Scope |
-| --- | --- |
-| **2.5 (current)** | Pack schema, registry, GLP-1 migration, 3 template packs, API list |
-| **3** | Panel C agent selector; session-bound pack; multi-agent workspaces; pack-scoped Text2SQL prompts |
-| **4** | Pack authoring CLI/UI; signed external packs |
+| Phase             | Scope                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------ |
+| **2.5 (current)** | Pack schema, registry, GLP-1 migration, 3 template packs, API list                               |
+| **3**             | Panel C agent selector; session-bound pack; multi-agent workspaces; pack-scoped Text2SQL prompts |
+| **4**             | Pack authoring CLI/UI; signed external packs                                                     |
 
 ## Compliance notes
 

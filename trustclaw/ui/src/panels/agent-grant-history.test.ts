@@ -10,7 +10,7 @@ describe("renderAgentGrantHistoryTable", () => {
           audit_trail_id: "grant_abc",
           timestamp: 1_700_000_000,
           agent_pack_id: "glp1-eligibility",
-          scopes: ["ptds.chat", "panel.browse"],
+          scopes: ["tra.chat", "panel.browse"],
           granted: true,
           status: "SUCCESS",
         },
@@ -32,7 +32,7 @@ describe("renderAgentGrantHistoryTable", () => {
         action: "Action",
         granted: "Granted",
         revoked: "Revoked",
-        scopeLabels: { "ptds.chat": "Chat" },
+        scopeLabels: { "tra.chat": "Chat" },
         packDisplayName: (id) => id,
       },
     );

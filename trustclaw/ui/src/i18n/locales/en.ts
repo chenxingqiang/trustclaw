@@ -118,8 +118,8 @@ export const en: TrustclawMessages = {
         "panel.audit": "Panel D · audit",
         "panel.ledger": "Panel E · ledger",
         "panel.compliance": "Panel F · compliance",
-        "ptds.chat": "Chat / query tool",
-        "ptds.write": "TRA write tool",
+        "tra.chat": "Chat / query tool",
+        "tra.write": "TRA write tool",
       },
       registryTitle: "Logical agent registry (TRA)",
       registrySubtitle:
@@ -233,7 +233,7 @@ export const en: TrustclawMessages = {
       sectionChat: "Latest chat pipeline",
       chatTrailLabel: "Audit trail ID:",
       compliancePlaceholder:
-        "Loads DATA_CONSENT and COMPLIANCE_IMPORT events from state/ptds-audit/events.jsonl.",
+        "Loads DATA_CONSENT and COMPLIANCE_IMPORT events from state/tra-audit/events.jsonl.",
       complianceEmpty:
         "No compliance or consent audit events yet. Subscribe in Panel F or trigger data consent in Chat, then refresh.",
       complianceLoaded: "Loaded {count} compliance/consent audit event(s).",
@@ -241,14 +241,14 @@ export const en: TrustclawMessages = {
       reload: "Refresh audit",
       loadError: "Failed to load audit",
       chatEmpty:
-        "No chat pipeline audit yet. Ask a GLP-1 / health question in Chat (trustclaw_ptds_query) or refresh after a run.",
+        "No chat pipeline audit yet. Ask a GLP-1 / health question in Chat (trustclaw_tra_query) or refresh after a run.",
       chatLoaded: "Loaded {count} step(s) from the latest chat audit trail (JSONL).",
       chatLoading: "Loading chat pipeline audit…",
       chatLive: "Live runtime context from the latest chat run.",
       chatOtherAgent:
         "Live trail belongs to agent «{agent}» — switch the selector or chat with that agent.",
       apiUnavailable:
-        "Audit API unavailable (404). Restart Gateway (`pnpm trustclaw:dev`) so /api/ptds/audit/events is registered.",
+        "Audit API unavailable (404). Restart Gateway (`pnpm trustclaw:dev`) so /api/tra/audit/events is registered.",
       stepDataConsent: "Private data consent · DATA_CONSENT",
       stepAgentDomainGrant: "Domain agent grant · AGENT_DOMAIN_GRANT",
       stepComplianceImport: "External standard import · COMPLIANCE_IMPORT",

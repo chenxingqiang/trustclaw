@@ -399,7 +399,7 @@ export const zh_CN: TranslationMap = {
     resize: "调整侧边栏大小",
   },
   tabs: {
-    ptds: "TRA 控制台",
+    tra: "TRA 控制台",
     agents: "代理",
     activity: "活动",
     overview: "概览",
@@ -425,7 +425,7 @@ export const zh_CN: TranslationMap = {
     dreams: "梦境",
   },
   subtitles: {
-    ptds: "Agent 可信运行时（TRA） — 初始化、问答、审计与存证。",
+    tra: "Agent 可信运行时（TRA） — 初始化、问答、审计与存证。",
     agents: "工作区、工具、身份。",
     activity: "浏览器本地工具活动摘要。",
     overview: "状态、入口点、健康。",
@@ -450,7 +450,7 @@ export const zh_CN: TranslationMap = {
     logs: "实时网关日志。",
     dreams: "睡眠时进行记忆巩固。",
   },
-  ptdsPanel: {
+  traPanel: {
     leftRail: "TRA 初始化与数据",
     rightRail: "审计与账本",
     collapseLeft: "收起左侧面板",

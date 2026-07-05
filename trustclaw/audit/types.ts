@@ -11,13 +11,13 @@ export type AuditStepCode =
   | "LEDGER_COMMIT";
 
 export type AuditComponent =
-  | "PTDS.AgentDomainGrant"
-  | "PTDS.ComplianceImport"
-  | "PTDS.ReferenceSync"
-  | "PTDS.DeviceImport"
-  | "PTDS.Consent"
+  | "TRA.AgentDomainGrant"
+  | "TRA.ComplianceImport"
+  | "TRA.ReferenceSync"
+  | "TRA.DeviceImport"
+  | "TRA.Consent"
   | "AgentRuntime.Text2SQL"
-  | "PTDS.Query"
+  | "TRA.Query"
   | "AgentRuntime.ExecRule"
   | "Agent.GLP1Decision"
   | "EvidenceLedger.Commit";

@@ -1,0 +1,486 @@
+{
+  "domain": "medical-assistance",
+  "total": 8,
+  "agents": [
+    {
+      "id": "ma-001",
+      "name": "医疗救助资格认定 Agent",
+      "version": "1.0.0",
+      "domain": "medical-assistance",
+      "domain_name": "医疗救助",
+      "subdomain": "eligibility-recognition",
+      "description": "核验参保人是否属于低保、特困、低收入、重特大疾病患者等医���救助对象类别，核验民政认定状态",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.assistance.eligibility_category_check",
+        "rule.assistance.civil_affairs_status_verify",
+        "rule.assistance.disease_poverty_check"
+      ],
+      "required_tra_tables": {
+        "available": [
+          "diagnoses"
+        ],
+        "missing": [
+          "insurance_enrollment",
+          "insurance_policy_rules"
+        ]
+      },
+      "optional_tra_tables": [],
+      "data_sources": [
+        {
+          "table": "diagnoses",
+          "fields": [
+            "icd10_code",
+            "diagnosis_name"
+          ]
+        },
+        {
+          "table": "insurance_enrollment",
+          "fields": [
+            "assistance_category",
+            "dibao_status",
+            "tekun_status",
+            "low_income_flag",
+            "civil_affairs_id"
+          ]
+        },
+        {
+          "table": "insurance_policy_rules",
+          "fields": [
+            "region_code",
+            "assistance_eligibility_categories",
+            "assistance_recognition_authority"
+          ]
+        }
+      ],
+      "enabled": "partial",
+      "enabled_note": "diagnoses 已挂载，可做疾病致贫初筛；导入 insurance_enrollment 后完全激活",
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能完全激活：\n• insurance_enrollment（含民政救助认定状态）\n• insurance_policy_rules（救助对象类别规则）\n✅ 已可用：diagnoses"
+    },
+    {
+      "id": "ma-002",
+      "name": "救助优先支付判断 Agent",
+      "version": "1.0.0",
+      "domain": "medical-assistance",
+      "domain_name": "医疗救助",
+      "subdomain": "priority-payment",
+      "description": "判断医疗救助在结算链中的支付顺序，确保基本医保→大病保险→医疗救助→慈善救助的正确顺序",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.assistance.payment_order_check",
+        "rule.assistance.basic_insurance_exhausted_check",
+        "rule.assistance.catastrophic_settled_check"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": [
+          "insurance_enrollment",
+          "settlement_records",
+          "insurance_policy_rules"
+        ]
+      },
+      "optional_tra_tables": [],
+      "data_sources": [
+        {
+          "table": "insurance_enrollment",
+          "fields": [
+            "assistance_category",
+            "catastrophic_coverage_status"
+          ]
+        },
+        {
+          "table": "settlement_records",
+          "fields": [
+            "basic_fund_paid",
+            "catastrophic_paid",
+            "remaining_self_paid",
+            "assistance_eligible_amount"
+          ]
+        },
+        {
+          "table": "insurance_policy_rules",
+          "fields": [
+            "region_code",
+            "assistance_payment_order",
+            "assistance_trigger_condition"
+          ]
+        }
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment / settlement_records / insurance_policy_rules"
+    },
+    {
+      "id": "ma-003",
+      "name": "门诊救助限额核定 Agent",
+      "version": "1.0.0",
+      "domain": "medical-assistance",
+      "domain_name": "医疗救助",
+      "subdomain": "outpatient-assistance-cap",
+      "description": "按救助对象类别核定年度门诊救助限额标准，判断当次门诊救助申请的可支付金额",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.assistance.outpatient_cap_by_category",
+        "rule.assistance.outpatient_ytd_accumulation"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": [
+          "insurance_enrollment",
+          "settlement_records",
+          "insurance_policy_rules"
+        ]
+      },
+      "optional_tra_tables": [
+        "visit_records"
+      ],
+      "data_sources": [
+        {
+          "table": "insurance_enrollment",
+          "fields": [
+            "assistance_category",
+            "region_code"
+          ]
+        },
+        {
+          "table": "settlement_records",
+          "fields": [
+            "settlement_year",
+            "outpatient_assistance_paid_ytd"
+          ]
+        },
+        {
+          "table": "insurance_policy_rules",
+          "fields": [
+            "region_code",
+            "outpatient_assistance_cap_dibao",
+            "outpatient_assistance_cap_tekun",
+            "outpatient_assistance_cap_low_income"
+          ]
+        }
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment（含救助对象类别）\n• settlement_records / insurance_policy_rules（门诊救助限额标准）"
+    },
+    {
+      "id": "ma-004",
+      "name": "住院救助比例计算 Agent",
+      "version": "1.0.0",
+      "domain": "medical-assistance",
+      "domain_name": "医疗救助",
+      "subdomain": "inpatient-assistance-ratio",
+      "description": "按救助对象类别和剩余个人负担金额计算住院医疗救助支付比例和可支付金额，生成救助结算单",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.assistance.inpatient_ratio_by_category",
+        "rule.assistance.residual_after_insurance_check",
+        "rule.assistance.annual_cap_check"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": [
+          "insurance_enrollment",
+          "settlement_records",
+          "insurance_policy_rules"
+        ]
+      },
+      "optional_tra_tables": [
+        "hospitalization_records"
+      ],
+      "data_sources": [
+        {
+          "table": "insurance_enrollment",
+          "fields": [
+            "assistance_category",
+            "region_code"
+          ]
+        },
+        {
+          "table": "settlement_records",
+          "fields": [
+            "basic_self_paid",
+            "catastrophic_residual",
+            "total_assistance_eligible"
+          ]
+        },
+        {
+          "table": "insurance_policy_rules",
+          "fields": [
+            "region_code",
+            "inpatient_assistance_ratio_dibao",
+            "inpatient_assistance_ratio_tekun",
+            "inpatient_assistance_annual_cap"
+          ]
+        }
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment / settlement_records / insurance_policy_rules"
+    },
+    {
+      "id": "ma-005",
+      "name": "医疗救助与基本医保衔接 Agent",
+      "version": "1.0.0",
+      "domain": "medical-assistance",
+      "domain_name": "医疗救助",
+      "subdomain": "insurance-linkage",
+      "description": "处理医疗救助对象参加基本医保的个人缴费补贴，核验政府代缴资格和代缴金额",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.assistance.premium_subsidy_eligibility",
+        "rule.assistance.government_payment_amount",
+        "rule.assistance.enrollment_linkage_check"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": [
+          "insurance_enrollment",
+          "insurance_policy_rules"
+        ]
+      },
+      "optional_tra_tables": [],
+      "data_sources": [
+        {
+          "table": "insurance_enrollment",
+          "fields": [
+            "assistance_category",
+            "dibao_status",
+            "tekun_status",
+            "government_paid_premium"
+          ]
+        },
+        {
+          "table": "insurance_policy_rules",
+          "fields": [
+            "region_code",
+            "dibao_premium_subsidy_full",
+            "tekun_premium_subsidy_full",
+            "low_income_premium_subsidy_ratio"
+          ]
+        }
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment（含代缴状态）\n• insurance_policy_rules（政府代缴政策）"
+    },
+    {
+      "id": "ma-006",
+      "name": "慈善救助协同结算 Agent",
+      "version": "1.0.0",
+      "domain": "medical-assistance",
+      "domain_name": "医疗救助",
+      "subdomain": "charity-coordination",
+      "description": "处理慈善机构救助与医保、医疗救助的协同结算，避免重复报销，核验慈善基金支付凭证",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.assistance.charity_deduplication",
+        "rule.assistance.charity_voucher_check",
+        "rule.assistance.total_benefit_cap"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": [
+          "settlement_records",
+          "insurance_policy_rules"
+        ]
+      },
+      "optional_tra_tables": [
+        "audit_records"
+      ],
+      "data_sources": [
+        {
+          "table": "settlement_records",
+          "fields": [
+            "basic_paid",
+            "catastrophic_paid",
+            "assistance_paid",
+            "charity_paid",
+            "total_expense",
+            "remaining_self_paid"
+          ]
+        },
+        {
+          "table": "insurance_policy_rules",
+          "fields": [
+            "region_code",
+            "charity_coordination_rules",
+            "max_combined_benefit_ratio"
+          ]
+        }
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• settlement_records（含慈善支付字段）\n• insurance_policy_rules（协同救助规则）"
+    },
+    {
+      "id": "ma-007",
+      "name": "救助申请材料核验 Agent",
+      "version": "1.0.0",
+      "domain": "medical-assistance",
+      "domain_name": "医疗救助",
+      "subdomain": "application-document-check",
+      "description": "核验医疗救助申请材料的完整性和合规性，包括民政证明、医疗诊断书、费用票据及银行账户信息",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.assistance.document_completeness_check",
+        "rule.assistance.civil_affairs_cert_validity",
+        "rule.assistance.medical_cert_authenticity"
+      ],
+      "required_tra_tables": {
+        "available": [
+          "diagnoses"
+        ],
+        "missing": [
+          "audit_records",
+          "insurance_enrollment"
+        ]
+      },
+      "optional_tra_tables": [],
+      "data_sources": [
+        {
+          "table": "diagnoses",
+          "fields": [
+            "icd10_code",
+            "diagnosis_name"
+          ]
+        },
+        {
+          "table": "audit_records",
+          "fields": [
+            "application_id",
+            "document_list",
+            "missing_documents",
+            "verification_status",
+            "submission_date"
+          ]
+        },
+        {
+          "table": "insurance_enrollment",
+          "fields": [
+            "assistance_category",
+            "civil_affairs_cert_no",
+            "cert_valid_until"
+          ]
+        }
+      ],
+      "enabled": "partial",
+      "enabled_note": "diagnoses 已挂载，可核验诊断书内容；需 audit_records 完整处理申请材料",
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能完全激活：\n• audit_records（救助申请记录）\n• insurance_enrollment（含民政证明信息）\n✅ 已可用：diagnoses"
+    },
+    {
+      "id": "ma-008",
+      "name": "救助年度费用汇总 Agent",
+      "version": "1.0.0",
+      "domain": "medical-assistance",
+      "domain_name": "医疗救助",
+      "subdomain": "annual-summary",
+      "description": "汇总救助对象年度门诊及住院医疗救助支付情况，生成救助资金使用报告并监控预算执行进度",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.assistance.annual_summary_calc",
+        "rule.assistance.budget_execution_monitoring"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": [
+          "settlement_records",
+          "insurance_enrollment"
+        ]
+      },
+      "optional_tra_tables": [
+        "visit_records",
+        "hospitalization_records"
+      ],
+      "data_sources": [
+        {
+          "table": "settlement_records",
+          "fields": [
+            "settlement_year",
+            "assistance_paid",
+            "assistance_category",
+            "outpatient_assistance_paid",
+            "inpatient_assistance_paid"
+          ]
+        },
+        {
+          "table": "insurance_enrollment",
+          "fields": [
+            "assistance_category",
+            "region_code",
+            "assistance_beneficiary_count"
+          ]
+        }
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• settlement_records（含救助支付明细）\n• insurance_enrollment（救助对象人数统计）"
+    }
+  ]
+}

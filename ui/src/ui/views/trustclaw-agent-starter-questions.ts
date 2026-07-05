@@ -1,7 +1,7 @@
-// Starter question chips for the active PTDS domain agent pack.
+// Starter question chips for the active TRA domain agent pack.
 import { html, nothing, type TemplateResult } from "lit";
 import { i18n, t } from "../../i18n/index.ts";
-import type { TrustclawAgentPackSummary } from "../controllers/trustclaw-ptds.ts";
+import type { TrustclawAgentPackSummary } from "../controllers/trustclaw-tra.ts";
 
 export type TrustclawAgentStarterQuestionsParams = {
   packs: TrustclawAgentPackSummary[];
@@ -33,25 +33,25 @@ export function renderTrustclawAgentStarterQuestions(
   }
 
   return html`<div
-    class="trustclaw-ptds-starter-questions"
-    aria-label=${t("ptdsPanel.starterQuestionsTitle")}
+    class="trustclaw-tra-starter-questions"
+    aria-label=${t("traPanel.starterQuestionsTitle")}
   >
-    <span class="trustclaw-ptds-starter-questions__label"
-      >${t("ptdsPanel.starterQuestionsTitle")}</span
+    <span class="trustclaw-tra-starter-questions__label"
+      >${t("traPanel.starterQuestionsTitle")}</span
     >
-    <div class="trustclaw-ptds-starter-questions__chips" role="list">
+    <div class="trustclaw-tra-starter-questions__chips" role="list">
       ${questions.map(
         (question, index) => html`<button
           type="button"
-          class="trustclaw-ptds-starter-questions__chip"
+          class="trustclaw-tra-starter-questions__chip"
           role="listitem"
           title=${questionText(question)}
           @click=${() => {
             params.onSelect(questionText(question));
           }}
         >
-          <span class="trustclaw-ptds-starter-questions__chip-index">${index + 1}</span>
-          <span class="trustclaw-ptds-starter-questions__chip-text">${questionText(question)}</span>
+          <span class="trustclaw-tra-starter-questions__chip-index">${index + 1}</span>
+          <span class="trustclaw-tra-starter-questions__chip-text">${questionText(question)}</span>
         </button>`,
       )}
     </div>

@@ -1,6 +1,6 @@
-# Text2SQL Agent — PTDS compliance metadata
+# Text2SQL Agent — TRA compliance metadata
 
-Convert natural-language **compliance / audit metadata** questions into **one** SQLite **SELECT** for PTDS governance tables.
+Convert natural-language **compliance / audit metadata** questions into **one** SQLite **SELECT** for TRA governance tables.
 
 ## Output rules (strict)
 

@@ -1,6 +1,6 @@
-// Panel B — PTDS Data Browser (personal + subscribed data with lineage).
+// Panel B — TRA Data Browser (personal + subscribed data with lineage).
 
-import type { PtdsTableCatalogRow, TrustclawApiClient } from "../api.js";
+import type { TraTableCatalogRow, TrustclawApiClient } from "../api.js";
 import { msg } from "../i18n/index.js";
 import { formatProvenanceCell, renderBrowserLineage } from "./browser-lineage.js";
 import {
@@ -65,7 +65,7 @@ export function renderBrowser(
   const panelBody = root.querySelector<HTMLElement>(".panel__body")!;
   const agentBar = mountPanelAgentBar(panelBody, client, "panel.browse");
 
-  let catalog: PtdsTableCatalogRow[] = [];
+  let catalog: TraTableCatalogRow[] = [];
   let allTables: string[] = [];
 
   function setMountedTag(mounted: boolean | null): void {

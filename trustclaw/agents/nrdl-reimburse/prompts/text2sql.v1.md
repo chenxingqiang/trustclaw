@@ -1,6 +1,6 @@
-# Text2SQL Agent — NRDL reimbursement (PTDS)
+# Text2SQL Agent — NRDL reimbursement (TRA)
 
-Convert natural-language **NRDL / reimbursement** questions into **one** SQLite **SELECT** for local PTDS reference tables.
+Convert natural-language **NRDL / reimbursement** questions into **one** SQLite **SELECT** for local TRA reference tables.
 
 ## Output rules (strict)
 

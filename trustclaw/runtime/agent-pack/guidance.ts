@@ -1,20 +1,17 @@
-import {
-  TRUSTCLAW_PTDS_QUERY_TOOL,
-  TRUSTCLAW_PTDS_WRITE_TOOL,
-} from "../constants.js";
+import { TRUSTCLAW_TRA_QUERY_TOOL, TRUSTCLAW_TRA_WRITE_TOOL } from "../constants.js";
 import { readPackAsset, type ResolvedAgentPack } from "./load.js";
 
 export function buildAgentPackToolGuidance(pack: ResolvedAgentPack): string {
   const lines = [
     "## Active tools",
-    `**Read:** For PTDS-backed questions in the **${pack.displayName.en}** domain — call **${pack.tools.read}** with the user's question.`,
+    `**Read:** For TRA-backed questions in the **${pack.displayName.en}** domain — call **${pack.tools.read}** with the user's question.`,
   ];
   if (pack.tools.write) {
     lines.push(
       `**Write:** When the user asks to save/update personal measurements allowed for this agent — call **${pack.tools.write}** with a clear natural-language write request. Never create SQLite files in the working directory.`,
     );
   } else {
-    lines.push("**Write:** This agent pack does not expose PTDS write tools.");
+    lines.push("**Write:** This agent pack does not expose TRA write tools.");
   }
   lines.push(
     "Each tool call triggers **explicit user consent**; never bypass approval.",
@@ -34,9 +31,9 @@ export function buildAgentPackSystemContext(pack: ResolvedAgentPack): string {
 }
 
 export function packEnablesWriteTool(pack: ResolvedAgentPack): boolean {
-  return pack.tools.write === TRUSTCLAW_PTDS_WRITE_TOOL;
+  return pack.tools.write === TRUSTCLAW_TRA_WRITE_TOOL;
 }
 
 export function packEnablesReadTool(pack: ResolvedAgentPack): boolean {
-  return pack.tools.read === TRUSTCLAW_PTDS_QUERY_TOOL;
+  return pack.tools.read === TRUSTCLAW_TRA_QUERY_TOOL;
 }

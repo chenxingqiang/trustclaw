@@ -1,0 +1,503 @@
+{
+  "domain": "tcm",
+  "total": 8,
+  "agents": [
+    {
+      "id": "tc-001",
+      "name": "中医诊疗项目目录核验 Agent",
+      "version": "1.0.0",
+      "domain": "tcm",
+      "domain_name": "中医药报销",
+      "subdomain": "tcm-procedure-catalog",
+      "description": "核验中医诊疗项目是否在医保支付范围内，区分针灸、推拿、正骨、中医特色技术等类别及报销比例",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.tcm.procedure_catalog_lookup",
+        "rule.tcm.category_classification",
+        "rule.tcm.regional_tcm_supplement"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": [
+          "visit_records",
+          "procedure_catalog"
+        ]
+      },
+      "optional_tra_tables": [
+        "insurance_policy_rules"
+      ],
+      "data_sources": [
+        {
+          "table": "visit_records",
+          "fields": [
+            "procedure_codes",
+            "charge_items",
+            "charge_amounts",
+            "institution_type"
+          ]
+        },
+        {
+          "table": "procedure_catalog",
+          "fields": [
+            "procedure_code",
+            "procedure_name",
+            "tcm_category",
+            "payment_ratio",
+            "tcm_incentive_flag",
+            "price_ceiling"
+          ]
+        }
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• visit_records（中医就诊记录）\n• procedure_catalog（含中医诊疗项目分类）\n→ Panel A 导入相关数据后激活"
+    },
+    {
+      "id": "tc-002",
+      "name": "中药饮片报销资格判断 Agent",
+      "version": "1.0.0",
+      "domain": "tcm",
+      "domain_name": "中医药报销",
+      "subdomain": "herbal-decoction-reimbursement",
+      "description": "判断中药饮片处方的医保支付资格，核验饮片品种是否在省级医保目录、处方来源及调剂机构资质",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.tcm.herbal_decoction_catalog",
+        "rule.tcm.prescription_source_check",
+        "rule.tcm.dispensing_institution_qualification"
+      ],
+      "required_tra_tables": {
+        "available": [
+          "medications"
+        ],
+        "missing": [
+          "drug_catalog_nrdl",
+          "prescription_records"
+        ]
+      },
+      "optional_tra_tables": [
+        "diagnoses"
+      ],
+      "data_sources": [
+        {
+          "table": "medications",
+          "fields": [
+            "drug_name",
+            "drug_category",
+            "dosage_form"
+          ]
+        },
+        {
+          "table": "drug_catalog_nrdl",
+          "fields": [
+            "drug_code",
+            "drug_name",
+            "tcm_herbal_flag",
+            "provincial_included",
+            "payment_ratio"
+          ]
+        },
+        {
+          "table": "prescription_records",
+          "fields": [
+            "rx_type",
+            "prescriber_id",
+            "tcm_prescriber_qualification",
+            "dispensing_institution_id",
+            "herb_items",
+            "herb_quantities"
+          ]
+        }
+      ],
+      "enabled": "partial",
+      "enabled_note": "medications 已挂载，可查用药记录；需 drug_catalog_nrdl 完整判断饮片支付资格",
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能完全激活：\n• drug_catalog_nrdl（含中药饮片目录标记）\n• prescription_records（中药处方记录）\n✅ 已可用：medications"
+    },
+    {
+      "id": "tc-003",
+      "name": "中成药 NRDL 核验 Agent",
+      "version": "1.0.0",
+      "domain": "tcm",
+      "domain_name": "中医药报销",
+      "subdomain": "patent-medicine-nrdl",
+      "description": "核验中成药是否在 NRDL 目录内，区分甲类/乙类，判断限定证候使用条件及报销比例",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.drug.nrdl_catalog_lookup",
+        "rule.tcm.patent_medicine_indication_match",
+        "rule.tcm.syndrome_differentiation_check"
+      ],
+      "required_tra_tables": {
+        "available": [
+          "medications",
+          "diagnoses"
+        ],
+        "missing": [
+          "drug_catalog_nrdl"
+        ]
+      },
+      "optional_tra_tables": [
+        "prescription_records"
+      ],
+      "data_sources": [
+        {
+          "table": "medications",
+          "fields": [
+            "drug_name",
+            "generic_name",
+            "dosage_form",
+            "strength"
+          ]
+        },
+        {
+          "table": "diagnoses",
+          "fields": [
+            "icd10_code",
+            "tcm_syndrome_code"
+          ]
+        },
+        {
+          "table": "drug_catalog_nrdl",
+          "fields": [
+            "drug_code",
+            "drug_name",
+            "tcm_patent_flag",
+            "category",
+            "syndrome_restrictions",
+            "indication_codes",
+            "payment_ratio"
+          ]
+        }
+      ],
+      "enabled": "partial",
+      "enabled_note": "medications + diagnoses 已挂载，可做初步目录查询；需 drug_catalog_nrdl 获取限定支付条件",
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能完全激活：\n• drug_catalog_nrdl（含中成药证候限制）\n✅ 已可用：medications + diagnoses"
+    },
+    {
+      "id": "tc-004",
+      "name": "针灸推拿项目报销 Agent",
+      "version": "1.0.0",
+      "domain": "tcm",
+      "domain_name": "中医药报销",
+      "subdomain": "acupuncture-massage",
+      "description": "核算针灸、推拿、拔罐、刮痧等传统中医适宜技术的医保报销金额，核验项目频次限制和适应症",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.tcm.acupuncture_frequency_limit",
+        "rule.tcm.massage_indication_check",
+        "rule.tcm.cupping_session_cap"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": [
+          "visit_records",
+          "procedure_catalog"
+        ]
+      },
+      "optional_tra_tables": [
+        "diagnoses",
+        "insurance_policy_rules"
+      ],
+      "data_sources": [
+        {
+          "table": "visit_records",
+          "fields": [
+            "procedure_codes",
+            "visit_date",
+            "session_count",
+            "charge_amounts",
+            "institution_type"
+          ]
+        },
+        {
+          "table": "procedure_catalog",
+          "fields": [
+            "procedure_code",
+            "procedure_name",
+            "max_sessions_per_course",
+            "max_courses_per_year",
+            "tcm_incentive_rate",
+            "price_ceiling"
+          ]
+        }
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• visit_records（中医适宜技术就诊记录）\n• procedure_catalog（含频次限制规则）"
+    },
+    {
+      "id": "tc-005",
+      "name": "中医特色技术报销比例 Agent",
+      "version": "1.0.0",
+      "domain": "tcm",
+      "domain_name": "中医药报销",
+      "subdomain": "tcm-special-technology",
+      "description": "适用中医药倾斜政策，对中医特色诊疗项目按高于西医的报销比例进行结算，核验政策适用资格",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.tcm.incentive_policy_check",
+        "rule.tcm.tcm_institution_ratio_uplift",
+        "rule.tcm.eligible_procedure_filter"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": [
+          "visit_records",
+          "procedure_catalog",
+          "insurance_policy_rules"
+        ]
+      },
+      "optional_tra_tables": [
+        "hospital_catalog"
+      ],
+      "data_sources": [
+        {
+          "table": "visit_records",
+          "fields": [
+            "institution_id",
+            "institution_type",
+            "procedure_codes",
+            "charge_amounts"
+          ]
+        },
+        {
+          "table": "procedure_catalog",
+          "fields": [
+            "procedure_code",
+            "tcm_incentive_flag",
+            "standard_ratio",
+            "tcm_uplift_ratio"
+          ]
+        },
+        {
+          "table": "insurance_policy_rules",
+          "fields": [
+            "region_code",
+            "tcm_institution_ratio_bonus",
+            "tcm_eligible_procedure_list"
+          ]
+        }
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• visit_records / procedure_catalog / insurance_policy_rules（含中医倾斜政策）"
+    },
+    {
+      "id": "tc-006",
+      "name": "中医住院诊疗合规审核 Agent",
+      "version": "1.0.0",
+      "domain": "tcm",
+      "domain_name": "中医药报销",
+      "subdomain": "tcm-inpatient-compliance",
+      "description": "审核中医住院诊疗的合规性，核验中医主治方案与诊断的一致性、中药和西药费用比例及住院必要性",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.tcm.inpatient_tcm_ratio_check",
+        "rule.tcm.treatment_diagnosis_consistency",
+        "rule.tcm.admission_necessity_check"
+      ],
+      "required_tra_tables": {
+        "available": [
+          "diagnoses"
+        ],
+        "missing": [
+          "hospitalization_records",
+          "drug_catalog_nrdl"
+        ]
+      },
+      "optional_tra_tables": [
+        "procedure_catalog"
+      ],
+      "data_sources": [
+        {
+          "table": "diagnoses",
+          "fields": [
+            "icd10_code",
+            "diagnosis_name",
+            "tcm_syndrome_code"
+          ]
+        },
+        {
+          "table": "hospitalization_records",
+          "fields": [
+            "tcm_drug_cost",
+            "western_drug_cost",
+            "tcm_procedure_cost",
+            "total_charge",
+            "primary_treatment_approach"
+          ]
+        },
+        {
+          "table": "drug_catalog_nrdl",
+          "fields": [
+            "drug_code",
+            "tcm_patent_flag",
+            "tcm_herbal_flag"
+          ]
+        }
+      ],
+      "enabled": "partial",
+      "enabled_note": "diagnoses 已挂载，可核验中医诊断；需 hospitalization_records 完整审核费用结构",
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能完全激活：\n• hospitalization_records / drug_catalog_nrdl\n✅ 已可用：diagnoses"
+    },
+    {
+      "id": "tc-007",
+      "name": "中医院等级及协议核验 Agent",
+      "version": "1.0.0",
+      "domain": "tcm",
+      "domain_name": "中医药报销",
+      "subdomain": "tcm-hospital-verification",
+      "description": "核验中医医院（含中西医结合医院）的等级、医保定点状态及中医特色诊疗协议资质",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.tcm.hospital_type_check",
+        "rule.tcm.accreditation_status_check",
+        "rule.tcm.tcm_specialty_agreement"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": [
+          "hospital_catalog"
+        ]
+      },
+      "optional_tra_tables": [
+        "insurance_policy_rules"
+      ],
+      "data_sources": [
+        {
+          "table": "hospital_catalog",
+          "fields": [
+            "hospital_id",
+            "hospital_name",
+            "hospital_type",
+            "tcm_flag",
+            "level",
+            "insurance_accreditation",
+            "tcm_specialty_agreement",
+            "agreement_valid_until"
+          ]
+        }
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• hospital_catalog（含中医类型及协议标记字段）"
+    },
+    {
+      "id": "tc-008",
+      "name": "中医药报销年度统计 Agent",
+      "version": "1.0.0",
+      "domain": "tcm",
+      "domain_name": "中医药报销",
+      "subdomain": "tcm-annual-statistics",
+      "description": "汇总参保人年度中医药就诊次数、中药费用、中医诊疗费用及医保支付情况，生成中医药使用趋势报告",
+      "scopes": [
+        "tra.read",
+        "tra.chat",
+        "panel.browse",
+        "panel.audit"
+      ],
+      "tra_write_allowed": false,
+      "tools": [
+        "trustclaw_tra_query"
+      ],
+      "rules": [
+        "rule.tcm.annual_summary_calc",
+        "rule.statistics.tcm_utilization_trend"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": [
+          "settlement_records",
+          "visit_records"
+        ]
+      },
+      "optional_tra_tables": [
+        "hospitalization_records",
+        "insurance_enrollment"
+      ],
+      "data_sources": [
+        {
+          "table": "settlement_records",
+          "fields": [
+            "settlement_year",
+            "tcm_drug_paid",
+            "tcm_procedure_paid",
+            "total_tcm_paid",
+            "visit_count_tcm"
+          ]
+        },
+        {
+          "table": "visit_records",
+          "fields": [
+            "visit_date",
+            "institution_type",
+            "tcm_flag",
+            "total_charge",
+            "fund_paid"
+          ]
+        }
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• settlement_records（含中医药费用分类字段）\n• visit_records（中医就诊记录）"
+    }
+  ]
+}

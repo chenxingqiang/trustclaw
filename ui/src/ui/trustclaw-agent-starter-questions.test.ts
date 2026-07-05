@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
 import { render } from "lit";
+import { describe, expect, it } from "vitest";
 import { renderTrustclawAgentStarterQuestions } from "./views/trustclaw-agent-starter-questions.ts";
 
 const t = {
-  t: (key: string) => (key === "ptdsPanel.starterQuestionsTitle" ? "试试这些问题" : key),
+  t: (key: string) => (key === "traPanel.starterQuestionsTitle" ? "试试这些问题" : key),
 };
 
 describe("renderTrustclawAgentStarterQuestions", () => {
@@ -16,7 +16,7 @@ describe("renderTrustclawAgentStarterQuestions", () => {
             id: "glp1-eligibility",
             version: "1.0.0",
             displayName: { "zh-CN": "GLP-1", en: "GLP-1" },
-            tools: { read: "trustclaw_ptds_query" },
+            tools: { read: "trustclaw_tra_query" },
             starterQuestions: [
               { "zh-CN": "问题一", en: "Q1" },
               { "zh-CN": "问题二", en: "Q2" },
@@ -29,7 +29,7 @@ describe("renderTrustclawAgentStarterQuestions", () => {
       }),
       root,
     );
-    const chips = root.querySelectorAll(".trustclaw-ptds-starter-questions__chip");
+    const chips = root.querySelectorAll(".trustclaw-tra-starter-questions__chip");
     expect(chips).toHaveLength(3);
     expect(chips[0]?.textContent).toMatch(/Q1|问题一/);
   });

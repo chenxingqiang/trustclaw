@@ -15,7 +15,7 @@ import { resolveToolDisplay } from "../tool-display.ts";
 import {
   decorateTrustclawEvidenceTags,
   type TrustclawEvidenceCitation,
-} from "../trustclaw-ptds-bridge.ts";
+} from "../trustclaw-tra-bridge.ts";
 import type {
   MessageContentItem,
   MessageGroup,

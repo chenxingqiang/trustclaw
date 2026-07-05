@@ -1,18 +1,12 @@
-// Agent pack selector bar for PTDS Console Panel C.
+// Agent pack selector bar for TRA Console Panel C.
 import { html, nothing, type TemplateResult } from "lit";
 import { i18n, t } from "../../i18n/index.ts";
-import type { TrustclawAgentPackSummary } from "../controllers/trustclaw-ptds.ts";
+import type { TrustclawAgentPackSummary } from "../controllers/trustclaw-tra.ts";
 
 export type TrustclawAgentPackSelectorParams = {
   packs: TrustclawAgentPackSummary[];
   selectedPackId: string | null;
-  resolvedFrom:
-    | "session"
-    | "lock"
-    | "openclaw_agent"
-    | "default"
-    | "request"
-    | null;
+  resolvedFrom: "session" | "lock" | "openclaw_agent" | "default" | "request" | null;
   locked: boolean;
   agentPackMismatch: boolean;
   loading: boolean;
@@ -31,18 +25,22 @@ function packLabel(pack: TrustclawAgentPackSummary): string {
 
 function resolvedFromHint(params: TrustclawAgentPackSelectorParams): string | null {
   if (params.agentPackMismatch) {
-    return t("ptdsPanel.agentPackMismatch");
+    return t("traPanel.agentPackMismatch");
   }
   if (params.locked || params.resolvedFrom === "lock") {
-    return t("ptdsPanel.agentPackLocked");
+    return t("traPanel.agentPackLocked");
   }
-  if (!params.resolvedFrom || params.resolvedFrom === "session" || params.resolvedFrom === "request") {
+  if (
+    !params.resolvedFrom ||
+    params.resolvedFrom === "session" ||
+    params.resolvedFrom === "request"
+  ) {
     return null;
   }
   if (params.resolvedFrom === "openclaw_agent") {
-    return t("ptdsPanel.agentPackFromAgent");
+    return t("traPanel.agentPackFromAgent");
   }
-  return t("ptdsPanel.agentPackFromDefault");
+  return t("traPanel.agentPackFromDefault");
 }
 
 export function renderTrustclawAgentPackSelector(
@@ -51,13 +49,13 @@ export function renderTrustclawAgentPackSelector(
   const hint = resolvedFromHint(params);
   const disabled = params.loading || params.saving || params.packs.length === 0;
 
-  return html`<div class="trustclaw-ptds-agent-pack" aria-label=${t("ptdsPanel.agentPackLabel")}>
-    <label class="trustclaw-ptds-agent-pack__label" for="trustclaw-ptds-agent-pack-select">
-      ${t("ptdsPanel.agentPackLabel")}
+  return html`<div class="trustclaw-tra-agent-pack" aria-label=${t("traPanel.agentPackLabel")}>
+    <label class="trustclaw-tra-agent-pack__label" for="trustclaw-tra-agent-pack-select">
+      ${t("traPanel.agentPackLabel")}
     </label>
     <select
-      id="trustclaw-ptds-agent-pack-select"
-      class="trustclaw-ptds-agent-pack__select"
+      id="trustclaw-tra-agent-pack-select"
+      class="trustclaw-tra-agent-pack__select"
       ?disabled=${disabled}
       .value=${params.selectedPackId ?? ""}
       @change=${(event: Event) => {
@@ -68,7 +66,7 @@ export function renderTrustclawAgentPackSelector(
       }}
     >
       ${params.packs.length === 0
-        ? html`<option value="">${t("ptdsPanel.agentPackLoading")}</option>`
+        ? html`<option value="">${t("traPanel.agentPackLoading")}</option>`
         : params.packs.map(
             (pack) =>
               html`<option value=${pack.id} ?selected=${pack.id === params.selectedPackId}>
@@ -77,12 +75,12 @@ export function renderTrustclawAgentPackSelector(
           )}
     </select>
     ${params.saving
-      ? html`<span class="trustclaw-ptds-agent-pack__status">${t("ptdsPanel.agentPackSaving")}</span>`
+      ? html`<span class="trustclaw-tra-agent-pack__status">${t("traPanel.agentPackSaving")}</span>`
       : hint
-        ? html`<span class="trustclaw-ptds-agent-pack__hint">${hint}</span>`
+        ? html`<span class="trustclaw-tra-agent-pack__hint">${hint}</span>`
         : nothing}
     ${params.error
-      ? html`<span class="trustclaw-ptds-agent-pack__error" role="status">${params.error}</span>`
+      ? html`<span class="trustclaw-tra-agent-pack__error" role="status">${params.error}</span>`
       : nothing}
   </div>`;
 }

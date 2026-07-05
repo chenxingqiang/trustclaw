@@ -21,9 +21,9 @@ From `docker/trustclaw-arm64/`:
 | Path                          | Source in container                                              |
 | ----------------------------- | ---------------------------------------------------------------- |
 | `openclaw.json`               | `/home/node/.openclaw/openclaw.json` (API keys redacted on pull) |
-| `state/`                      | `state/local_ptds.db`, `trustclaw-agents-merged/`, `ptds-audit/` |
+| `state/`                      | `state/local_tra.db`, `trustclaw-agents-merged/`, `tra-audit/`   |
 | `workspace/domain-agents/`    | Domain agent registry JSON/SQL                                   |
-| `workspace/trustclaw-agents/` | PTDS agent pack symlinks/sources                                 |
+| `workspace/trustclaw-agents/` | TRA agent pack symlinks/sources                                  |
 | `npm/`                        | Installed channel plugins (e.g. WeChat)                          |
 
-Product registry files are also copied to `trustclaw/ptds/seeds/domain-agents/` on pull.
+Product registry files are also copied to `trustclaw/tra/seeds/domain-agents/` on pull.

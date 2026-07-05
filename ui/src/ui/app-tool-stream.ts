@@ -12,11 +12,11 @@ import {
 } from "./session-key.ts";
 import { normalizeLowercaseStringOrEmpty } from "./string-coerce.ts";
 import {
-  syncTrustclawPtdsRuntimeContext,
-  syncTrustclawPtdsDataChanged,
-  TRUSTCLAW_PTDS_QUERY_TOOL,
-  TRUSTCLAW_PTDS_WRITE_TOOL,
-} from "./trustclaw-ptds-bridge.ts";
+  syncTrustclawTraRuntimeContext,
+  syncTrustclawTraDataChanged,
+  TRUSTCLAW_TRA_QUERY_TOOL,
+  TRUSTCLAW_TRA_WRITE_TOOL,
+} from "./trustclaw-tra-bridge.ts";
 
 const TOOL_STREAM_LIMIT = 50;
 const TOOL_STREAM_THROTTLE_MS = 80;
@@ -75,7 +75,7 @@ type ToolStreamHost = {
   toolStreamSyncTimer: number | null;
   chatModelOverrides?: Record<string, ChatModelOverride | null>;
   trustclawRuntimeContext?:
-    | import("./trustclaw-ptds-bridge.ts").TrustclawRuntimeContextPayload
+    | import("./trustclaw-tra-bridge.ts").TrustclawRuntimeContextPayload
     | null;
 };
 
@@ -789,11 +789,11 @@ export function handleAgentEvent(host: ToolStreamHost, payload?: AgentEventPaylo
   if (name === "session_status" && phase === "result") {
     syncSessionStatusModelOverride(host, data);
   }
-  if (name === TRUSTCLAW_PTDS_QUERY_TOOL && phase === "result") {
-    syncTrustclawPtdsRuntimeContext(host, data);
+  if (name === TRUSTCLAW_TRA_QUERY_TOOL && phase === "result") {
+    syncTrustclawTraRuntimeContext(host, data);
   }
-  if (name === TRUSTCLAW_PTDS_WRITE_TOOL && phase === "result") {
-    syncTrustclawPtdsDataChanged(data);
+  if (name === TRUSTCLAW_TRA_WRITE_TOOL && phase === "result") {
+    syncTrustclawTraDataChanged(data);
   }
 
   const now = Date.now();

@@ -151,13 +151,13 @@ function applyTrustclawDefaults(config) {
   }
   const plugins = next.plugins ?? {};
   const entries = { ...(plugins.entries ?? {}) };
-  const ptds = entries["trustclaw-ptds"] ?? {};
-  entries["trustclaw-ptds"] = {
-    ...ptds,
+  const tra = entries["trustclaw-tra"] ?? {};
+  entries["trustclaw-tra"] = {
+    ...tra,
     enabled: true,
     config: {
-      ...(ptds.config ?? {}),
-      defaultAgentPack: ptds.config?.defaultAgentPack ?? "glp1-eligibility",
+      ...(tra.config ?? {}),
+      defaultAgentPack: tra.config?.defaultAgentPack ?? "glp1-eligibility",
       // Resolved at first launch to Contents/Resources/trustclaw/agents
       agentPacksDir: "__TRUSTCLAW_BUNDLED_AGENTS_DIR__",
     },

@@ -1,4 +1,4 @@
-import type { Glp1CheckSnapshot, PtdsQueryResult } from "../../ptds/types.js";
+import type { Glp1CheckSnapshot, TraQueryResult } from "../../tra/types.js";
 import type { RuleEvaluationMatrix } from "../rules/types.js";
 import type { Text2SqlGenerateResult } from "../text2sql/types.js";
 
@@ -21,7 +21,7 @@ export type PipelineStages = {
     security_error?: string;
   };
   db_query: {
-    raw_data: PtdsQueryResult | { snapshot: Glp1CheckSnapshot };
+    raw_data: TraQueryResult | { snapshot: Glp1CheckSnapshot };
     skipped?: boolean;
   };
   rule_evaluation: {
@@ -63,4 +63,4 @@ export type RunChatOptions = {
 
 export type RunChatResult =
   | { ok: true; context: RuntimeContext }
-  | { ok: false; status: "ptds_not_initialized" | "security_blocked"; message: string };
+  | { ok: false; status: "tra_not_initialized" | "security_blocked"; message: string };

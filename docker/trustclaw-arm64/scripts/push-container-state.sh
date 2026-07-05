@@ -16,10 +16,10 @@ if [[ ! -d "$STATE_ROOT/state" ]]; then
   exit 1
 fi
 
-echo "==> Push PTDS DB + merged packs + audit (overwrites container volume)"
-docker cp "$STATE_ROOT/state/local_ptds.db" "$CONTAINER:$REMOTE_STATE/state/local_ptds.db"
+echo "==> Push TRA DB + merged packs + audit (overwrites container volume)"
+docker cp "$STATE_ROOT/state/local_tra.db" "$CONTAINER:$REMOTE_STATE/state/local_tra.db"
 docker cp "$STATE_ROOT/state/trustclaw-agents-merged/." "$CONTAINER:$REMOTE_STATE/state/trustclaw-agents-merged/"
-docker cp "$STATE_ROOT/state/ptds-audit/." "$CONTAINER:$REMOTE_STATE/state/ptds-audit/"
+docker cp "$STATE_ROOT/state/tra-audit/." "$CONTAINER:$REMOTE_STATE/state/tra-audit/"
 
 if [[ -d "$STATE_ROOT/workspace/domain-agents" ]]; then
   echo "==> Push workspace domain-agents registry"

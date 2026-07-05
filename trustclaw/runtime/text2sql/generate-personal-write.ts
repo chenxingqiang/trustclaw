@@ -1,4 +1,3 @@
-import { loadDeviceImportSchemaSnippet } from "./device-write-schema.js";
 import {
   assertDeviceImportStatements,
   DeviceImportSecurityError,
@@ -6,8 +5,9 @@ import {
   extractInsertTables,
   splitInsertStatements,
 } from "./device-write-sanitize.js";
+import { loadDeviceImportSchemaSnippet } from "./device-write-schema.js";
 import { buildPersonalWriteSqlPrompt } from "./personal-write-prompt.js";
-import { loadPtdsSchemaSnippetForObjects } from "./schema-context.js";
+import { loadTraSchemaSnippetForObjects } from "./schema-context.js";
 
 export type PersonalWriteGenerateInput = {
   writeRequest: string;
@@ -32,7 +32,7 @@ export type PersonalWriteGenerateResult = {
 
 export function resolvePersonalWriteSchemaSnippet(writeTables?: readonly string[]): string {
   if (writeTables && writeTables.length > 0) {
-    const snippet = loadPtdsSchemaSnippetForObjects(writeTables);
+    const snippet = loadTraSchemaSnippetForObjects(writeTables);
     if (snippet.trim()) {
       return snippet;
     }
@@ -77,8 +77,7 @@ export async function generatePersonalWriteSql(
       write_verification: true,
     };
   } catch (error) {
-    const message =
-      error instanceof DeviceImportSecurityError ? error.message : String(error);
+    const message = error instanceof DeviceImportSecurityError ? error.message : String(error);
     return {
       statements,
       sql: statements.join(";\n"),

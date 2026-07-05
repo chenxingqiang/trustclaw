@@ -1,4 +1,4 @@
-/** Shared Panel B/D/E/F domain-agent context (decoupled from PTDS runtime). */
+/** Shared Panel B/D/E/F domain-agent context (decoupled from TRA runtime). */
 
 const STORAGE_KEY = "trustclaw.panelAgentPackId";
 const STORAGE_KEY_LOGICAL_AGENT = "trustclaw.panelLogicalAgentId";

@@ -2,18 +2,18 @@
 
 **TrustClaw** is a local-first **Trust Runtime for Agent (TRA)**: personal health data, subscribed reference datasets, and auditable Agent Packs collaborate under explicit consent and immutable evidence.
 
-| Principle | Meaning |
-| --- | --- |
-| 个人数据不出域 | Raw data stays in local SQLite only |
-| 凡答必有据 | Conclusions trace to data, rules, and evidence chain |
-| 凡行必审计 | Every data access and agent action is logged |
+| Principle        | Meaning                                                      |
+| ---------------- | ------------------------------------------------------------ |
+| 个人数据不出域   | Raw data stays in local SQLite only                          |
+| 凡答必有据       | Conclusions trace to data, rules, and evidence chain         |
+| 凡行必审计       | Every data access and agent action is logged                 |
 | Agent 与平台解耦 | Vertical logic ships as Agent Packs, not platform hardcoding |
 
 **TrustClaw docs**
 
 [Getting started](trustclaw/GETTING_STARTED.md) · [Vision](VISION.md) · [**Agent loop guide (canonical)**](trustclaw/AGENTS.md) · [Decisions (审核)](trustclaw/DECISIONS.md) · [OpenClaw reuse](trustclaw/OPENCLAW_REUSE.md)
 
-## TrustClaw quick start 
+## TrustClaw quick start
 
 ```bash
 pnpm install
@@ -25,13 +25,13 @@ Open **TRA Runtime Console** at `http://127.0.0.1:5174/trustclaw/` (dev) or Cont
 
 **Models & keys (dev profile, `~/.openclaw-dev/`)**
 
-| Role | Setting |
-| --- | --- |
-| Chat primary | `ollama/qwen2.5:7b` (local Ollama at `http://127.0.0.1:11434`) |
-| Chat fallback | `anthropic/claude-sonnet-4-6` |
+| Role            | Setting                                                                                                                                                     |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chat primary    | `ollama/qwen2.5:7b` (local Ollama at `http://127.0.0.1:11434`)                                                                                              |
+| Chat fallback   | `anthropic/claude-sonnet-4-6`                                                                                                                               |
 | Anthropic proxy | Same base URL as `~/.claude/settings.json` → `ANTHROPIC_BASE_URL`; import API key with `pnpm openclaw models auth paste-api-key --provider anthropic --dev` |
-| TRA Text2SQL | `OPENAI_API_KEY` (separate from chat models) |
-| Control UI auth | Dev gateway uses token auth on `:19001`; open `pnpm openclaw dashboard --no-open --dev` (token in URL — do not paste into chat) |
+| TRA Text2SQL    | `OPENAI_API_KEY` (separate from chat models)                                                                                                                |
+| Control UI auth | Dev gateway uses token auth on `:19001`; open `pnpm openclaw dashboard --no-open --dev` (token in URL — do not paste into chat)                             |
 
 Quick setup after `pnpm trustclaw:setup`:
 
@@ -46,11 +46,11 @@ pnpm openclaw models auth paste-api-key --provider anthropic --dev
 pnpm openclaw models status --dev
 ```
 
-**Platform APIs** (`extensions/trustclaw-ptds`)
+**Platform APIs** (`extensions/trustclaw-tra`)
 
-- `POST /api/ptds/init` — mount local personal data space
+- `POST /api/tra/init` — mount local personal data space
 - `POST /api/agent/chat` — run audited Agent Pack pipeline
-- `GET /api/ptds/domain-agents` — logical agent catalog
+- `GET /api/tra/domain-agents` — logical agent catalog
 
 See `trustclaw/GETTING_STARTED.md` and `trustclaw/docs/AGENT_PLATFORM.md`.
 
@@ -262,7 +262,6 @@ Minimal `~/.openclaw/openclaw.json` (model + defaults):
 ```
 
 [Full configuration reference (all keys + examples).](https://docs.openclaw.ai/gateway/configuration)
-
 
 ## Upstream (OpenClaw)
 

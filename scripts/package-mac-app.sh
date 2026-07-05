@@ -345,7 +345,7 @@ fi
 
 TRUSTCLAW_UI_SRC="$ROOT_DIR/dist/trustclaw-ui"
 if [[ -d "$TRUSTCLAW_UI_SRC" && -f "$TRUSTCLAW_UI_SRC/index.html" ]]; then
-  echo "📦 Copying TrustClaw PTDS console assets"
+  echo "📦 Copying TrustClaw TRA console assets"
   rm -rf "$APP_ROOT/Contents/Resources/trustclaw-ui"
   cp -R "$TRUSTCLAW_UI_SRC" "$APP_ROOT/Contents/Resources/trustclaw-ui"
 fi

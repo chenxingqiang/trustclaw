@@ -2,15 +2,15 @@
   "id": "compliance-auditor",
   "version": "0.1.0",
   "displayName": {
-    "zh-CN": "PTDS 合规审计员",
-    "en": "PTDS compliance auditor"
+    "zh-CN": "TRA 合规审计员",
+    "en": "TRA compliance auditor"
   },
   "domain": ["audit", "compliance", "security"],
   "openclaw": {
     "agentId": "compliance-auditor"
   },
   "tools": {
-    "read": "trustclaw_ptds_query"
+    "read": "trustclaw_tra_query"
   },
   "prompts": {
     "system": "prompts/compliance-auditor-system.v1.md",
@@ -34,7 +34,7 @@
     "read": { "allowAlways": false }
   },
   "audit": {
-    "businessComponent": "PTDS.Agent.ComplianceAuditor",
+    "businessComponent": "TRA.Agent.ComplianceAuditor",
     "decisionComponent": "Agent.ComplianceAuditorDecision"
   }
 }

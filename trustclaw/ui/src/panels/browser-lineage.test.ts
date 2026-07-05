@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { PtdsTableCatalogRow, PtdsTableLineage } from "../api.js";
+import type { TraTableCatalogRow, TraTableLineage } from "../api.js";
 import { buildLineageFlowSteps } from "./browser-lineage-flow.js";
 import { filterTablesByCategory } from "./browser-table-filter.js";
 
-const catalog: PtdsTableCatalogRow[] = [
+const catalog: TraTableCatalogRow[] = [
   {
     table: "lab_test_results",
     kind: "personal",
@@ -28,7 +28,7 @@ describe("browser lineage helpers", () => {
   });
 
   it("builds ordered lineage flow steps", () => {
-    const lineage: PtdsTableLineage = {
+    const lineage: TraTableLineage = {
       table: "nrdl_payment_rules",
       kind: "subscribed",
       provenance_fields: [],

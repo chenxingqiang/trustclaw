@@ -1,9 +1,9 @@
-// Panel A — Landing & PTDS Init.
+// Panel A — Landing & TRA Init.
 
 import {
-  computePtdsBmi,
-  type PtdsInitRequest,
-  PTDS_INIT_FORM_DEFAULTS,
+  computeTraBmi,
+  type TraInitRequest,
+  TRA_INIT_FORM_DEFAULTS,
   type TrustclawApiClient,
 } from "../api.js";
 import { msg } from "../i18n/index.js";
@@ -13,7 +13,7 @@ export interface LandingHandlers {
   onReset(): void;
 }
 
-function checkboxField(name: keyof PtdsInitRequest, label: string, checked = false): string {
+function checkboxField(name: keyof TraInitRequest, label: string, checked = false): string {
   const checkedAttr = checked ? " checked" : "";
   return `<label class="init-form__check"><input name="${name}" type="checkbox"${checkedAttr} /> ${escapeHtml(label)}</label>`;
 }
@@ -24,7 +24,7 @@ export function renderLanding(
   handlers: LandingHandlers,
 ): void {
   const m = msg().panels.landing;
-  const d = PTDS_INIT_FORM_DEFAULTS;
+  const d = TRA_INIT_FORM_DEFAULTS;
   root.innerHTML = `
     <section class="panel panel--a" data-panel="landing">
       <header class="panel__header">
@@ -58,7 +58,7 @@ export function renderLanding(
                 <input name="height" type="number" step="0.1" value="${d.height}" required data-bmi-input />
               </label>
               <label>${escapeHtml(m.bmi)}
-                <input name="bmi" type="text" readonly data-testid="bmi-display" value="${computePtdsBmi(d.weight, d.height).toFixed(1)}" />
+                <input name="bmi" type="text" readonly data-testid="bmi-display" value="${computeTraBmi(d.weight, d.height).toFixed(1)}" />
               </label>
               <label>${escapeHtml(m.hba1c)}
                 <input name="hba1c" type="number" step="0.1" value="${d.hba1c}" required />
@@ -129,7 +129,7 @@ export function renderLanding(
     const w = Number(weightEl.value);
     const h = Number(heightEl.value);
     if (Number.isFinite(w) && Number.isFinite(h) && h > 0) {
-      bmiDisplay.value = computePtdsBmi(w, h).toFixed(1);
+      bmiDisplay.value = computeTraBmi(w, h).toFixed(1);
     }
   }
 
@@ -152,7 +152,7 @@ export function renderLanding(
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(form);
-    const body: PtdsInitRequest = {
+    const body: TraInitRequest = {
       patientName: String(data.get("patientName") ?? d.patientName).trim(),
       gender: String(data.get("gender")) === "女" ? "女" : "男",
       age: Number(data.get("age")),

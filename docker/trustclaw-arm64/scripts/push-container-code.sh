@@ -20,15 +20,15 @@ if [[ "${SKIP_BUILD:-0}" != "1" ]]; then
 fi
 
 echo "==> Push plugin bundle"
-docker cp "$ROOT/dist/extensions/trustclaw-ptds/index.js" "$CONTAINER:/app/dist/extensions/trustclaw-ptds/index.js"
+docker cp "$ROOT/dist/extensions/trustclaw-tra/index.js" "$CONTAINER:/app/dist/extensions/trustclaw-tra/index.js"
 
 echo "==> Push TrustClaw UI"
-docker cp "$ROOT/trustclaw/ui/dist/." "$CONTAINER:/app/dist/extensions/trustclaw-ptds/dist/ui/"
+docker cp "$ROOT/trustclaw/ui/dist/." "$CONTAINER:/app/dist/extensions/trustclaw-tra/dist/ui/"
 docker cp "$ROOT/trustclaw/ui/dist/." "$CONTAINER:/app/dist/extensions/dist/ui/"
 docker cp "$ROOT/trustclaw/ui/dist/." "$CONTAINER:/app/trustclaw/ui/dist/"
 
-echo "==> Push trustclaw ptds + runtime sources"
-docker cp "$ROOT/trustclaw/ptds/." "$CONTAINER:/app/trustclaw/ptds/"
+echo "==> Push trustclaw tra + runtime sources"
+docker cp "$ROOT/trustclaw/tra/." "$CONTAINER:/app/trustclaw/tra/"
 docker cp "$ROOT/trustclaw/runtime/." "$CONTAINER:/app/trustclaw/runtime/"
 
 if [[ "${SKIP_RESTART:-0}" != "1" ]]; then

@@ -1,4 +1,4 @@
-// Helpers for grouping PTDS audit JSONL rows into chat pipeline trails.
+// Helpers for grouping TRA audit JSONL rows into chat pipeline trails.
 
 export type AuditEventRow = {
   event_id: string;

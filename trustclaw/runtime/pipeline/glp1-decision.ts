@@ -1,8 +1,8 @@
-import type { Glp1CheckSnapshot } from "../../ptds/types.js";
+import type { Glp1CheckSnapshot } from "../../tra/types.js";
 import type { RuleEvaluationMatrix } from "../rules/types.js";
 import type { Glp1Citation, Glp1DecisionStage } from "./types.js";
 
-export const PTDS_MISSING_VITALS_MESSAGE =
+export const TRA_MISSING_VITALS_MESSAGE =
   "由于本地数据空间缺少关键健康指标（如体重/血糖），无法做出用药评估，请先完善本地数据空间配置。";
 
 export function buildGlp1Decision(params: {
@@ -12,7 +12,7 @@ export function buildGlp1Decision(params: {
 }): Glp1DecisionStage {
   if (!params.snapshot) {
     return {
-      response: PTDS_MISSING_VITALS_MESSAGE,
+      response: TRA_MISSING_VITALS_MESSAGE,
       citations: [],
     };
   }
@@ -32,7 +32,7 @@ export function buildGlp1Decision(params: {
     const evidenceRefs = citations.map((c) => `[Evidence #${c.index}]`).join("");
     return {
       response:
-        `根据您本地 PTDS 数据与 NRDL 司美格鲁肽规则评估，当前指标满足用药路径的前置条件。${evidenceRefs} ` +
+        `根据您本地 TRA 数据与 NRDL 司美格鲁肽规则评估，当前指标满足用药路径的前置条件。${evidenceRefs} ` +
         `如需正式用药决策，请结合临床医生意见。`,
       citations,
     };
@@ -46,10 +46,7 @@ export function buildGlp1Decision(params: {
     })
     .join("；");
 
-  const passNote =
-    passed.length > 0
-      ? `已满足 ${passed.length} 项条件。`
-      : "";
+  const passNote = passed.length > 0 ? `已满足 ${passed.length} 项条件。` : "";
 
   return {
     response:

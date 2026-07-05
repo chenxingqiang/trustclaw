@@ -1,5 +1,5 @@
 import {
-  TRUSTCLAW_PTDS_DATA_CHANGED_MESSAGE,
+  TRUSTCLAW_TRA_DATA_CHANGED_MESSAGE,
   TRUSTCLAW_RUNTIME_CONTEXT_MESSAGE,
 } from "../../runtime/constants.js";
 import type { RuntimeContextResponse } from "./api.js";
@@ -62,7 +62,7 @@ export function bindTrustclawRuntimeContextListener(handlers: {
       handlers.appendLedger(record.context);
       return;
     }
-    if (record.type === TRUSTCLAW_PTDS_DATA_CHANGED_MESSAGE) {
+    if (record.type === TRUSTCLAW_TRA_DATA_CHANGED_MESSAGE) {
       handlers.onDataChanged?.();
     }
   };

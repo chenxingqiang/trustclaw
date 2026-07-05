@@ -154,9 +154,9 @@ import {
   updateSkillEnabled,
 } from "./controllers/skills.ts";
 import {
-  ensureTrustclawPtdsAgentPackState,
+  ensureTrustclawTraAgentPackState,
   saveTrustclawSessionAgentPack,
-} from "./controllers/trustclaw-ptds.ts";
+} from "./controllers/trustclaw-tra.ts";
 import { captureSessionToWorkboard, getWorkboardState } from "./controllers/workboard.ts";
 import { getCronJobPayload } from "./cron-payload.ts";
 import { buildExternalLinkRel, EXTERNAL_LINK_TARGET } from "./external-link.ts";
@@ -190,7 +190,7 @@ import type { SidebarContent } from "./sidebar-content.ts";
 import { loadLocalAssistantIdentity } from "./storage.ts";
 import { normalizeStringEntries } from "./string-coerce.ts";
 import { normalizeOptionalString } from "./string-coerce.ts";
-import { extractTrustclawEvidenceCitations } from "./trustclaw-ptds-bridge.ts";
+import { extractTrustclawEvidenceCitations } from "./trustclaw-tra-bridge.ts";
 import type {
   ArtifactDownloadResult,
   GatewaySessionRow,
@@ -223,7 +223,7 @@ import { renderGatewayUrlConfirmation } from "./views/gateway-url-confirmation.t
 import { renderLoginGate } from "./views/login-gate.ts";
 import { renderMcp } from "./views/mcp.ts";
 import { renderOverview } from "./views/overview.ts";
-import { renderTrustclawPtdsWorkbench } from "./views/trustclaw-ptds-workbench.ts";
+import { renderTrustclawTraWorkbench } from "./views/trustclaw-tra-workbench.ts";
 
 let pendingUpdate: (() => void) | undefined;
 
@@ -1402,10 +1402,10 @@ export function renderApp(state: AppViewState) {
   const sessionsCount = state.sessionsResult?.count ?? null;
   const cronNext = state.cronStatus?.nextWakeAtMs ?? null;
   const chatDisabledReason = state.connected ? null : t("chat.disconnected");
-  const isPtds = state.tab === "ptds";
-  const isChat = state.tab === "chat" || isPtds;
-  if (isPtds) {
-    ensureTrustclawPtdsAgentPackState(state);
+  const isTra = state.tab === "tra";
+  const isChat = state.tab === "chat" || isTra;
+  if (isTra) {
+    ensureTrustclawTraAgentPackState(state);
   }
   const headerError = !isChat && state.lastError !== state.chatError ? state.lastError : null;
   const chatViewError = state.lastError;
@@ -2500,7 +2500,7 @@ export function renderApp(state: AppViewState) {
       sessions: state.sessionsResult,
       composerControls: renderGuardedChatControls(state),
       sessionWorkspace: {
-        collapsed: isPtds || chatWorkspaceFiles.collapsed,
+        collapsed: isTra || chatWorkspaceFiles.collapsed,
         sessionKey: state.sessionKey,
         list:
           chatWorkspaceFiles.list?.sessionKey === state.sessionKey ? chatWorkspaceFiles.list : null,
@@ -2630,14 +2630,14 @@ export function renderApp(state: AppViewState) {
     renderMeasured(state, "chat", chatMeasureMetrics, renderMainChat);
 
   const trustclawStarterQuestions = {
-    packs: state.ptdsAgentPacks,
-    selectedPackId: state.ptdsSessionAgentPackId ?? "glp1-eligibility",
+    packs: state.traAgentPacks,
+    selectedPackId: state.traSessionAgentPackId ?? "glp1-eligibility",
     onSelect: (text: string) => {
       state.chatMessage = text;
       requestAnimationFrame(() => {
         document
           .querySelector<HTMLTextAreaElement>(
-            ".trustclaw-ptds-workbench .agent-chat__composer-combobox > textarea",
+            ".trustclaw-tra-workbench .agent-chat__composer-combobox > textarea",
           )
           ?.focus();
       });
@@ -2851,8 +2851,8 @@ export function renderApp(state: AppViewState) {
         </aside>
       </div>
       <main
-        class="content ${isChat ? "content--chat" : ""} ${isPtds
-          ? "content--ptds"
+        class="content ${isChat ? "content--chat" : ""} ${isTra
+          ? "content--tra"
           : ""} ${state.tab === "logs" ? "content--logs" : ""} ${state.tab === "workboard"
           ? "content--workboard"
           : ""} ${state.tab === "skillWorkshop"
@@ -3946,29 +3946,29 @@ export function renderApp(state: AppViewState) {
               }),
             )
           : nothing}
-        ${state.tab === "ptds"
-          ? renderTrustclawPtdsWorkbench({
+        ${state.tab === "tra"
+          ? renderTrustclawTraWorkbench({
               basePath: state.basePath ?? "",
               locale: i18n.getLocale(),
               themeResolved: state.themeResolved,
               themeMode: state.themeResolved.endsWith("light") ? "light" : "dark",
-              leftOpen: state.ptdsLeftRailOpen,
-              rightOpen: state.ptdsRightRailOpen,
+              leftOpen: state.traLeftRailOpen,
+              rightOpen: state.traRightRailOpen,
               onToggleLeft: () => {
-                state.ptdsLeftRailOpen = !state.ptdsLeftRailOpen;
+                state.traLeftRailOpen = !state.traLeftRailOpen;
               },
               onToggleRight: () => {
-                state.ptdsRightRailOpen = !state.ptdsRightRailOpen;
+                state.traRightRailOpen = !state.traRightRailOpen;
               },
               agentPackSelector: {
-                packs: state.ptdsAgentPacks,
-                selectedPackId: state.ptdsSessionAgentPackId,
-                resolvedFrom: state.ptdsSessionAgentPackSource,
-                locked: state.ptdsSessionAgentPackLocked,
-                agentPackMismatch: state.ptdsSessionAgentPackMismatch,
-                loading: state.ptdsAgentPacksLoading,
-                saving: state.ptdsSessionAgentPackSaving,
-                error: state.ptdsAgentPacksError,
+                packs: state.traAgentPacks,
+                selectedPackId: state.traSessionAgentPackId,
+                resolvedFrom: state.traSessionAgentPackSource,
+                locked: state.traSessionAgentPackLocked,
+                agentPackMismatch: state.traSessionAgentPackMismatch,
+                loading: state.traAgentPacksLoading,
+                saving: state.traSessionAgentPackSaving,
+                error: state.traAgentPacksError,
                 onSelect: (packId) => {
                   void saveTrustclawSessionAgentPack(state, packId);
                 },

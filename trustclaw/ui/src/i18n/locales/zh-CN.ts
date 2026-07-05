@@ -114,8 +114,8 @@ export const zh_CN: TrustclawMessages = {
         "panel.audit": "Panel D · 审计",
         "panel.ledger": "Panel E · 账本",
         "panel.compliance": "Panel F · 合规订阅",
-        "ptds.chat": "Chat / 查询工具",
-        "ptds.write": "TRA 写入工具",
+        "tra.chat": "Chat / 查询工具",
+        "tra.write": "TRA 写入工具",
       },
       registryTitle: "逻辑 Agent 目录（TRA 注册表）",
       registrySubtitle: "domain_agents 表中的逻辑 Agent 元数据；与上方 13 个 Agent Pack 不同层",
@@ -226,7 +226,7 @@ export const zh_CN: TrustclawMessages = {
       sectionChat: "最近一次 Chat 管线",
       chatTrailLabel: "审计链 ID：",
       compliancePlaceholder:
-        "从 state/ptds-audit/events.jsonl 加载 DATA_CONSENT / COMPLIANCE_IMPORT 事件。",
+        "从 state/tra-audit/events.jsonl 加载 DATA_CONSENT / COMPLIANCE_IMPORT 事件。",
       complianceEmpty:
         "暂无合规或同意审计记录。在 F 面板订阅合规数据或在 Chat 中触发数据同意后可刷新。",
       complianceLoaded: "已加载 {count} 条合规/同意审计事件。",
@@ -234,13 +234,13 @@ export const zh_CN: TrustclawMessages = {
       reload: "刷新审计",
       loadError: "审计加载失败",
       chatEmpty:
-        "暂无 Chat 管线审计。请在 Chat 中提问 GLP-1 / 健康相关问题（会调用 trustclaw_ptds_query），或在对话后点「刷新审计」。",
+        "暂无 Chat 管线审计。请在 Chat 中提问 GLP-1 / 健康相关问题（会调用 trustclaw_tra_query），或在对话后点「刷新审计」。",
       chatLoaded: "已从 JSONL 加载最近一条 Chat 审计链（{count} 步）。",
       chatLoading: "正在加载 Chat 管线审计…",
       chatLive: "来自最近一次 Chat 运行的实时 Runtime Context。",
       chatOtherAgent: "实时轨迹属于领域 Agent「{agent}」— 请切换选择器或等待该 Agent 的 Chat。",
       apiUnavailable:
-        "审计 API 不可用（404）。请重启 Gateway（`pnpm trustclaw:dev`）以注册 /api/ptds/audit/events。",
+        "审计 API 不可用（404）。请重启 Gateway（`pnpm trustclaw:dev`）以注册 /api/tra/audit/events。",
       stepDataConsent: "个人数据同意 · DATA_CONSENT",
       stepAgentDomainGrant: "领域 Agent 赋权 · AGENT_DOMAIN_GRANT",
       stepComplianceImport: "外部标准导入 · COMPLIANCE_IMPORT",

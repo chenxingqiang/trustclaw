@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadPtdsSchemaSnippet } from "./schema-context.js";
+import { loadTraSchemaSnippet } from "./schema-context.js";
 
 const DEFAULT_PROMPT_PATH = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -23,7 +23,7 @@ export function buildText2SqlPrompt(params: {
   databaseSchema?: string;
   promptTemplate?: string;
 }): string {
-  const schema = params.databaseSchema?.trim() || loadPtdsSchemaSnippet();
+  const schema = params.databaseSchema?.trim() || loadTraSchemaSnippet();
   const template = params.promptTemplate?.trim() || loadDefaultText2SqlPromptTemplate();
   return template
     .replace("{{DATABASE_SCHEMA}}", schema)

@@ -1,20 +1,15 @@
-import type { TrustclawPluginConfig } from "../../ptds/config.js";
-import { resolveTrustclawPaths } from "../../ptds/config.js";
+import type { TrustclawPluginConfig } from "../../tra/config.js";
+import { resolveTrustclawPaths } from "../../tra/config.js";
 import {
   getSessionAgentPackId,
   getSessionAgentPackLock,
   setSessionAgentPackBinding,
   setSessionAgentPackLock,
-} from "../../ptds/session-agent-pack.js";
+} from "../../tra/session-agent-pack.js";
 import { getAgentPackRegistry } from "../agent-pack/registry.js";
 import type { ResolvedAgentPack } from "../agent-pack/schema.js";
 
-export type CoordinatorPackSource =
-  | "session"
-  | "lock"
-  | "openclaw_agent"
-  | "default"
-  | "request";
+export type CoordinatorPackSource = "session" | "lock" | "openclaw_agent" | "default" | "request";
 
 export type CoordinatorPackResolution = {
   pack: ResolvedAgentPack;
@@ -68,15 +63,13 @@ export function resolveCoordinatorAgentPack(params: {
       pack,
       source: "request",
       locked: bindLock,
-      lock_pack_id: bindLock ? pack.id : getSessionAgentPackLock(sessionKey, overrides) ?? null,
+      lock_pack_id: bindLock ? pack.id : (getSessionAgentPackLock(sessionKey, overrides) ?? null),
       openclaw_suggested_pack_id: suggested.pack.id,
       agent_pack_mismatch: suggested.pack.id !== pack.id,
     };
   }
 
-  const sessionOverride = sessionKey
-    ? getSessionAgentPackId(sessionKey, overrides)
-    : undefined;
+  const sessionOverride = sessionKey ? getSessionAgentPackId(sessionKey, overrides) : undefined;
   if (sessionOverride) {
     const pack = registry.resolve({ packId: sessionOverride });
     if (bindLock && sessionKey) {

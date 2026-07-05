@@ -1,4 +1,4 @@
-import type { PtdsBrowseSubscriptionsResponse } from "../api.js";
+import type { TraBrowseSubscriptionsResponse } from "../api.js";
 import { i18n, msg } from "../i18n/index.js";
 
 export function renderBrowserSubscriptionsHint(root: HTMLElement, hint: string): void {
@@ -13,7 +13,7 @@ export function renderBrowserSubscriptionsHint(root: HTMLElement, hint: string):
 
 export function renderBrowserSubscriptions(
   root: HTMLElement,
-  snapshot: PtdsBrowseSubscriptionsResponse | undefined,
+  snapshot: TraBrowseSubscriptionsResponse | undefined,
   onJump: (table: string) => void,
 ): void {
   const m = msg().panels.browser;

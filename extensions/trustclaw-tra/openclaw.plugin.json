@@ -1,0 +1,46 @@
+{
+  "id": "trustclaw-tra",
+  "name": "TrustClaw TRA",
+  "description": "Trust Runtime for Agent — HTTP APIs, tools, and runtime integration for OpenClaw Gateway.",
+  "contracts": {
+    "tools": ["trustclaw_tra_query", "trustclaw_tra_write"]
+  },
+  "toolMetadata": {
+    "trustclaw_tra_query": {
+      "optional": true
+    },
+    "trustclaw_tra_write": {
+      "optional": true
+    }
+  },
+  "activation": {
+    "onStartup": false,
+    "onConfigPaths": ["plugins.entries.trustclaw-tra"]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "dbPath": {
+        "type": "string",
+        "description": "Override TRA SQLite path (default: state/local_tra.db under OPENCLAW_STATE_DIR)"
+      },
+      "auditDir": {
+        "type": "string",
+        "description": "Override audit JSONL directory (default: state/tra-audit)"
+      },
+      "evidenceDir": {
+        "type": "string",
+        "description": "Override evidence ledger directory (default: state/tra-evidence)"
+      },
+      "agentPacksDir": {
+        "type": "string",
+        "description": "Override business agent pack directory (default: trustclaw/agents)"
+      },
+      "defaultAgentPack": {
+        "type": "string",
+        "description": "Default agent pack id when OpenClaw agentId is not mapped (default: glp1-eligibility)"
+      }
+    }
+  }
+}

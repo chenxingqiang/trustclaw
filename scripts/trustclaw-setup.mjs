@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-// Ensures TrustClaw PTDS plugin is enabled for local fork demos.
+// Ensures TrustClaw TRA plugin is enabled for local fork demos.
 import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -77,8 +77,7 @@ function readClaudeModelEnv() {
   try {
     const settings = JSON.parse(readFileSync(CLAUDE_SETTINGS_PATH, "utf8"));
     const env = settings?.env ?? {};
-    const baseUrl =
-      typeof env.ANTHROPIC_BASE_URL === "string" ? env.ANTHROPIC_BASE_URL.trim() : "";
+    const baseUrl = typeof env.ANTHROPIC_BASE_URL === "string" ? env.ANTHROPIC_BASE_URL.trim() : "";
     const apiKey =
       (typeof env.ANTHROPIC_AUTH_TOKEN === "string" ? env.ANTHROPIC_AUTH_TOKEN.trim() : "") ||
       (typeof env.ANTHROPIC_API_KEY === "string" ? env.ANTHROPIC_API_KEY.trim() : "");
@@ -151,13 +150,13 @@ function applyTrustclawConfig(profileArgs) {
   const { configPath, config } = loadProfileConfig(profileArgs);
   const plugins = config.plugins ?? {};
   const entries = plugins.entries ?? {};
-  const existing = entries["trustclaw-ptds"] ?? {};
+  const existing = entries["trustclaw-tra"] ?? {};
 
   config.plugins = {
     ...plugins,
     entries: {
       ...entries,
-      "trustclaw-ptds": {
+      "trustclaw-tra": {
         ...existing,
         enabled: true,
         config: {
@@ -282,7 +281,7 @@ if (exitCode === 0) {
     `[trustclaw:setup] gateway.port → ${TRUSTCLAW_DEFAULT_GATEWAY_PORT} (default + dev profiles)`,
   );
   console.log(
-    "[trustclaw:setup] agents: main (dev), nrdl-reimburse, compliance-auditor — use PTDS Console agent selector or switch OpenClaw agent",
+    "[trustclaw:setup] agents: main (dev), nrdl-reimburse, compliance-auditor — use TRA Console agent selector or switch OpenClaw agent",
   );
 }
 

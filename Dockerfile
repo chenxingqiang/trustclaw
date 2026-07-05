@@ -127,8 +127,8 @@ ARG OPENCLAW_TRUSTCLAW_UI=""
 RUN if [ -n "$OPENCLAW_TRUSTCLAW_UI" ]; then \
       OPENCLAW_GATEWAY_PORT=19001 TRUSTCLAW_GATEWAY_PORT=19001 VITE_GATEWAY_URL= \
       pnpm_config_verify_deps_before_run=false pnpm trustclaw:ui:build && \
-      mkdir -p extensions/trustclaw-ptds/dist/ui && \
-      cp -R trustclaw/ui/dist/. extensions/trustclaw-ptds/dist/ui/; \
+      mkdir -p extensions/trustclaw-tra/dist/ui && \
+      cp -R trustclaw/ui/dist/. extensions/trustclaw-tra/dist/ui/; \
     fi
 RUN if printf '%s\n' "$OPENCLAW_EXTENSIONS" | tr ',' ' ' | tr ' ' '\n' | grep -qx 'qa-lab'; then \
       pnpm_config_verify_deps_before_run=false pnpm qa:lab:build && \

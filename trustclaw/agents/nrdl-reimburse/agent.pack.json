@@ -10,7 +10,7 @@
     "agentId": "nrdl-reimburse"
   },
   "tools": {
-    "read": "trustclaw_ptds_query"
+    "read": "trustclaw_tra_query"
   },
   "prompts": {
     "system": "prompts/nrdl-reimburse-system.v1.md",
@@ -40,7 +40,7 @@
     "read": { "allowAlways": true }
   },
   "audit": {
-    "businessComponent": "PTDS.Agent.NRDLReimburse",
+    "businessComponent": "TRA.Agent.NRDLReimburse",
     "decisionComponent": "Agent.NRDLReimburseDecision",
     "ruleEvalComponent": "AgentRuntime.ExecRule"
   }

@@ -24,7 +24,7 @@ echo "==> [1/2] Build OpenClaw + TrustClaw base (${PLATFORM})"
   --build-arg OPENCLAW_NODE_BOOKWORM_SLIM_IMAGE="$NODE_BOOKWORM_SLIM_IMAGE" \
   --build-arg OPENCLAW_BUN_IMAGE="$BUN_IMAGE" \
   --build-arg OPENCLAW_TRUSTCLAW_UI=1 \
-  --build-arg OPENCLAW_EXTENSIONS=trustclaw-ptds \
+  --build-arg OPENCLAW_EXTENSIONS=trustclaw-tra \
   -f Dockerfile \
   -t "$BASE_TAG" \
   .

@@ -74,10 +74,7 @@ function compareRule(
   return { status: passed ? "PASS" : "FAIL", value: actualNum };
 }
 
-function snapshotValueForKey(
-  snapshot: Record<string, unknown>,
-  targetKey: string,
-): unknown {
+function snapshotValueForKey(snapshot: Record<string, unknown>, targetKey: string): unknown {
   if (targetKey in snapshot) {
     return snapshot[targetKey];
   }
@@ -106,7 +103,9 @@ export function evaluateGlp1Rules(input: EvaluateGlp1RulesInput): RuleEvaluation
     };
   });
 
-  const overallStatus: RuleEvaluationStatus = evaluatedRules.every((entry) => entry.status === "PASS")
+  const overallStatus: RuleEvaluationStatus = evaluatedRules.every(
+    (entry) => entry.status === "PASS",
+  )
     ? "PASS"
     : "FAIL";
 
@@ -120,7 +119,7 @@ export function evaluateGlp1Rules(input: EvaluateGlp1RulesInput): RuleEvaluation
   return {
     matrix,
     handshake: {
-      source_system: "PTDS_SQLite_Engine",
+      source_system: "TRA_SQLite_Engine",
       target_agent: "RuleEvaluationAgent",
       handshake_payload: {
         biometric_snapshot: snapshotRecord,

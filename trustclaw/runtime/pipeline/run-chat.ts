@@ -1,21 +1,17 @@
 import { randomBytes } from "node:crypto";
 import { AuditRecorder } from "../../audit/index.js";
 import { commitEvidenceReceipt, hashEvidenceContent } from "../../ledger/index.js";
-import { getActiveComplianceStandard } from "../../ptds/compliance-import.js";
-import { bootstrapPtdsDatabase } from "../../ptds/db.js";
-import {
-  resolvePtdsAuditDir,
-  resolvePtdsDbPath,
-  resolvePtdsEvidenceDir,
-} from "../../ptds/paths.js";
-import { readGlp1CheckSnapshot, queryPtds } from "../../ptds/query.js";
+import { getActiveComplianceStandard } from "../../tra/compliance-import.js";
+import { bootstrapTraDatabase } from "../../tra/db.js";
+import { resolveTraAuditDir, resolveTraDbPath, resolveTraEvidenceDir } from "../../tra/paths.js";
+import { readGlp1CheckSnapshot, queryTra } from "../../tra/query.js";
 import { getAgentPackRegistry } from "../agent-pack/index.js";
 import { loadAgentPackText2SqlTemplate } from "../agent-pack/text2sql-prompt.js";
 import { evaluateGlp1RulesFromDb } from "../rules/index.js";
 import { resolveGlp1EvalDrugId } from "../rules/resolve-glp1-drug-id.js";
 import type { RuleEvaluationMatrix } from "../rules/types.js";
 import { generateText2Sql } from "../text2sql/generate.js";
-import { loadPtdsSchemaSnippetForObjects } from "../text2sql/schema-context.js";
+import { loadTraSchemaSnippetForObjects } from "../text2sql/schema-context.js";
 import { buildPackAgentDecision, packIncludesStage } from "./pack-decision.js";
 import type { RunChatInput, RunChatOptions, RunChatResult, RuntimeContext } from "./types.js";
 
@@ -27,14 +23,14 @@ function resolveEvidenceDir(options: RunChatOptions): string {
   if (options.evidenceDir?.trim()) {
     return options.evidenceDir;
   }
-  return resolvePtdsEvidenceDir({});
+  return resolveTraEvidenceDir({});
 }
 
 function resolveAuditDir(options: RunChatOptions): string {
   if (options.auditDir?.trim()) {
     return options.auditDir;
   }
-  return resolvePtdsAuditDir({});
+  return resolveTraAuditDir({});
 }
 
 function resolveAgentPack(input: RunChatInput, options: RunChatOptions) {
@@ -61,8 +57,8 @@ function evaluateRulesForPack(
     };
   }
 
-  const dbPath = resolvePtdsDbPath(params.dbOverrides);
-  const evalDb = bootstrapPtdsDatabase(dbPath);
+  const dbPath = resolveTraDbPath(params.dbOverrides);
+  const evalDb = bootstrapTraDatabase(dbPath);
   let evalDrugId: string;
   try {
     evalDrugId = resolveGlp1EvalDrugId({
@@ -85,8 +81,8 @@ export async function runTrustclawChat(
   if (!snapshot) {
     return {
       ok: false,
-      status: "ptds_not_initialized",
-      message: "Trust runtime is not initialized. Call POST /api/ptds/init first.",
+      status: "tra_not_initialized",
+      message: "Trust runtime is not initialized. Call POST /api/tra/init first.",
     };
   }
 
@@ -100,7 +96,7 @@ export async function runTrustclawChat(
   const text2sql = await generateText2Sql(
     {
       userQuery: input.message,
-      databaseSchema: loadPtdsSchemaSnippetForObjects(pack.data.readTables),
+      databaseSchema: loadTraSchemaSnippetForObjects(pack.data.readTables),
       promptTemplate: loadAgentPackText2SqlTemplate(pack),
     },
     { llm: options.llm },
@@ -138,12 +134,12 @@ export async function runTrustclawChat(
 
   const dbQuery =
     text2sql.sql.length > 0
-      ? { raw_data: queryPtds(text2sql.sql, dbOverrides) }
+      ? { raw_data: queryTra(text2sql.sql, dbOverrides) }
       : { raw_data: { snapshot }, skipped: true as const };
 
   audit.record({
     step: "DB_QUERY",
-    component: "PTDS.Query",
+    component: "TRA.Query",
     input: { sql: text2sql.sql, skipped: text2sql.sql.length === 0, agent_pack_id: pack.id },
     output:
       "row_count" in dbQuery.raw_data

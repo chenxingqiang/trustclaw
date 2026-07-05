@@ -1,4 +1,4 @@
-// TrustClaw PTDS theme — mirrors OpenClaw Control UI settings + postMessage bridge.
+// TrustClaw TRA theme — mirrors OpenClaw Control UI settings + postMessage bridge.
 
 export type TrustclawThemeMode = "light" | "dark";
 

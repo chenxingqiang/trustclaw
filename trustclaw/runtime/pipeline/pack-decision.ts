@@ -1,8 +1,8 @@
+import type { Glp1CheckSnapshot } from "../../tra/types.js";
 import type { ResolvedAgentPack } from "../agent-pack/index.js";
-import type { Glp1CheckSnapshot } from "../../ptds/types.js";
 import type { RuleEvaluationMatrix } from "../rules/types.js";
-import type { Glp1DecisionStage } from "./types.js";
 import { buildGlp1Decision } from "./glp1-decision.js";
+import type { Glp1DecisionStage } from "./types.js";
 
 export function buildPackAgentDecision(
   pack: ResolvedAgentPack,
@@ -15,7 +15,7 @@ export function buildPackAgentDecision(
   if (pack.pipeline.decisionBuilder === "pass-through") {
     return {
       response:
-        `(${pack.displayName.en}) Query recorded. Summarize PTDS query results and audit metadata only; ` +
+        `(${pack.displayName.en}) Query recorded. Summarize TRA query results and audit metadata only; ` +
         `do not provide clinical prescribing advice. User question: ${params.userQuery}`,
       citations: [],
     };

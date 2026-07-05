@@ -1,7 +1,7 @@
 import type { DatabaseSync } from "node:sqlite";
-import { bootstrapPtdsDatabase, resolvePrimaryUserId } from "../../ptds/db.js";
-import { resolvePtdsDbPath, type PtdsPathOverrides } from "../../ptds/paths.js";
-import { readPrescriptionContext } from "../../ptds/prescription-context.js";
+import { bootstrapTraDatabase, resolvePrimaryUserId } from "../../tra/db.js";
+import { resolveTraDbPath, type TraPathOverrides } from "../../tra/paths.js";
+import { readPrescriptionContext } from "../../tra/prescription-context.js";
 
 /** Demo fallback when prescription_context row is absent (pre-init DB probes). */
 export type PrescriptionContextDefaults = {
@@ -139,17 +139,17 @@ export function buildComplianceEvalContext(
 }
 
 export function buildComplianceEvalContextFromDb(
-  dbPathOrOverrides?: string | PtdsPathOverrides,
+  dbPathOrOverrides?: string | TraPathOverrides,
   env: NodeJS.ProcessEnv = process.env,
 ): Record<string, unknown> {
   const dbPath =
     typeof dbPathOrOverrides === "string" || dbPathOrOverrides === undefined
-      ? resolvePtdsDbPath(
+      ? resolveTraDbPath(
           typeof dbPathOrOverrides === "string" ? { dbPath: dbPathOrOverrides } : {},
           env,
         )
-      : resolvePtdsDbPath(dbPathOrOverrides, env);
-  const db = bootstrapPtdsDatabase(dbPath);
+      : resolveTraDbPath(dbPathOrOverrides, env);
+  const db = bootstrapTraDatabase(dbPath);
   try {
     return buildComplianceEvalContext(db);
   } finally {

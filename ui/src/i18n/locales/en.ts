@@ -400,7 +400,7 @@ export const en: TranslationMap = {
     resize: "Resize sidebar",
   },
   tabs: {
-    ptds: "TRA Console",
+    tra: "TRA Console",
     agents: "Agents",
     activity: "Activity",
     overview: "Overview",
@@ -426,7 +426,7 @@ export const en: TranslationMap = {
     dreams: "Dreaming",
   },
   subtitles: {
-    ptds: "Trust Runtime for Agent — init, chat, audit, and evidence.",
+    tra: "Trust Runtime for Agent — init, chat, audit, and evidence.",
     agents: "Workspaces, tools, identities.",
     activity: "Browser-local tool activity summaries.",
     overview: "Status, entry points, health.",
@@ -451,7 +451,7 @@ export const en: TranslationMap = {
     logs: "Live gateway logs.",
     dreams: "Memory dreaming, consolidation, and reflection.",
   },
-  ptdsPanel: {
+  traPanel: {
     leftRail: "TRA setup & data",
     rightRail: "Audit & ledger",
     collapseLeft: "Collapse left panel",

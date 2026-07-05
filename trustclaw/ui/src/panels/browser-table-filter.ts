@@ -1,10 +1,10 @@
-import type { PtdsTableCatalogRow } from "../api.js";
+import type { TraTableCatalogRow } from "../api.js";
 
 export type BrowserCategory = "all" | "personal" | "subscribed";
 
 export function filterTablesByCategory(
   tables: string[],
-  catalog: PtdsTableCatalogRow[] | undefined,
+  catalog: TraTableCatalogRow[] | undefined,
   category: BrowserCategory,
 ): string[] {
   if (category === "all" || !catalog?.length) {

@@ -1,4 +1,4 @@
-import { assertReadOnlySelectSql, PtdsQuerySecurityError } from "../../ptds/query.js";
+import { assertReadOnlySelectSql, TraQuerySecurityError } from "../../tra/query.js";
 import { extractReferencedTables } from "./extract-tables.js";
 import { buildText2SqlPrompt } from "./prompt.js";
 import { extractSqlFromLlmOutput } from "./sanitize.js";
@@ -16,7 +16,7 @@ function buildHandshake(params: {
 }): Text2SqlHandshake {
   return {
     source_agent: "Text2SQLAgent",
-    target_system: "PTDS_SQLite_Engine",
+    target_system: "TRA_SQLite_Engine",
     handshake_payload: {
       sanitized_sql: params.sql,
       read_only_verification: params.readOnly,
@@ -43,8 +43,7 @@ function finalizeSql(rawSql: string): {
       tables: extractReferencedTables(safeSql),
     };
   } catch (error) {
-    const message =
-      error instanceof PtdsQuerySecurityError ? error.message : String(error);
+    const message = error instanceof TraQuerySecurityError ? error.message : String(error);
     return {
       sql: cleaned,
       readOnly: false,

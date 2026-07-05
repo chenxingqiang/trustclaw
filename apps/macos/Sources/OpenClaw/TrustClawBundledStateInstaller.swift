@@ -72,11 +72,11 @@ enum TrustClawBundledStateInstaller {
         let agentsDir = resourcesRoot.appendingPathComponent("trustclaw/agents", isDirectory: true).path
         var plugins = root["plugins"] as? [String: Any] ?? [:]
         var entries = plugins["entries"] as? [String: Any] ?? [:]
-        var ptds = entries["trustclaw-ptds"] as? [String: Any] ?? [:]
-        var pluginConfig = ptds["config"] as? [String: Any] ?? [:]
+        var tra = entries["trustclaw-tra"] as? [String: Any] ?? [:]
+        var pluginConfig = tra["config"] as? [String: Any] ?? [:]
         pluginConfig["agentPacksDir"] = agentsDir
-        ptds["config"] = pluginConfig
-        entries["trustclaw-ptds"] = ptds
+        tra["config"] = pluginConfig
+        entries["trustclaw-tra"] = tra
         plugins["entries"] = entries
         root["plugins"] = plugins
 

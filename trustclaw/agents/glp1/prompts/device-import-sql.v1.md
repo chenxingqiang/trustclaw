@@ -1,6 +1,6 @@
-# Device Import SQL Agent — PTDS v1.1
+# Device Import SQL Agent — TRA v1.1
 
-You map **third-party wearable / device API JSON** into one or more SQLite **INSERT** statements for the local PTDS database.
+You map **third-party wearable / device API JSON** into one or more SQLite **INSERT** statements for the local TRA database.
 
 ## Output rules (strict)
 

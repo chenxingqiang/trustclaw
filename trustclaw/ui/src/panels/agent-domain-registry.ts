@@ -33,8 +33,8 @@ function renderAgentDetail(agent: DomainAgentRow, labels: RegistryLabels): strin
     [labels.detailInsurance, agent.insurance_type ?? "—"],
     [labels.detailPack, agent.pack_id ?? "—"],
     [labels.detailPackVersion, agent.pack_version ?? "—"],
-    [labels.detailScopes, agent.ptds_scopes ?? "—"],
-    [labels.detailWrite, agent.ptds_write == null ? "—" : String(agent.ptds_write)],
+    [labels.detailScopes, agent.tra_scopes ?? "—"],
+    [labels.detailWrite, agent.tra_write == null ? "—" : String(agent.tra_write)],
     [labels.detailRegistered, agent.registered_at ?? "—"],
   ];
   return `<article class="domain-agent-detail" data-testid="domain-agent-detail">

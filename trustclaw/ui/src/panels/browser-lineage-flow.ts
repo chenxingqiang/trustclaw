@@ -1,7 +1,7 @@
-import type { PtdsTableLineage } from "../api.js";
+import type { TraTableLineage } from "../api.js";
 
 /** Ordered upstream → focal table → downstream labels for the lineage flow strip. */
-export function buildLineageFlowSteps(lineage: PtdsTableLineage): string[] {
+export function buildLineageFlowSteps(lineage: TraTableLineage): string[] {
   const focalId = `table:${lineage.table}`;
   const labelOf = (id: string) => lineage.nodes.find((node) => node.id === id)?.label ?? id;
 

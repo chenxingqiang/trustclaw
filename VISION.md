@@ -15,21 +15,21 @@ Business agents (clinical eligibility, reimbursement, compliance review, and oth
 
 TrustClaw is organized by **planes**, not by a single demo chat script:
 
-| Plane | Responsibility |
-| --- | --- |
-| **Data** | TRA schema, personal store, reference sync, SELECT guards, table lineage |
-| **Policy** | Consent, domain grants, compliance import, fail-closed gates |
-| **Agent** | Agent Pack contract, coordinators, session binding, tool-gated access |
-| **Evidence** | Audit trail, hash-chain ledger, operator replay |
-| **Operator** | Runtime Console (data/audit/compliance) + Agent workbench (chat/tools) |
+| Plane        | Responsibility                                                           |
+| ------------ | ------------------------------------------------------------------------ |
+| **Data**     | TRA schema, personal store, reference sync, SELECT guards, table lineage |
+| **Policy**   | Consent, domain grants, compliance import, fail-closed gates             |
+| **Agent**    | Agent Pack contract, coordinators, session binding, tool-gated access    |
+| **Evidence** | Audit trail, hash-chain ledger, operator replay                          |
+| **Operator** | Runtime Console (data/audit/compliance) + Agent workbench (chat/tools)   |
 
 A typical production interaction flows through these planes — mount data → grant scope → run pack tools → evaluate rules → commit evidence — but **no fixed vertical pipeline** is canonical at the vision layer. Concrete flows are owned by packs, `DECISIONS.md`, and `trustclaw/AGENTS.md`.
 
 **Technical foundation**
 
-TrustClaw is forked from [OpenClaw](https://github.com/openclaw/openclaw). We reuse Gateway, agent runner, SQLite/Kysely patterns, Control UI shell, and plugin SDK seams. TRA-specific systems are scoped extensions under `trustclaw/` and `extensions/trustclaw-ptds/`.
+TrustClaw is forked from [OpenClaw](https://github.com/openclaw/openclaw). We reuse Gateway, agent runner, SQLite/Kysely patterns, Control UI shell, and plugin SDK seams. TRA-specific systems are scoped extensions under `trustclaw/` and `extensions/trustclaw-tra/`.
 
-> **Terminology:** Product concept is **Trust Runtime for Agent (TRA)**. Legacy HTTP/DB seams may still use the `ptds` prefix (`/api/ptds/*`, `local_ptds.db`) until a tagged migration removes them.
+> **Terminology:** Product concept is **Trust Runtime for Agent (TRA)**. Legacy HTTP/DB seams may still use the `tra` prefix (`/api/tra/*`, `local_tra.db`) until a tagged migration removes them.
 
 **Docs**
 
@@ -54,4 +54,3 @@ TrustClaw is forked from [OpenClaw](https://github.com/openclaw/openclaw). We re
 - Natural-language multi-agent routing — D23
 - CLI/package rename (`openclaw` → `trustclaw`) — D13
 - Full `domain_agents` registry import — D24
-- Retire `ptds` API/DB path prefix in favor of `tra` — D25 follow-up

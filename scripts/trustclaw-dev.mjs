@@ -191,7 +191,7 @@ function shutdown(code = 0) {
 process.on("SIGINT", () => shutdown(0));
 process.on("SIGTERM", () => shutdown(0));
 
-console.log("[trustclaw:dev] Enabling trustclaw-ptds plugin in local dev config…");
+console.log("[trustclaw:dev] Enabling trustclaw-tra plugin in local dev config…");
 const setup = spawnSync(
   process.execPath,
   [path.join(repoRoot, "scripts/trustclaw-setup.mjs"), "--dev"],

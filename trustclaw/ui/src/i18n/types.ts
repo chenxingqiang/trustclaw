@@ -108,8 +108,8 @@ export type TrustclawMessages = {
         "panel.audit": string;
         "panel.ledger": string;
         "panel.compliance": string;
-        "ptds.chat": string;
-        "ptds.write": string;
+        "tra.chat": string;
+        "tra.write": string;
       };
       registryTitle: string;
       registrySubtitle: string;

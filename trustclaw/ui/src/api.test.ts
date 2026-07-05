@@ -13,16 +13,16 @@ import {
 describe("trustclaw/ui api client", () => {
   it("buildBrowseUrl encodes table and clamps limit to integer", () => {
     expect(buildBrowseUrl("http://x", "body_anthropometrics")).toBe(
-      "/api/ptds/browse?table=body_anthropometrics",
+      "/api/tra/browse?table=body_anthropometrics",
     );
     expect(buildBrowseUrl("http://x", "lab_test_results", 42.9)).toBe(
-      "/api/ptds/browse?table=lab_test_results&limit=42",
+      "/api/tra/browse?table=lab_test_results&limit=42",
     );
   });
 
   it("buildBrowseUrl omits limit when undefined or non-finite", () => {
-    expect(buildBrowseUrl("http://x", "t")).toBe("/api/ptds/browse?table=t");
-    expect(buildBrowseUrl("http://x", "t", Number.NaN)).toBe("/api/ptds/browse?table=t");
+    expect(buildBrowseUrl("http://x", "t")).toBe("/api/tra/browse?table=t");
+    expect(buildBrowseUrl("http://x", "t", Number.NaN)).toBe("/api/tra/browse?table=t");
   });
 
   it("resolveApiBaseUrl always uses same-origin relative API paths", () => {
@@ -42,8 +42,8 @@ describe("trustclaw/ui api client", () => {
 
   it("callJson uses relative path when baseUrl is empty", async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ ok: 1 }), { status: 200 }));
-    await callJson(fetchImpl as unknown as typeof fetch, "", "/api/ptds/status");
-    expect(fetchImpl.mock.calls[0]![0]).toBe("/api/ptds/status");
+    await callJson(fetchImpl as unknown as typeof fetch, "", "/api/tra/status");
+    expect(fetchImpl.mock.calls[0]![0]).toBe("/api/tra/status");
   });
 
   it("callJson posts JSON with content-type header and parses response", async () => {
@@ -51,13 +51,13 @@ describe("trustclaw/ui api client", () => {
     const result = await callJson<{ ok: number }>(
       fetchImpl as unknown as typeof fetch,
       "http://host/",
-      "/api/ptds/init",
+      "/api/tra/init",
       { method: "POST", body: JSON.stringify({ a: 1 }) },
     );
     expect(result).toEqual({ ok: 1 });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     const [url, init] = fetchImpl.mock.calls[0]!;
-    expect(url).toBe("http://host/api/ptds/init");
+    expect(url).toBe("http://host/api/tra/init");
     expect((init as RequestInit).method).toBe("POST");
     const headers = (init as RequestInit).headers as Record<string, string>;
     expect(headers["content-type"]).toBe("application/json");
@@ -66,19 +66,19 @@ describe("trustclaw/ui api client", () => {
   it("callJson wraps non-JSON body with a descriptive error", async () => {
     const fetchImpl = vi.fn(async () => new Response("<html>oops</html>", { status: 500 }));
     await expect(
-      callJson(fetchImpl as unknown as typeof fetch, "http://host", "/api/ptds/status"),
-    ).rejects.toThrow(/Non-JSON response from \/api\/ptds\/status/);
+      callJson(fetchImpl as unknown as typeof fetch, "http://host", "/api/tra/status"),
+    ).rejects.toThrow(/Non-JSON response from \/api\/tra\/status/);
   });
 
   it("createApiClient routes methods to the frozen endpoints", async () => {
     const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
-      if (url.endsWith("/api/ptds/status")) {
+      if (url.endsWith("/api/tra/status")) {
         return new Response(
           JSON.stringify({ status: "success", mounted: true, db_file: "x.db", snapshot: {} }),
         );
       }
-      if (url.includes("/api/ptds/browse?table=body_anthropometrics")) {
+      if (url.includes("/api/tra/browse?table=body_anthropometrics")) {
         return new Response(
           JSON.stringify({ status: "success", table: "body_anthropometrics", rows: [] }),
         );

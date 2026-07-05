@@ -269,7 +269,7 @@ export class OpenClawApp extends LitElement {
   @state() chatMessages: unknown[] = [];
   @state() chatToolMessages: unknown[] = [];
   @state() trustclawRuntimeContext:
-    | import("./trustclaw-ptds-bridge.ts").TrustclawRuntimeContextPayload
+    | import("./trustclaw-tra-bridge.ts").TrustclawRuntimeContextPayload
     | null = null;
   @state() activityEntries: ActivityEntry[] = [];
   @state() activityFilterText = "";
@@ -362,24 +362,23 @@ export class OpenClawApp extends LitElement {
   @state() sidebarError: string | null = null;
   @state() splitRatio = this.settings.splitRatio;
 
-  @state() ptdsLeftRailOpen = true;
-  @state() ptdsRightRailOpen = true;
-  @state() ptdsAgentPacks: import("./controllers/trustclaw-ptds.ts").TrustclawAgentPackSummary[] =
-    [];
-  @state() ptdsAgentPacksLoading = false;
-  @state() ptdsAgentPacksError: string | null = null;
-  @state() ptdsSessionAgentPackId: string | null = null;
-  @state() ptdsSessionAgentPackSource:
+  @state() traLeftRailOpen = true;
+  @state() traRightRailOpen = true;
+  @state() traAgentPacks: import("./controllers/trustclaw-tra.ts").TrustclawAgentPackSummary[] = [];
+  @state() traAgentPacksLoading = false;
+  @state() traAgentPacksError: string | null = null;
+  @state() traSessionAgentPackId: string | null = null;
+  @state() traSessionAgentPackSource:
     | "session"
     | "lock"
     | "openclaw_agent"
     | "default"
     | "request"
     | null = null;
-  @state() ptdsSessionAgentPackLocked = false;
-  @state() ptdsSessionAgentPackMismatch = false;
-  @state() ptdsSessionAgentPackSaving = false;
-  @state() ptdsAgentPackSessionKey: string | null = null;
+  @state() traSessionAgentPackLocked = false;
+  @state() traSessionAgentPackMismatch = false;
+  @state() traSessionAgentPackSaving = false;
+  @state() traAgentPackSessionKey: string | null = null;
 
   @state() nodesLoading = false;
   @state() nodes: Array<Record<string, unknown>> = [];

@@ -1,10 +1,7 @@
-import type { TrustclawPluginConfig } from "../../ptds/config.js";
-import { resolveTrustclawPaths } from "../../ptds/config.js";
-import { getSessionAgentPackId, getSessionAgentPackLock } from "../../ptds/session-agent-pack.js";
-import {
-  resolveCoordinatorAgentPack,
-  type CoordinatorPackSource,
-} from "../coordinator/index.js";
+import type { TrustclawPluginConfig } from "../../tra/config.js";
+import { resolveTrustclawPaths } from "../../tra/config.js";
+import { getSessionAgentPackId, getSessionAgentPackLock } from "../../tra/session-agent-pack.js";
+import { resolveCoordinatorAgentPack, type CoordinatorPackSource } from "../coordinator/index.js";
 
 /** @deprecated Prefer resolveCoordinatorAgentPack; read-only preview without lock binding. */
 export type SessionAgentPackSource = Exclude<CoordinatorPackSource, "lock" | "request">;
@@ -13,19 +10,23 @@ export function resolveSessionAgentPack(params: {
   sessionKey: string;
   openclawAgentId?: string;
   pluginConfig?: TrustclawPluginConfig;
-}): { pack: ReturnType<typeof resolveCoordinatorAgentPack>["pack"]; source: SessionAgentPackSource } {
+}): {
+  pack: ReturnType<typeof resolveCoordinatorAgentPack>["pack"];
+  source: SessionAgentPackSource;
+} {
   const resolved = resolveCoordinatorAgentPack({
     ...params,
     bindLock: false,
   });
   const source: SessionAgentPackSource =
-    resolved.source === "lock" || resolved.source === "request"
-      ? "session"
-      : resolved.source;
+    resolved.source === "lock" || resolved.source === "request" ? "session" : resolved.source;
   return { pack: resolved.pack, source };
 }
 
-export { resolveCoordinatorAgentPack, type CoordinatorPackResolution } from "../coordinator/index.js";
+export {
+  resolveCoordinatorAgentPack,
+  type CoordinatorPackResolution,
+} from "../coordinator/index.js";
 
 export function resolveBoundAgentPack(params: {
   sessionKey: string;

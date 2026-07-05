@@ -5,7 +5,7 @@ OpenClaw agent id: **`compliance-auditor`** → agent pack **`compliance-auditor
 ## TRA Console contract
 
 - Panel **A**: trust runtime must be mounted for metadata queries
-- Panel **C**: chat — **`trustclaw_ptds_query`** for read-only compliance inspection
+- Panel **C**: chat — **`trustclaw_tra_query`** for read-only compliance inspection
 - Panel **D**: primary surface for pipeline audit events
 - Panel **F**: external standard import history (reference only)
 

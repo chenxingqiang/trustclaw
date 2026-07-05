@@ -1,4 +1,4 @@
-import type { Glp1CheckSnapshot } from "../../ptds/types.js";
+import type { Glp1CheckSnapshot } from "../../tra/types.js";
 
 export type RuleEvaluationStatus = "PASS" | "FAIL";
 
@@ -30,7 +30,7 @@ export type NrdlPaymentRuleRow = {
 };
 
 export type RuleEvaluatorHandshake = {
-  source_system: "PTDS_SQLite_Engine";
+  source_system: "TRA_SQLite_Engine";
   target_agent: "RuleEvaluationAgent";
   handshake_payload: {
     biometric_snapshot: Record<string, unknown>;

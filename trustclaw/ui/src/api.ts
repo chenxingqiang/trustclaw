@@ -1,9 +1,9 @@
-// TrustClaw PTDS Runtime Console — typed API client for plugin routes.
-// Contracts follow handlers under `extensions/trustclaw-ptds/src/` and
+// TrustClaw TRA Runtime Console — typed API client for plugin routes.
+// Contracts follow handlers under `extensions/trustclaw-tra/src/` and
 // colocated types here. If the shape changes, update handlers + DECISIONS.md first.
 
-/** Frozen `POST /api/ptds/init` request shape. */
-export interface PtdsInitRequest {
+/** Frozen `POST /api/tra/init` request shape. */
+export interface TraInitRequest {
   patientName?: string;
   gender: "男" | "女";
   age: number;
@@ -32,10 +32,10 @@ export interface PtdsInitRequest {
   isSpecialistPhysician?: boolean;
 }
 
-export const PTDS_INIT_FORM_DEFAULTS: Required<
-  Pick<PtdsInitRequest, "patientName" | "gender" | "age">
+export const TRA_INIT_FORM_DEFAULTS: Required<
+  Pick<TraInitRequest, "patientName" | "gender" | "age">
 > &
-  Omit<PtdsInitRequest, "patientName" | "gender" | "age" | "bmi"> = {
+  Omit<TraInitRequest, "patientName" | "gender" | "age" | "bmi"> = {
   patientName: "张三",
   gender: "男",
   age: 45,
@@ -60,60 +60,60 @@ export const PTDS_INIT_FORM_DEFAULTS: Required<
   isSpecialistPhysician: true,
 };
 
-export function computePtdsBmi(weightKg: number, heightCm: number): number {
+export function computeTraBmi(weightKg: number, heightCm: number): number {
   const heightM = heightCm / 100;
   return weightKg / (heightM * heightM);
 }
 
-export interface PtdsInitResponse {
+export interface TraInitResponse {
   status: "success" | "error";
   message: string;
   db_file?: string;
   records_inserted?: number;
 }
 
-export interface PtdsResetResponse {
+export interface TraResetResponse {
   status: "success" | "error";
   message: string;
 }
 
-export interface PtdsStatusResponse {
+export interface TraStatusResponse {
   status: "success" | "error";
   mounted: boolean;
   db_file: string;
   snapshot: unknown;
 }
 
-export type PtdsTableKind = "personal" | "subscribed" | "reference" | "provenance" | "view";
+export type TraTableKind = "personal" | "subscribed" | "reference" | "provenance" | "view";
 
-export interface PtdsTableCatalogRow {
+export interface TraTableCatalogRow {
   table: string;
-  kind: PtdsTableKind;
+  kind: TraTableKind;
   subscription_type?: "pharma-compliance" | "nrdl-reference" | "device-data";
   label_en: string;
   label_zh: string;
 }
 
-export interface PtdsLineageNode {
+export interface TraLineageNode {
   id: string;
   role: "table" | "source" | "subscription" | "panel" | "engine";
   label: string;
   meta?: Record<string, string | number | null>;
 }
 
-export interface PtdsLineageEdge {
+export interface TraLineageEdge {
   from: string;
   to: string;
   label?: string;
 }
 
-export interface PtdsTableLineage {
+export interface TraTableLineage {
   table: string;
-  kind: PtdsTableKind;
+  kind: TraTableKind;
   subscription_type?: "pharma-compliance" | "nrdl-reference" | "device-data";
   provenance_fields: string[];
-  nodes: PtdsLineageNode[];
-  edges: PtdsLineageEdge[];
+  nodes: TraLineageNode[];
+  edges: TraLineageEdge[];
   live?: {
     active_standard_id?: string | null;
     ruleset_hash?: string | null;
@@ -131,16 +131,16 @@ export interface PtdsTableLineage {
   };
 }
 
-export interface PtdsTablesResponse {
+export interface TraTablesResponse {
   status: "success" | "error";
   default_tables: string[];
   tables: string[];
-  catalog?: PtdsTableCatalogRow[];
+  catalog?: TraTableCatalogRow[];
   personal_tables?: string[];
   subscribed_tables?: string[];
 }
 
-export interface PtdsBrowseSubscriptionsResponse {
+export interface TraBrowseSubscriptionsResponse {
   status: "success" | "error";
   agent_pack_id?: string;
   pharma: {
@@ -159,19 +159,19 @@ export interface PtdsBrowseSubscriptionsResponse {
   quick_tables?: Array<{
     table: string;
     kind: string;
-    subscription_type?: PtdsTableLineage["subscription_type"];
+    subscription_type?: TraTableLineage["subscription_type"];
     label_en: string;
     label_zh: string;
   }>;
   message?: string;
 }
 
-export interface PtdsBrowseResponse {
+export interface TraBrowseResponse {
   status: "success" | "error";
   table: string;
   columns?: string[];
   rows?: unknown[];
-  lineage?: PtdsTableLineage;
+  lineage?: TraTableLineage;
   message?: string;
 }
 
@@ -209,7 +209,7 @@ export interface RuntimeContextResponse {
 }
 
 export interface AgentChatErrorResponse {
-  status: "error" | "security_blocked" | "ptds_not_initialized";
+  status: "error" | "security_blocked" | "tra_not_initialized";
   message: string;
 }
 
@@ -420,7 +420,7 @@ export function buildBrowseUrl(
   limit?: number,
   agentPackId?: string,
 ): string {
-  const url = new URL("/api/ptds/browse", base);
+  const url = new URL("/api/tra/browse", base);
   url.searchParams.set("table", table);
   if (agentPackId?.trim()) {
     url.searchParams.set("agentPackId", agentPackId.trim());
@@ -436,8 +436,8 @@ export type AgentDomainScopeId =
   | "panel.audit"
   | "panel.ledger"
   | "panel.compliance"
-  | "ptds.chat"
-  | "ptds.write";
+  | "tra.chat"
+  | "tra.write";
 
 export interface AgentGrantPackRow {
   id: string;
@@ -475,8 +475,8 @@ export interface DomainAgentRow {
   region: string | null;
   insurance_type: string | null;
   enabled: string;
-  ptds_scopes: string | null;
-  ptds_write: number | null;
+  tra_scopes: string | null;
+  tra_write: number | null;
   pack_id: string | null;
   pack_version: string | null;
   registered_at: string | null;
@@ -502,7 +502,7 @@ export type DomainAgentsQuery = {
 
 /** Serialize domain-agents registry URL with optional filters. */
 export function buildDomainAgentsUrl(base: string, query?: DomainAgentsQuery): string {
-  const url = new URL("/api/ptds/domain-agents", base);
+  const url = new URL("/api/tra/domain-agents", base);
   if (query?.pack_id?.trim()) {
     url.searchParams.set("pack_id", query.pack_id.trim());
   }
@@ -534,7 +534,7 @@ export function resolveApiBaseUrl(
   _env: { VITE_GATEWAY_URL?: string } | undefined,
   _location: Pick<Location, "origin">,
 ): string {
-  // PTDS HTTP routes are always on the page origin: bundled at `/trustclaw/` on the
+  // TRA HTTP routes are always on the page origin: bundled at `/trustclaw/` on the
   // gateway, or proxied through Vite dev (`/api` → gateway). Do not use VITE_GATEWAY_URL
   // here — a stale baked port (e.g. :18789) breaks init when dev gateway runs on :19001.
   return "";
@@ -582,7 +582,7 @@ export async function callJson<TResponse>(
   } catch {
     const hint =
       response.status === 404
-        ? " — PTDS plugin route missing; run `pnpm trustclaw:setup` and restart gateway"
+        ? " — TRA plugin route missing; run `pnpm trustclaw:setup` and restart gateway"
         : "";
     throw new Error(
       `Non-JSON response from ${path} (${response.status})${hint}: ${text.slice(0, 200)}`,
@@ -602,12 +602,12 @@ export async function callJson<TResponse>(
 }
 
 export interface TrustclawApiClient {
-  init(body: PtdsInitRequest): Promise<PtdsInitResponse>;
-  reset(): Promise<PtdsResetResponse>;
-  status(): Promise<PtdsStatusResponse>;
-  tables(agentPackId?: string): Promise<PtdsTablesResponse>;
-  browseSubscriptions(agentPackId?: string): Promise<PtdsBrowseSubscriptionsResponse>;
-  browse(table: string, limit?: number, agentPackId?: string): Promise<PtdsBrowseResponse>;
+  init(body: TraInitRequest): Promise<TraInitResponse>;
+  reset(): Promise<TraResetResponse>;
+  status(): Promise<TraStatusResponse>;
+  tables(agentPackId?: string): Promise<TraTablesResponse>;
+  browseSubscriptions(agentPackId?: string): Promise<TraBrowseSubscriptionsResponse>;
+  browse(table: string, limit?: number, agentPackId?: string): Promise<TraBrowseResponse>;
   agentGrants(): Promise<AgentGrantsResponse>;
   domainAgents(query?: DomainAgentsQuery): Promise<DomainAgentsResponse>;
   putAgentGrant(body: PutAgentGrantRequest): Promise<PutAgentGrantResponse>;
@@ -666,38 +666,34 @@ export function createApiClient(
 ): TrustclawApiClient {
   return {
     init(body) {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/init", {
+      return callJson(fetchImpl, baseUrl, "/api/tra/init", {
         method: "POST",
         body: JSON.stringify(body),
       });
     },
     reset() {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/reset", { method: "POST" });
+      return callJson(fetchImpl, baseUrl, "/api/tra/reset", { method: "POST" });
     },
     status() {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/status");
+      return callJson(fetchImpl, baseUrl, "/api/tra/status");
     },
     tables(agentPackId) {
-      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/tables", agentPackId));
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/tra/tables", agentPackId));
     },
     browseSubscriptions(agentPackId) {
-      return callJson(
-        fetchImpl,
-        baseUrl,
-        scopedPath("/api/ptds/browse/subscriptions", agentPackId),
-      );
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/tra/browse/subscriptions", agentPackId));
     },
     browse(table, limit, agentPackId) {
       return callJson(fetchImpl, baseUrl, buildBrowseUrl("http://x", table, limit, agentPackId));
     },
     agentGrants() {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/agent-grants");
+      return callJson(fetchImpl, baseUrl, "/api/tra/agent-grants");
     },
     domainAgents(query) {
       return callJson(fetchImpl, baseUrl, buildDomainAgentsUrl("http://x", query));
     },
     putAgentGrant(body) {
-      return callJson(fetchImpl, baseUrl, "/api/ptds/agent-grants", {
+      return callJson(fetchImpl, baseUrl, "/api/tra/agent-grants", {
         method: "PUT",
         body: JSON.stringify(body),
       });
@@ -709,13 +705,13 @@ export function createApiClient(
       });
     },
     compliancePreview(packagePayload, agentPackId) {
-      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/compliance/preview", agentPackId), {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/tra/compliance/preview", agentPackId), {
         method: "POST",
         body: JSON.stringify({ package: packagePayload }),
       });
     },
     complianceImport(body, agentPackId) {
-      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/compliance/import", agentPackId), {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/tra/compliance/import", agentPackId), {
         method: "POST",
         body: JSON.stringify(body),
       });
@@ -724,7 +720,7 @@ export function createApiClient(
       return callJson(
         fetchImpl,
         baseUrl,
-        scopedPath("/api/ptds/compliance/import/bundled-glp1-v2", agentPackId),
+        scopedPath("/api/tra/compliance/import/bundled-glp1-v2", agentPackId),
         {
           method: "POST",
           body: JSON.stringify(body),
@@ -732,20 +728,16 @@ export function createApiClient(
       );
     },
     complianceStandards(agentPackId) {
-      return callJson(
-        fetchImpl,
-        baseUrl,
-        scopedPath("/api/ptds/compliance/standards", agentPackId),
-      );
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/tra/compliance/standards", agentPackId));
     },
     referencePreview(body, agentPackId) {
-      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/reference/preview", agentPackId), {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/tra/reference/preview", agentPackId), {
         method: "POST",
         body: JSON.stringify(body),
       });
     },
     referenceSync(body, agentPackId) {
-      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/reference/sync", agentPackId), {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/tra/reference/sync", agentPackId), {
         method: "POST",
         body: JSON.stringify(body),
       });
@@ -754,7 +746,7 @@ export function createApiClient(
       return callJson(
         fetchImpl,
         baseUrl,
-        scopedPath("/api/ptds/reference/sync/bundled-glp1", agentPackId),
+        scopedPath("/api/tra/reference/sync/bundled-glp1", agentPackId),
         {
           method: "POST",
           body: JSON.stringify(body),
@@ -762,22 +754,22 @@ export function createApiClient(
       );
     },
     referenceStatus(agentPackId) {
-      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/reference/status", agentPackId));
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/tra/reference/status", agentPackId));
     },
     devicePreview(body, agentPackId) {
-      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/device/preview", agentPackId), {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/tra/device/preview", agentPackId), {
         method: "POST",
         body: JSON.stringify(body),
       });
     },
     deviceImport(body, agentPackId) {
-      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/device/import", agentPackId), {
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/tra/device/import", agentPackId), {
         method: "POST",
         body: JSON.stringify(body),
       });
     },
     auditEvents(scope = "compliance", limit = 30, agentPackId) {
-      const url = new URL("/api/ptds/audit/events", "http://x");
+      const url = new URL("/api/tra/audit/events", "http://x");
       url.searchParams.set("scope", scope);
       url.searchParams.set("limit", String(limit));
       if (agentPackId?.trim()) {
@@ -786,7 +778,7 @@ export function createApiClient(
       return callJson(fetchImpl, baseUrl, url.pathname + url.search);
     },
     ledgerStatus(agentPackId) {
-      return callJson(fetchImpl, baseUrl, scopedPath("/api/ptds/ledger", agentPackId));
+      return callJson(fetchImpl, baseUrl, scopedPath("/api/tra/ledger", agentPackId));
     },
   };
 }

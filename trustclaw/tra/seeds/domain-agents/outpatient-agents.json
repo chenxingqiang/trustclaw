@@ -1,0 +1,350 @@
+{
+  "domain": "outpatient",
+  "domain_name": "门诊",
+  "version": "1.0.0",
+  "agent_count": 12,
+  "agents": [
+    {
+      "id": "op-001",
+      "name": "门诊参保资格核验 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "eligibility",
+      "description": "核验参保人在指定统筹区的门诊就医资格，包括参保状态、险种类型、缴费连续性及待遇享受有效期",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.insurance.enrollment_status_check",
+        "rule.insurance.payment_continuity_check",
+        "rule.insurance.benefit_eligibility_period"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["insurance_enrollment","insurance_policy_rules"]
+      },
+      "optional_tra_tables": ["visit_records"],
+      "data_sources": [
+        {"table":"insurance_enrollment","fields":["enrollment_id","region_code","insurance_type","status","valid_until","payment_months"]},
+        {"table":"insurance_policy_rules","fields":["region_code","outpatient_benefit_type","outpatient_threshold","outpatient_ratio"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment（参保信息）\n• insurance_policy_rules（地区政策规则）\n→ Panel A 导入相关数据后重新激活此 Agent"
+    },
+    {
+      "id": "op-002",
+      "name": "门诊统筹待遇资格判断 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "benefit-category",
+      "description": "判断参保人是否具有门诊统筹待遇资格，区分普通门诊、门诊慢特病、门诊大病等待遇类别及起享条件",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.outpatient.benefit_category_check",
+        "rule.outpatient.waiting_period_check"
+      ],
+      "required_tra_tables": {
+        "available": ["diagnoses"],
+        "missing": ["insurance_enrollment","visit_records"]
+      },
+      "optional_tra_tables": ["disease_catalog_chronic"],
+      "data_sources": [
+        {"table":"diagnoses","fields":["icd10_code","diagnosis_name"]},
+        {"table":"insurance_enrollment","fields":["insurance_type","enrollment_date","benefit_categories"]},
+        {"table":"visit_records","fields":["visit_date","institution_level","visit_type"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment（参保信息）\n• visit_records（就诊记录）\n已可用：diagnoses（诊断信息）"
+    },
+    {
+      "id": "op-003",
+      "name": "门诊慢特病病种匹配 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "chronic-disease",
+      "description": "基于参保人诊断和实验室检测结果，匹配门诊慢特病病种目录，判断病种认定资格及对应待遇标准",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.chronic.disease_matching",
+        "rule.chronic.lab_threshold_check",
+        "rule.chronic.recognition_criteria"
+      ],
+      "required_tra_tables": {
+        "available": ["diagnoses","labs"],
+        "missing": ["disease_catalog_chronic"]
+      },
+      "optional_tra_tables": ["insurance_enrollment"],
+      "data_sources": [
+        {"table":"diagnoses","fields":["icd10_code","diagnosis_name"]},
+        {"table":"labs","fields":["hba1c_percent","fasting_glucose","lab_date"]},
+        {"table":"disease_catalog_chronic","fields":["disease_code","disease_name","recognition_criteria","benefit_limit","annual_cap"]}
+      ],
+      "enabled": "partial",
+      "enabled_note": "diagnoses + labs 已挂载，可部分运行；导入 disease_catalog_chronic 后完全激活",
+      "missing_data_warning": "⚠️ 需导入 TRA 数据表才能完全激活：\n• disease_catalog_chronic（慢特病病种目录）\n✅ 已可用：diagnoses + labs"
+    },
+    {
+      "id": "op-004",
+      "name": "门诊 NRDL 药品目录核验 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "drug-catalog",
+      "description": "核验门诊处方药品是否在国家医保药品目录（NRDL）内，区分甲类/乙类，判断限定支付条件及自付比例",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.drug.nrdl_catalog_lookup",
+        "rule.drug.category_ab_classification",
+        "rule.drug.restricted_payment_conditions"
+      ],
+      "required_tra_tables": {
+        "available": ["medications"],
+        "missing": ["drug_catalog_nrdl"]
+      },
+      "optional_tra_tables": ["diagnoses","prescription_records"],
+      "data_sources": [
+        {"table":"medications","fields":["drug_name","generic_name","dosage_form","strength"]},
+        {"table":"drug_catalog_nrdl","fields":["drug_code","drug_name","category","restricted_conditions","payment_ratio","dosage_form"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• drug_catalog_nrdl（NRDL 药品目录）\n已可用：medications（用药记录，当前为空，导入处方后生效）"
+    },
+    {
+      "id": "op-005",
+      "name": "门诊诊疗项目合规审查 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "procedure-compliance",
+      "description": "审查门诊诊疗项目是否符合医保支付范围，核验项目编码、报销类别及与诊断的匹配性",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.procedure.catalog_check",
+        "rule.procedure.diagnosis_match",
+        "rule.procedure.duplicate_detection"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["visit_records","procedure_catalog"]
+      },
+      "optional_tra_tables": ["diagnoses"],
+      "data_sources": [
+        {"table":"visit_records","fields":["visit_id","procedure_codes","charges","visit_date","institution_level"]},
+        {"table":"procedure_catalog","fields":["procedure_code","procedure_name","category","payment_limit","diagnosis_restrictions"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• visit_records（门诊就诊记录）\n• procedure_catalog（诊疗项目目录）"
+    },
+    {
+      "id": "op-006",
+      "name": "门诊自付比例计算 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "cost-sharing",
+      "description": "根据险种类型、医疗机构等级和费用类别，计算门诊就诊个人自付比例及应付金额",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.outpatient.copay_ratio_lookup",
+        "rule.outpatient.institution_level_adjustment"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["insurance_enrollment","insurance_policy_rules","visit_records"]
+      },
+      "optional_tra_tables": [],
+      "data_sources": [
+        {"table":"insurance_enrollment","fields":["insurance_type","region_code"]},
+        {"table":"insurance_policy_rules","fields":["institution_level","copay_ratio_class_a","copay_ratio_class_b","copay_ratio_class_c"]},
+        {"table":"visit_records","fields":["institution_level","total_charge","charge_categories"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment / insurance_policy_rules / visit_records"
+    },
+    {
+      "id": "op-007",
+      "name": "门诊起付线核定 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "deductible",
+      "description": "核定门诊统筹年度起付线，结合历史结算记录判断当次就诊是否仍需先行自付起付金额",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.outpatient.deductible_lookup",
+        "rule.outpatient.annual_deductible_accumulation"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["insurance_enrollment","insurance_policy_rules","settlement_records"]
+      },
+      "optional_tra_tables": [],
+      "data_sources": [
+        {"table":"insurance_enrollment","fields":["insurance_type","region_code"]},
+        {"table":"insurance_policy_rules","fields":["outpatient_deductible_amount","deductible_reset_date"]},
+        {"table":"settlement_records","fields":["settlement_year","accumulated_outpatient_self_paid","accumulated_visits"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment / insurance_policy_rules / settlement_records"
+    },
+    {
+      "id": "op-008",
+      "name": "门诊统筹基金支付计算 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "fund-payment",
+      "description": "综合诊疗费用明细、药品目录分类、起付线及报销比例，计算门诊统筹基金本次应支付金额",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.outpatient.fund_calculation",
+        "rule.outpatient.eligible_expense_filter",
+        "rule.outpatient.payment_cap_check"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["insurance_enrollment","visit_records","drug_catalog_nrdl","procedure_catalog"]
+      },
+      "optional_tra_tables": ["settlement_records"],
+      "data_sources": [
+        {"table":"insurance_enrollment","fields":["insurance_type","region_code"]},
+        {"table":"visit_records","fields":["charge_items","charge_amounts","charge_categories"]},
+        {"table":"drug_catalog_nrdl","fields":["drug_code","category","payment_ratio"]},
+        {"table":"procedure_catalog","fields":["procedure_code","category","payment_limit"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment / visit_records / drug_catalog_nrdl / procedure_catalog"
+    },
+    {
+      "id": "op-009",
+      "name": "门诊年度封顶线判断 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "annual-cap",
+      "description": "判断年度门诊统筹累计支付是否触及封顶线，超额部分转为个人负担并发出预警",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.outpatient.annual_cap_check",
+        "rule.outpatient.cap_exceeded_handling"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["insurance_enrollment","settlement_records"]
+      },
+      "optional_tra_tables": [],
+      "data_sources": [
+        {"table":"insurance_enrollment","fields":["insurance_type","region_code"]},
+        {"table":"settlement_records","fields":["settlement_year","fund_paid_outpatient_ytd","outpatient_annual_cap"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment / settlement_records"
+    },
+    {
+      "id": "op-010",
+      "name": "门诊处方合规审核 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "prescription-compliance",
+      "description": "审核门诊处方合规性，包括处方权限、用药适应症、超量开药、重复处方及配伍禁忌核查",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.prescription.authority_check",
+        "rule.prescription.indication_match",
+        "rule.prescription.quantity_limit",
+        "rule.prescription.duplicate_check"
+      ],
+      "required_tra_tables": {
+        "available": ["medications"],
+        "missing": ["prescription_records","drug_catalog_nrdl"]
+      },
+      "optional_tra_tables": ["diagnoses"],
+      "data_sources": [
+        {"table":"medications","fields":["drug_name","dosage_form","quantity"]},
+        {"table":"prescription_records","fields":["rx_id","prescriber_id","drug_code","dosage","quantity","rx_date"]},
+        {"table":"drug_catalog_nrdl","fields":["drug_code","restricted_conditions","max_quantity_per_rx","contraindications"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• prescription_records（处方记录）\n• drug_catalog_nrdl（NRDL 药品目录）\n已可用：medications（用药记录）"
+    },
+    {
+      "id": "op-011",
+      "name": "门诊实时费用结算 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "settlement",
+      "description": "执行门诊就诊实时费用结算，生成统筹基金支付、大额支付、个人账户支付及自付金额明细，写入结算记录",
+      "scopes": ["tra.read","tra.chat","tra.write","panel.browse","panel.audit","panel.ledger"],
+      "tra_write_allowed": true,
+      "tools": ["trustclaw_tra_query","trustclaw_tra_write"],
+      "rules": [
+        "rule.outpatient.realtime_settlement",
+        "rule.outpatient.payment_split_calculation",
+        "rule.settlement.ledger_entry",
+        "rule.audit.consent_required_before_write"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["insurance_enrollment","visit_records","settlement_records"]
+      },
+      "optional_tra_tables": ["drug_catalog_nrdl","procedure_catalog"],
+      "data_sources": [
+        {"table":"insurance_enrollment","fields":["insurance_type","region_code","personal_account_balance"]},
+        {"table":"visit_records","fields":["visit_id","charge_items","total_charge"]},
+        {"table":"settlement_records","fields":["settlement_id","fund_paid","self_paid","personal_account_paid"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment / visit_records / settlement_records\n⚠️ 此 Agent 具有 tra.write 权限，每次写入均需用户明确同意并记录至审计账本（Panel E）"
+    },
+    {
+      "id": "op-012",
+      "name": "门诊年度费用统计汇总 Agent",
+      "version": "1.0.0",
+      "domain": "outpatient",
+      "domain_name": "门诊",
+      "subdomain": "statistics",
+      "description": "汇总参保人年度门诊就诊费用、统筹支付、个人支付及历史趋势，生成年度费用分析报告",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.statistics.annual_outpatient_summary",
+        "rule.statistics.trend_analysis"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["settlement_records","visit_records"]
+      },
+      "optional_tra_tables": ["insurance_enrollment"],
+      "data_sources": [
+        {"table":"settlement_records","fields":["settlement_year","settlement_month","fund_paid","self_paid","visit_count"]},
+        {"table":"visit_records","fields":["visit_date","institution_level","total_charge","diagnosis_code"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• settlement_records（结算记录）\n• visit_records（就诊记录）"
+    }
+  ]
+}

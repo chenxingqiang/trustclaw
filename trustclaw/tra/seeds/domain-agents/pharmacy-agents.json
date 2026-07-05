@@ -1,0 +1,288 @@
+{
+  "domain": "pharmacy",
+  "domain_name": "药店",
+  "version": "1.0.0",
+  "agent_count": 10,
+  "agents": [
+    {
+      "id": "ph-001",
+      "name": "定点药店资格验证 Agent",
+      "version": "1.0.0",
+      "domain": "pharmacy",
+      "domain_name": "药店",
+      "subdomain": "pharmacy-eligibility",
+      "description": "验证药店是否为有效医保定点药店，核验医保编码、协议有效期、经营资质及是否已暂停协议",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.pharmacy.accreditation_check",
+        "rule.pharmacy.agreement_status_check"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["pharmacy_catalog"]
+      },
+      "optional_tra_tables": [],
+      "data_sources": [
+        {"table":"pharmacy_catalog","fields":["pharmacy_id","pharmacy_name","insurance_code","agreement_status","agreement_valid_until","business_scope","suspended"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• pharmacy_catalog（定点药店目录）\n→ Panel A 导入定点药店目录 JSON"
+    },
+    {
+      "id": "ph-002",
+      "name": "参保人购药资格核验 Agent",
+      "version": "1.0.0",
+      "domain": "pharmacy",
+      "domain_name": "药店",
+      "subdomain": "buyer-eligibility",
+      "description": "核验参保人在定点药店购药的医保支付资格，包括参保状态、险种类型、慢病备案及处方合规",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.insurance.enrollment_status_check",
+        "rule.pharmacy.buyer_benefit_check"
+      ],
+      "required_tra_tables": {
+        "available": ["diagnoses"],
+        "missing": ["insurance_enrollment"]
+      },
+      "optional_tra_tables": ["disease_catalog_chronic"],
+      "data_sources": [
+        {"table":"diagnoses","fields":["icd10_code","diagnosis_name"]},
+        {"table":"insurance_enrollment","fields":["enrollment_id","insurance_type","status","chronic_disease_registrations"]}
+      ],
+      "enabled": "partial",
+      "enabled_note": "diagnoses 已挂载，可提供诊断侧核验；导入 insurance_enrollment 后完全激活",
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能完全激活：\n• insurance_enrollment（参保信息）\n✅ 已可用：diagnoses"
+    },
+    {
+      "id": "ph-003",
+      "name": "处方合规性审核 Agent",
+      "version": "1.0.0",
+      "domain": "pharmacy",
+      "domain_name": "药店",
+      "subdomain": "prescription-compliance",
+      "description": "审核在药店使用的处方合规性，包括处方真实性、有效期、医师资质、药品与诊断匹配性",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.prescription.validity_check",
+        "rule.prescription.prescriber_qualification",
+        "rule.prescription.drug_diagnosis_match"
+      ],
+      "required_tra_tables": {
+        "available": ["medications"],
+        "missing": ["prescription_records","drug_catalog_nrdl"]
+      },
+      "optional_tra_tables": ["diagnoses"],
+      "data_sources": [
+        {"table":"medications","fields":["drug_name","dosage_form"]},
+        {"table":"prescription_records","fields":["rx_id","prescriber_id","prescriber_qualification","drug_code","rx_date","valid_until","diagnosis_code"]},
+        {"table":"drug_catalog_nrdl","fields":["drug_code","drug_name","prescription_required","restricted_conditions"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• prescription_records（处方记录）\n• drug_catalog_nrdl（NRDL 药品目录）\n已可用：medications（用药记录）"
+    },
+    {
+      "id": "ph-004",
+      "name": "NRDL 乙类药品核验 Agent",
+      "version": "1.0.0",
+      "domain": "pharmacy",
+      "domain_name": "药店",
+      "subdomain": "drug-category-b",
+      "description": "核验药店销售药品的 NRDL 乙类资格，判断个人先行自付比例及统筹基金可支付部分",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.drug.category_b_self_pay_ratio",
+        "rule.drug.regional_category_b_adjustment"
+      ],
+      "required_tra_tables": {
+        "available": ["medications"],
+        "missing": ["drug_catalog_nrdl"]
+      },
+      "optional_tra_tables": ["insurance_policy_rules"],
+      "data_sources": [
+        {"table":"medications","fields":["drug_name","generic_name","dosage_form","strength"]},
+        {"table":"drug_catalog_nrdl","fields":["drug_code","drug_name","category","self_pay_ratio_b","dosage_form"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• drug_catalog_nrdl（NRDL 药品目录含甲乙分类）\n已可用：medications（用药记录）"
+    },
+    {
+      "id": "ph-005",
+      "name": "慢病专项购药资格判断 Agent",
+      "version": "1.0.0",
+      "domain": "pharmacy",
+      "domain_name": "药店",
+      "subdomain": "chronic-drug-benefit",
+      "description": "基于诊断和检验结果判断参保人慢病专项购药资格，核验是否符合慢特病药店购药报销条件",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.chronic.pharmacy_drug_benefit",
+        "rule.chronic.lab_recognition_criteria"
+      ],
+      "required_tra_tables": {
+        "available": ["diagnoses","labs"],
+        "missing": ["disease_catalog_chronic"]
+      },
+      "optional_tra_tables": ["insurance_enrollment","drug_catalog_nrdl"],
+      "data_sources": [
+        {"table":"diagnoses","fields":["icd10_code","diagnosis_name"]},
+        {"table":"labs","fields":["hba1c_percent","fasting_glucose","lab_date"]},
+        {"table":"disease_catalog_chronic","fields":["disease_code","pharmacy_eligible","allowed_drug_categories","monthly_limit"]}
+      ],
+      "enabled": "partial",
+      "enabled_note": "diagnoses + labs 已挂载，可做慢病认定初筛；导入 disease_catalog_chronic 后完全激活",
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能完全激活：\n• disease_catalog_chronic（慢特病目录）\n✅ 已可用：diagnoses + labs（支持 T2DM / HbA1c 初筛）"
+    },
+    {
+      "id": "ph-006",
+      "name": "购药数量频次限制核查 Agent",
+      "version": "1.0.0",
+      "domain": "pharmacy",
+      "domain_name": "药店",
+      "subdomain": "quantity-frequency-check",
+      "description": "核查参保人单次购药数量及月度/年度购药频次是否超出医保规定上限，防范超量购药骗保",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.prescription.quantity_per_purchase_limit",
+        "rule.prescription.monthly_frequency_check",
+        "rule.prescription.duplicate_purchase_check"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["prescription_records","drug_catalog_nrdl"]
+      },
+      "optional_tra_tables": ["settlement_records"],
+      "data_sources": [
+        {"table":"prescription_records","fields":["rx_date","pharmacy_id","drug_code","quantity","patient_id"]},
+        {"table":"drug_catalog_nrdl","fields":["drug_code","max_quantity_per_purchase","max_days_supply","controlled_substance"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• prescription_records（处方记录）\n• drug_catalog_nrdl（NRDL 目录含数量限制规则）"
+    },
+    {
+      "id": "ph-007",
+      "name": "特殊药品购买审批 Agent",
+      "version": "1.0.0",
+      "domain": "pharmacy",
+      "domain_name": "药店",
+      "subdomain": "special-drug-approval",
+      "description": "处理谈判药品、双通道药品、罕见病用药等特殊药品的购买审批，核验适应症、备案状态及定点资质",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.special_drug.access_check",
+        "rule.special_drug.indication_verification",
+        "rule.special_drug.dual_channel_check"
+      ],
+      "required_tra_tables": {
+        "available": ["diagnoses"],
+        "missing": ["special_drug_catalog"]
+      },
+      "optional_tra_tables": ["labs","insurance_enrollment","pharmacy_catalog"],
+      "data_sources": [
+        {"table":"diagnoses","fields":["icd10_code","diagnosis_name"]},
+        {"table":"special_drug_catalog","fields":["drug_code","drug_name","drug_type","indication_codes","dual_channel","approved_pharmacies","reimbursement_conditions"]}
+      ],
+      "enabled": "partial",
+      "enabled_note": "diagnoses 已挂载，可核验适应症匹配；导入 special_drug_catalog 后完全激活",
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能完全激活：\n• special_drug_catalog（特殊药品准入目录）\n✅ 已可用：diagnoses（可初步核验 T2DM 相关适应症）"
+    },
+    {
+      "id": "ph-008",
+      "name": "药店统筹基金支付计算 Agent",
+      "version": "1.0.0",
+      "domain": "pharmacy",
+      "domain_name": "药店",
+      "subdomain": "fund-payment",
+      "description": "计算药店购药的医保统筹基金支付金额，含 NRDL 甲类全额、乙类按比例、个人账户及自付金额拆分",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.pharmacy.fund_calc_by_drug_category",
+        "rule.pharmacy.personal_account_deduction",
+        "rule.pharmacy.self_pay_calculation"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["insurance_enrollment","prescription_records","drug_catalog_nrdl"]
+      },
+      "optional_tra_tables": ["insurance_policy_rules"],
+      "data_sources": [
+        {"table":"insurance_enrollment","fields":["insurance_type","personal_account_balance","region_code"]},
+        {"table":"prescription_records","fields":["drug_code","quantity","unit_price","total_amount"]},
+        {"table":"drug_catalog_nrdl","fields":["drug_code","category","self_pay_ratio_b"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• insurance_enrollment / prescription_records / drug_catalog_nrdl"
+    },
+    {
+      "id": "ph-009",
+      "name": "药店医保结算核对 Agent",
+      "version": "1.0.0",
+      "domain": "pharmacy",
+      "domain_name": "药店",
+      "subdomain": "settlement-reconciliation",
+      "description": "核对药店申报结算数据与 TRA 处方记录的一致性，识别申报差错、多计费用及退药未冲账问题",
+      "scopes": ["tra.read","tra.chat","panel.browse","panel.audit"],
+      "tra_write_allowed": false,
+      "tools": ["trustclaw_tra_query"],
+      "rules": [
+        "rule.settlement.pharmacy_reconciliation",
+        "rule.settlement.refund_reversal_check"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["settlement_records","prescription_records"]
+      },
+      "optional_tra_tables": ["pharmacy_catalog"],
+      "data_sources": [
+        {"table":"settlement_records","fields":["settlement_id","pharmacy_id","settlement_amount","drug_items","settlement_date"]},
+        {"table":"prescription_records","fields":["rx_id","pharmacy_id","drug_code","quantity","amount","dispensing_date"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• settlement_records（结算记录）\n• prescription_records（处方配药记录）"
+    },
+    {
+      "id": "ph-010",
+      "name": "药店费用汇总上传 Agent",
+      "version": "1.0.0",
+      "domain": "pharmacy",
+      "domain_name": "药店",
+      "subdomain": "billing-upload",
+      "description": "汇总药店月度医保费用，生成标准申报格式数据并写入结算待审记录，供医保经办机构核验",
+      "scopes": ["tra.read","tra.chat","tra.write","panel.browse","panel.audit","panel.ledger"],
+      "tra_write_allowed": true,
+      "tools": ["trustclaw_tra_query","trustclaw_tra_write"],
+      "rules": [
+        "rule.billing.monthly_summary",
+        "rule.billing.standard_format_export",
+        "rule.audit.consent_required_before_write"
+      ],
+      "required_tra_tables": {
+        "available": [],
+        "missing": ["settlement_records","pharmacy_catalog"]
+      },
+      "optional_tra_tables": ["prescription_records"],
+      "data_sources": [
+        {"table":"settlement_records","fields":["pharmacy_id","settlement_month","fund_paid","self_paid","transaction_count"]},
+        {"table":"pharmacy_catalog","fields":["pharmacy_id","insurance_code","region_code"]}
+      ],
+      "enabled": false,
+      "missing_data_warning": "⚠️ 需开放 TRA 数据表才能激活：\n• settlement_records / pharmacy_catalog\n⚠️ 此 Agent 具有 tra.write 权限，写入前需用户明确同意"
+    }
+  ]
+}

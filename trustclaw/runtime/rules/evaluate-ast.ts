@@ -1,10 +1,10 @@
 import type { DatabaseSync } from "node:sqlite";
-import type { ComplianceAstNode, MedicationComplianceAstRuleRow } from "../../ptds/compliance-types.js";
-import { loadComplianceAstRules } from "../../ptds/compliance-import.js";
-import {
-  buildComplianceEvalContext,
-  resolveComplianceFieldValue,
-} from "./ast-context.js";
+import { loadComplianceAstRules } from "../../tra/compliance-import.js";
+import type {
+  ComplianceAstNode,
+  MedicationComplianceAstRuleRow,
+} from "../../tra/compliance-types.js";
+import { buildComplianceEvalContext, resolveComplianceFieldValue } from "./ast-context.js";
 import type {
   RuleEvaluationEntry,
   RuleEvaluationMatrix,
@@ -85,9 +85,7 @@ export function evaluateComplianceAstRules(params: {
     const astRoot = JSON.parse(rule.ast_root_json) as ComplianceAstNode;
     const passed = evaluateComplianceAstNode(astRoot, params.context);
     const firstLeaf = flattenAstLeaves(astRoot)[0];
-    const actual = firstLeaf
-      ? resolveComplianceFieldValue(params.context, firstLeaf.field)
-      : null;
+    const actual = firstLeaf ? resolveComplianceFieldValue(params.context, firstLeaf.field) : null;
     return {
       rule_id: rule.rule_id,
       name: rule.drug_name,
@@ -99,7 +97,9 @@ export function evaluateComplianceAstRules(params: {
     };
   });
 
-  const overallStatus: RuleEvaluationStatus = evaluatedRules.every((entry) => entry.status === "PASS")
+  const overallStatus: RuleEvaluationStatus = evaluatedRules.every(
+    (entry) => entry.status === "PASS",
+  )
     ? "PASS"
     : "FAIL";
 
@@ -111,7 +111,7 @@ export function evaluateComplianceAstRules(params: {
   };
 
   const handshake: RuleEvaluatorHandshake = {
-    source_system: "PTDS_SQLite_Engine",
+    source_system: "TRA_SQLite_Engine",
     target_agent: "RuleEvaluationAgent",
     handshake_payload: {
       biometric_snapshot: params.snapshot ?? params.context,

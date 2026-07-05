@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { generateText2Sql } from "./generate.js";
-import { extractSqlFromLlmOutput } from "./sanitize.js";
 import { buildText2SqlPrompt } from "./prompt.js";
-import { loadPtdsSchemaSnippet } from "./schema-context.js";
+import { extractSqlFromLlmOutput } from "./sanitize.js";
+import { loadTraSchemaSnippet } from "./schema-context.js";
 
 const mockLlm = (sql: string) => async () => sql;
 
@@ -54,7 +54,7 @@ describe("trustclaw/runtime/text2sql", () => {
   });
 
   it("loads v1.1 schema objects for Text2SQL", () => {
-    const schema = loadPtdsSchemaSnippet();
+    const schema = loadTraSchemaSnippet();
     expect(schema).toContain("body_anthropometrics");
     expect(schema).toContain("v_glp1_nrdl_check_snapshot");
   });
@@ -69,10 +69,7 @@ describe("trustclaw/runtime/text2sql", () => {
   });
 
   it("returns empty SQL when LLM output is unrelated to schema", async () => {
-    const result = await generateText2Sql(
-      { userQuery: "列出用户姓名" },
-      { llm: mockLlm("") },
-    );
+    const result = await generateText2Sql({ userQuery: "列出用户姓名" }, { llm: mockLlm("") });
     expect(result.source).toBe("empty");
     expect(result.sql).toBe("");
   });

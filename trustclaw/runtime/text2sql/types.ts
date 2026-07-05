@@ -14,7 +14,7 @@ export type Text2SqlGenerateOptions = {
 
 export type Text2SqlHandshake = {
   source_agent: "Text2SQLAgent";
-  target_system: "PTDS_SQLite_Engine";
+  target_system: "TRA_SQLite_Engine";
   handshake_payload: {
     sanitized_sql: string;
     read_only_verification: boolean;

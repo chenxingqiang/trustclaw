@@ -6,7 +6,7 @@ ROOT="$(cd "$DIR/../.." && pwd)"
 CONTAINER="${TRUSTCLAW_CONTAINER:-trustclaw-arm64-app-1}"
 STATE_ROOT="${TRUSTCLAW_STATE_PULL_DIR:-$DIR/runtime-state}"
 REMOTE_STATE="/home/node/.openclaw"
-SEEDS_DIR="$ROOT/trustclaw/ptds/seeds/domain-agents"
+SEEDS_DIR="$ROOT/trustclaw/tra/seeds/domain-agents"
 
 if ! docker inspect "$CONTAINER" >/dev/null 2>&1; then
   echo "Container not found: $CONTAINER" >&2
@@ -35,10 +35,10 @@ writeFileSync(outPath, `${JSON.stringify(config, null, 2)}\n`);
 NODE
 rm -f "$STATE_ROOT/openclaw.json.raw"
 
-echo "==> Pull PTDS state"
-docker cp "$CONTAINER:$REMOTE_STATE/state/local_ptds.db" "$STATE_ROOT/state/local_ptds.db"
+echo "==> Pull TRA state"
+docker cp "$CONTAINER:$REMOTE_STATE/state/local_tra.db" "$STATE_ROOT/state/local_tra.db"
 docker cp "$CONTAINER:$REMOTE_STATE/state/trustclaw-agents-merged/." "$STATE_ROOT/state/trustclaw-agents-merged/"
-docker cp "$CONTAINER:$REMOTE_STATE/state/ptds-audit/." "$STATE_ROOT/state/ptds-audit/"
+docker cp "$CONTAINER:$REMOTE_STATE/state/tra-audit/." "$STATE_ROOT/state/tra-audit/"
 
 echo "==> Pull workspace agent registry"
 docker cp "$CONTAINER:$REMOTE_STATE/workspace/domain-agents/." "$STATE_ROOT/workspace/domain-agents/"

@@ -1,11 +1,11 @@
-import type { PtdsTableLineage, PtdsTableCatalogRow } from "../api.js";
+import type { TraTableLineage, TraTableCatalogRow } from "../api.js";
 import { msg } from "../i18n/index.js";
 import { buildLineageFlowSteps, renderLineageFlowHtml } from "./browser-lineage-flow.js";
 import type { BrowserCategory } from "./browser-table-filter.js";
 
 export type { BrowserCategory };
 
-export function kindLabel(kind: PtdsTableCatalogRow["kind"]): string {
+export function kindLabel(kind: TraTableCatalogRow["kind"]): string {
   const m = msg().panels.browser;
   switch (kind) {
     case "subscribed":
@@ -23,7 +23,7 @@ export function kindLabel(kind: PtdsTableCatalogRow["kind"]): string {
 
 export function renderBrowserLineage(
   root: HTMLElement,
-  lineage: PtdsTableLineage | undefined,
+  lineage: TraTableLineage | undefined,
 ): void {
   const m = msg().panels.browser;
   if (!lineage) {

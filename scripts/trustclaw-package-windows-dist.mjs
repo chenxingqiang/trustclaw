@@ -80,7 +80,7 @@ function copyRuntimeTree(stagingRuntime) {
     ["pnpm-workspace.yaml", "pnpm-workspace.yaml"],
     [".npmrc", ".npmrc"],
     ["patches", "patches"],
-    ["extensions/trustclaw-ptds", "extensions/trustclaw-ptds"],
+    ["extensions/trustclaw-tra", "extensions/trustclaw-tra"],
     ["src/agents/templates", "src/agents/templates"],
   ];
   for (const [srcRel, destRel] of pairs) {
@@ -113,7 +113,7 @@ Control UI: http://127.0.0.1:19001/#token=trustclaw-local-default
 
 Requires Windows 10+ and Node.js 24+.
 
-Native WinUI "Windows Hub" is a separate OpenClaw release; this zip is TrustClaw Gateway + PTDS + bundled config.
+Native WinUI "Windows Hub" is a separate OpenClaw release; this zip is TrustClaw Gateway + TRA + bundled config.
 `,
     "utf8",
   );

@@ -55,12 +55,12 @@ $configRaw = $configRaw.Replace("__TRUSTCLAW_BUNDLED_AGENTS_DIR__", $AgentsRoot.
 $config = $configRaw | ConvertFrom-Json
 if (-not $config.plugins) { $config | Add-Member -NotePropertyName plugins -NotePropertyValue (@{}) }
 if (-not $config.plugins.entries) { $config.plugins | Add-Member -NotePropertyName entries -NotePropertyValue (@{}) }
-if (-not $config.plugins.entries."trustclaw-ptds") {
-  $config.plugins.entries | Add-Member -NotePropertyName "trustclaw-ptds" -NotePropertyValue (@{})
+if (-not $config.plugins.entries."trustclaw-tra") {
+  $config.plugins.entries | Add-Member -NotePropertyName "trustclaw-tra" -NotePropertyValue (@{})
 }
-$ptds = $config.plugins.entries."trustclaw-ptds"
-if (-not $ptds.config) { $ptds | Add-Member -NotePropertyName config -NotePropertyValue (@{}) }
-$ptds.config.agentPacksDir = $AgentsRoot
+$tra = $config.plugins.entries."trustclaw-tra"
+if (-not $tra.config) { $tra | Add-Member -NotePropertyName config -NotePropertyValue (@{}) }
+$tra.config.agentPacksDir = $AgentsRoot
 $config | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $ConfigPath -Encoding UTF8
 
 Set-Content -LiteralPath $MarkerPath -Value $BundleVersion -Encoding ASCII

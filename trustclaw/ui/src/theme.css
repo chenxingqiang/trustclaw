@@ -1,4 +1,4 @@
-/* TrustClaw PTDS Runtime Console theme tokens — copied verbatim from
+/* TrustClaw TRA Runtime Console theme tokens — copied verbatim from
  * `ui/src/styles/base.css` (Control UI, root `ui/` package) as of 2026-07-04.
  * Keep visual language aligned with OpenClaw Control UI without importing
  * across workspace packages (that would trip the plugin-boundary rule in
@@ -58,7 +58,7 @@
   --danger-subtle: rgba(239, 68, 68, 0.08);
   --info: #3b82f6;
 
-  /* PTDS console panel accents (mockup A–E) */
+  /* TRA console panel accents (mockup A–E) */
   --panel-a: #3b82f6;
   --panel-b: #22c55e;
   --panel-c: #8b5cf6;
