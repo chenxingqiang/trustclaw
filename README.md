@@ -1,13 +1,15 @@
 # TrustClaw — Trust Runtime for Agent
 
-**TrustClaw** is a local-first **Trust Runtime for Agent (TRA)**: personal health data, subscribed reference datasets, and auditable Agent Packs collaborate under explicit consent and immutable evidence.
+**TrustClaw** is a local-first **Trust Runtime for Agent (TRA)**: personal data, subscribed reference datasets, and auditable Agent Packs collaborate under explicit consent and an immutable evidence chain.
 
 | Principle        | Meaning                                                      |
 | ---------------- | ------------------------------------------------------------ |
-| 个人数据不出域   | Raw data stays in local SQLite only                          |
+| 个人数据不出域   | Raw data stays in local SQLite (`state/local_tra.db`) only   |
 | 凡答必有据       | Conclusions trace to data, rules, and evidence chain         |
 | 凡行必审计       | Every data access and agent action is logged                 |
 | Agent 与平台解耦 | Vertical logic ships as Agent Packs, not platform hardcoding |
+
+**Five planes:** Data · Policy · Agent · Evidence · Operator — see [Vision](VISION.md).
 
 **TrustClaw docs**
 
@@ -48,19 +50,38 @@ pnpm openclaw models status --dev
 
 **Platform APIs** (`extensions/trustclaw-tra`)
 
-- `POST /api/tra/init` — mount local personal data space
-- `POST /api/agent/chat` — run audited Agent Pack pipeline
-- `GET /api/tra/domain-agents` — logical agent catalog
+| Endpoint                     | Purpose                            |
+| ---------------------------- | ---------------------------------- |
+| `POST /api/tra/init`         | Mount local TRA personal data      |
+| `POST /api/tra/reset`        | Clear personal data + audit/ledger |
+| `POST /api/agent/chat`       | Run audited Agent Pack pipeline    |
+| `GET /api/tra/domain-agents` | Logical agent catalog              |
+
+**Agent tools:** `trustclaw_tra_query` (read pipeline), `trustclaw_tra_write` (consented personal writes).
+
+Enable the plugin in `openclaw.json`:
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "trustclaw-tra": { "enabled": true }
+    }
+  }
+}
+```
+
+Or run `pnpm trustclaw:setup` (also sets TrustClaw gateway defaults).
+
+**Layout:** `trustclaw/tra/` (data plane) · `trustclaw/runtime/` (pipeline) · `trustclaw/ui/` (Runtime Console) · Control UI tab **TRA Console**.
 
 See `trustclaw/GETTING_STARTED.md` and `trustclaw/docs/AGENT_PLATFORM.md`.
-
-Implementation lives under `trustclaw/`. Runtime still uses the OpenClaw Gateway stack during transition (`openclaw` CLI).
 
 ---
 
 ## Built on OpenClaw
 
-This repository forks [OpenClaw](https://github.com/openclaw/openclaw) — a multi-channel personal AI assistant and Gateway. TrustClaw reuses its agent runtime, SQLite patterns, Gateway, and Control UI shell while adding TRA-specific systems.
+This repository forks [OpenClaw](https://github.com/openclaw/openclaw) — a multi-channel personal AI assistant and Gateway. TrustClaw reuses its agent runtime, SQLite patterns, Gateway, and Control UI shell while adding TRA (`trustclaw/` + `extensions/trustclaw-tra`). The CLI/package name remains `openclaw` during transition (D13).
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License"></a>
@@ -267,4 +288,4 @@ Minimal `~/.openclaw/openclaw.json` (model + defaults):
 
 TrustClaw builds on [OpenClaw](https://github.com/openclaw/openclaw). Sponsors, star history, Molty branding, and the full contributor wall live in the [upstream README](https://github.com/openclaw/openclaw/blob/main/README.md). OpenClaw docs: [docs.openclaw.ai](https://docs.openclaw.ai).
 
-TrustClaw-specific docs: [Getting started](trustclaw/GETTING_STARTED.md) · [Vision](VISION.md) · [Decisions](trustclaw/DECISIONS.md).
+TrustClaw-specific docs: [Getting started](trustclaw/GETTING_STARTED.md) · [Vision](VISION.md) · [Agent loop](trustclaw/AGENTS.md) · [Decisions](trustclaw/DECISIONS.md).

@@ -17,17 +17,22 @@ TrustClaw **Trust Runtime for Agent (TRA)** 实现根目录。在 **OpenClaw for
 
 ```
 trustclaw/
-  tra/              # TRA data plane
-  runtime/           # Text2SQL, rules, pipeline, agent-pack
-  audit/ ledger/     # JSONL 审计 + 证据哈希链
-  agents/            # 声明式 Agent Pack
-  ui/                # TRA Runtime Console SPA
+  tra/              # TRA data plane (schema, init, query, grants)
+  runtime/          # Text2SQL, rules, pipeline, agent-pack
+  audit/ ledger/    # JSONL 审计 + 证据哈希链
+  agents/           # 声明式 Agent Pack
+  ui/               # TRA Runtime Console SPA
 
-extensions/trustclaw-tra/   # Gateway HTTP 插件（/api/tra/*, /api/agent/*）
+extensions/trustclaw-tra/   # Gateway 插件
+  /api/tra/*                # TRA HTTP API
+  /api/agent/chat           # Pack pipeline chat
+  /trustclaw/*              # 静态 Runtime Console
 ```
+
+**命名（D25 已交付）：** 插件 `trustclaw-tra` · 工具 `trustclaw_tra_query` / `trustclaw_tra_write` · DB `state/local_tra.db` · scope `tra.chat` / `tra.read` / `tra.write`.
 
 ## 状态
 
-**平台 baseline 已落地**（`DECISIONS.md` D1–D24）。架构叙事以 `VISION.md` 五平面为准；迭代 Loop 只读 `AGENTS.md`。开放项：D5、D21、D23（deferred）；D13、D24（approved）。
+**平台 baseline 已落地**（`DECISIONS.md` D1–D25，含全量 TRA 命名）。架构叙事以 `VISION.md` 五平面为准；迭代 Loop 只读 `AGENTS.md`。开放项：D5、D21、D23（deferred）；D13、D24（approved）。
 
 本地启动见 `GETTING_STARTED.md`。
