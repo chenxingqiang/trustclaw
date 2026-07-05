@@ -1,0 +1,206 @@
+{
+  "pack_id": "medical-insurance-full-chain-1000",
+  "pack_name": "医保医药报销全链路 Domain Agent Pack",
+  "version": "2.0.0",
+  "openclaw_pack_spec": "1.0",
+  "author": "TrustClaw PTDS",
+  "created_at": "2026-07-05",
+  "updated_at": "2026-07-05",
+  "description": "覆盖门诊/住院/药店/异地就医/医保稽核/DRG分组/生育保险/大病保险/医疗救助/中医药全链路的医保报销领域 Agent 配置包，共 1000 个 Domain Agent",
+
+  "file_structure": {
+    "base_domain_files": [
+      "outpatient-agents.json      — 门诊 (12 agents)",
+      "inpatient-agents.json       — 住院 (12 agents)",
+      "pharmacy-agents.json        — 药店 (10 agents)",
+      "cross-region-agents.json    — 异地就医 (10 agents)",
+      "audit-agents.json           — 医保稽核 (12 agents)",
+      "drg-agents.json             — DRG分组 (10 agents)",
+      "maternity-agents.json       — 生育保险 (10 agents)",
+      "catastrophic-agents.json    — 大病保险 (10 agents)",
+      "medical-assistance-agents.json — 医疗救助 (8 agents)",
+      "tcm-agents.json             — 中医药报销 (8 agents)"
+    ],
+    "generator_script": "scripts/generate-regional-agents.js",
+    "generated_output": {
+      "all_agents": "scripts/output/agents-all-1000.json  (2.3MB)",
+      "index": "scripts/output/agents-index.json  (274KB)",
+      "by_domain": "scripts/output/agents-by-domain/*.json  (10 files)"
+    }
+  },
+
+  "ptds_base_tables": {
+    "available": ["anthropometrics", "labs", "diagnoses", "medications"],
+    "note": "以上 4 张表已在当前 PTDS 实例中挂载，标注 partial 的 19 个 Agent 可部分激活"
+  },
+
+  "ptds_extended_tables_required": [
+    {
+      "table": "insurance_enrollment",
+      "description": "参保人参保信息（参保地区、险种类型、缴费状态、待遇有效期）",
+      "used_by_domains": ["outpatient","inpatient","pharmacy","cross-region","audit","maternity","catastrophic","medical-assistance"],
+      "how_to_add": "Panel A → 导入参保信息 → 支持标准参保 JSON/CSV 格式"
+    },
+    {
+      "table": "insurance_policy_rules",
+      "description": "各统筹区医保政策规则（起付线、报销比例、封顶线、甲乙丙分类规则）",
+      "used_by_domains": ["outpatient","inpatient","pharmacy","cross-region","drg","maternity","catastrophic","medical-assistance","tcm"],
+      "how_to_add": "Panel A → 导入政策规则库 → 支持省/市级规则 JSON"
+    },
+    {
+      "table": "visit_records",
+      "description": "门诊就诊记录",
+      "used_by_domains": ["outpatient","cross-region","audit","maternity","tcm"],
+      "how_to_add": "Panel A → 导入就诊记录"
+    },
+    {
+      "table": "prescription_records",
+      "description": "处方记录",
+      "used_by_domains": ["pharmacy","audit","tcm"],
+      "how_to_add": "Panel A → 导入处方记录"
+    },
+    {
+      "table": "hospitalization_records",
+      "description": "住院记录（含病案首页、手术操作、费用清单）",
+      "used_by_domains": ["inpatient","drg","audit","cross-region","maternity","catastrophic"],
+      "how_to_add": "Panel A → 导入住院病历数据"
+    },
+    {
+      "table": "drug_catalog_nrdl",
+      "description": "国家医保药品目录 NRDL",
+      "used_by_domains": ["outpatient","inpatient","pharmacy","audit","tcm"],
+      "how_to_add": "Panel A → 导入 NRDL 目录 JSON"
+    },
+    {
+      "table": "procedure_catalog",
+      "description": "诊疗项目目录",
+      "used_by_domains": ["outpatient","inpatient","drg","maternity","tcm"],
+      "how_to_add": "Panel A → 导入诊疗项目目录"
+    },
+    {
+      "table": "diagnosis_catalog",
+      "description": "ICD-10 标准编码目录",
+      "used_by_domains": ["outpatient","drg"],
+      "how_to_add": "Panel A → 导入 ICD-10 编码目录"
+    },
+    {
+      "table": "disease_catalog_chronic",
+      "description": "门诊慢特病病种目录",
+      "used_by_domains": ["outpatient","pharmacy","catastrophic"],
+      "how_to_add": "Panel A → 导入慢特病目录"
+    },
+    {
+      "table": "drg_rules",
+      "description": "CHS-DRG/DIP 分组规则库",
+      "used_by_domains": ["drg"],
+      "how_to_add": "Panel A → 导入 CHS-DRG 分组规则库 JSON"
+    },
+    {
+      "table": "drg_weights",
+      "description": "DRG 权重及费率表",
+      "used_by_domains": ["drg"],
+      "how_to_add": "Panel A → 导入 DRG 权重费率表"
+    },
+    {
+      "table": "audit_records",
+      "description": "医保稽核记录",
+      "used_by_domains": ["audit","medical-assistance"],
+      "how_to_add": "Panel A → 导入稽核历史记录"
+    },
+    {
+      "table": "settlement_records",
+      "description": "医保结算记录",
+      "used_by_domains": ["outpatient","inpatient","pharmacy","cross-region","audit","catastrophic","medical-assistance"],
+      "how_to_add": "Panel A → 导入结算流水记录"
+    },
+    {
+      "table": "pharmacy_catalog",
+      "description": "定点药店目录",
+      "used_by_domains": ["pharmacy"],
+      "how_to_add": "Panel A → 导入定点药店目录"
+    },
+    {
+      "table": "hospital_catalog",
+      "description": "定点医疗机构目录",
+      "used_by_domains": ["cross-region","audit","tcm"],
+      "how_to_add": "Panel A → 导入定点医疗机构目录"
+    },
+    {
+      "table": "cross_region_registration",
+      "description": "异地就医备案信息",
+      "used_by_domains": ["cross-region"],
+      "how_to_add": "Panel A → 导入异地就医备案数据"
+    },
+    {
+      "table": "consumables_catalog",
+      "description": "医用耗材目录",
+      "used_by_domains": ["inpatient"],
+      "how_to_add": "Panel A → 导入医用耗材目录"
+    },
+    {
+      "table": "high_value_items_catalog",
+      "description": "高值耗材目录",
+      "used_by_domains": ["inpatient"],
+      "how_to_add": "Panel A → 导入高值耗材目录"
+    },
+    {
+      "table": "special_drug_catalog",
+      "description": "特殊药品目录（谈判药/双通道/罕见病）",
+      "used_by_domains": ["pharmacy","outpatient"],
+      "how_to_add": "Panel A → 导入特殊药品准入目录"
+    }
+  ],
+
+  "domains": [
+    {"id":"outpatient",         "name":"门诊",       "base_agents":12, "total_agents":144, "file":"outpatient-agents.json"},
+    {"id":"inpatient",          "name":"住院",       "base_agents":12, "total_agents":144, "file":"inpatient-agents.json"},
+    {"id":"pharmacy",           "name":"药店",       "base_agents":10, "total_agents":120, "file":"pharmacy-agents.json"},
+    {"id":"cross-region",       "name":"异地就医",   "base_agents":10, "total_agents":114, "file":"cross-region-agents.json"},
+    {"id":"audit",              "name":"医保稽核",   "base_agents":12, "total_agents":132, "file":"audit-agents.json"},
+    {"id":"drg",                "name":"DRG分组",    "base_agents":10, "total_agents":110, "file":"drg-agents.json"},
+    {"id":"maternity",          "name":"生育保险",   "base_agents":10, "total_agents":110, "file":"maternity-agents.json"},
+    {"id":"catastrophic",       "name":"大病保险",   "base_agents":10, "total_agents":110, "file":"catastrophic-agents.json"},
+    {"id":"medical-assistance", "name":"医疗救助",   "base_agents":8,  "total_agents":8,   "file":"medical-assistance-agents.json"},
+    {"id":"tcm",                "name":"中医药报销", "base_agents":8,  "total_agents":8,   "file":"tcm-agents.json"}
+  ],
+
+  "scaling_strategy": {
+    "base_agents": 102,
+    "regional_variants": 898,
+    "total": 1000,
+    "regions_covered": 30,
+    "insurance_types": ["EMPLOYEE — 职工基本医疗保险","RESIDENT — 城乡居民基本医疗保险"],
+    "zones": ["华东","华南","华北","华中","西部","东北"],
+    "expand_to_full_province": "运行 generate-regional-agents.js 并调整 REGIONS 数组为 34 省 × 337 地市可扩展至 10000+ agents",
+    "note": "medical-assistance 和 tcm 域因全国政策趋于统一，暂不做地区变体扩展，保留 8 个全国版"
+  },
+
+  "enabled_summary": {
+    "total": 1000,
+    "enabled": 0,
+    "partial": 19,
+    "disabled": 981,
+    "partial_agents_note": "19 个 partial agent 已可使用现有 diagnoses/labs/medications 部分运行，导入缺失表后完全激活",
+    "partial_agents_list": [
+      "op-003 — 门诊慢特病病种匹配（需 disease_catalog_chronic）",
+      "ip-002 — 住院前置审批判断（需 hospitalization_records）",
+      "ip-010 — 住院病案首页核验（需 diagnosis_catalog）",
+      "ph-002 — 参保人购药资格核验（需 insurance_enrollment）",
+      "ph-005 — 慢病专项购药资格判断（需 disease_catalog_chronic）",
+      "ph-007 — 特殊药品购买审批（需 special_drug_catalog）",
+      "au-003 — 超量开药识别（需 prescription_records）",
+      "au-005 — 分解住院识别（需 hospitalization_records）",
+      "drg-001 — 主诊断ICD编码核验（需 diagnosis_catalog）",
+      "drg-003 — MDC分类匹配（需 drg_rules）",
+      "drg-004 — ADRG匹配（需 drg_rules）",
+      "drg-005 — DRG最终判定（需 drg_rules）✨ 当前张三档案适用",
+      "drg-009 — DIP分值计算（需 drg_rules）",
+      "cb-006 — 大病特殊病种认定（需 disease_catalog_chronic）",
+      "cb-009 — 重大疾病单病种结算（需 insurance_policy_rules）",
+      "ma-001 — 医疗救助资格认定（需 insurance_enrollment）",
+      "ma-007 — 救助申请材料核验（需 audit_records）",
+      "tc-002 — 中药饮片报销（需 drug_catalog_nrdl）",
+      "tc-003 — 中成药NRDL核验（需 drug_catalog_nrdl）"
+    ]
+  }
+}
