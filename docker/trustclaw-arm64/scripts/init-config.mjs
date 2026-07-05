@@ -58,10 +58,30 @@ function syncTrustclawWorkspaces() {
   }
 }
 
+function buildControlUiOrigins() {
+  const explicit = envTrim("TRUSTCLAW_CONTROL_UI_ORIGINS");
+  if (explicit) {
+    return explicit
+      .split(/[,\s]+/)
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+  }
+  const hostPorts = [
+    envTrim("APP_PORT") ?? "8080",
+    envTrim("TRUSTCLAW_UI_PORT") ?? "15174",
+  ];
+  const origins = new Set();
+  for (const port of hostPorts) {
+    origins.add(`http://127.0.0.1:${port}`);
+    origins.add(`http://localhost:${port}`);
+  }
+  return [...origins];
+}
+
 function applyEnvToConfig(config) {
   const gatewayToken = envTrim("OPENCLAW_GATEWAY_TOKEN");
   const anthropicBaseUrl = envTrim("ANTHROPIC_BASE_URL");
-  const anthropicApiKey = envTrim("ANTHROPIC_API_KEY") ?? envTrim("ANTHROPIC_AUTH_TOKEN");
+  const anthropicApiKey = resolveAnthropicApiKey();
   const openaiApiKey = envTrim("OPENAI_API_KEY");
   const primaryModel = envTrim("OPENCLAW_PRIMARY_MODEL") ?? "anthropic/claude-sonnet-4-6";
   const gatewayPort = Number(envTrim("OPENCLAW_GATEWAY_PORT") ?? "19001");
@@ -74,6 +94,11 @@ function applyEnvToConfig(config) {
     auth: {
       mode: "token",
       token: gatewayToken ?? config.gateway?.auth?.token ?? "trustclaw-docker-demo",
+    },
+    controlUi: {
+      ...(config.gateway?.controlUi ?? {}),
+      allowInsecureAuth: true,
+      allowedOrigins: buildControlUiOrigins(),
     },
   };
 
@@ -147,6 +172,34 @@ function applyEnvToConfig(config) {
   return config;
 }
 
+function resolveAnthropicApiKey() {
+  return envTrim("ANTHROPIC_API_KEY") ?? envTrim("ANTHROPIC_AUTH_TOKEN");
+}
+
+function warnMissingModelAuth(config) {
+  const primary =
+    envTrim("OPENCLAW_PRIMARY_MODEL") ??
+    config.agents?.defaults?.model?.primary ??
+    "anthropic/claude-sonnet-4-6";
+  if (!primary.startsWith("anthropic/")) {
+    return;
+  }
+  const anthropicKey = resolveAnthropicApiKey();
+  const configKey =
+    typeof config.env?.ANTHROPIC_API_KEY === "string" ? config.env.ANTHROPIC_API_KEY.trim() : "";
+  if (anthropicKey || configKey) {
+    return;
+  }
+  console.warn(
+    [
+      "[trustclaw:docker] WARN: Anthropic model auth is missing.",
+      "Set ANTHROPIC_API_KEY (or ANTHROPIC_AUTH_TOKEN) in docker/trustclaw-arm64/app.env,",
+      "then restart: docker compose up -d --force-recreate",
+      "Local ~/.openclaw auth is NOT copied into the container automatically.",
+    ].join(" "),
+  );
+}
+
 function main() {
   mkdirSync(stateDir, { recursive: true });
   mkdirSync(path.join(stateDir, "agents", "main", "agent"), { recursive: true });
@@ -156,6 +209,7 @@ function main() {
   const merged = applyEnvToConfig(existing);
   saveJson(configPath, merged);
   syncTrustclawWorkspaces();
+  warnMissingModelAuth(merged);
 
   console.log(`[trustclaw:docker] Config ready at ${configPath}`);
 }

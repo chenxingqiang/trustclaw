@@ -6,6 +6,15 @@
     "auth": {
       "mode": "token",
       "token": "REPLACE_ME_GATEWAY_TOKEN"
+    },
+    "controlUi": {
+      "allowInsecureAuth": true,
+      "allowedOrigins": [
+        "http://127.0.0.1:8080",
+        "http://localhost:8080",
+        "http://127.0.0.1:15174",
+        "http://localhost:15174"
+      ]
     }
   },
   "plugins": {

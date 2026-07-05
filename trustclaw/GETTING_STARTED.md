@@ -177,10 +177,45 @@ pnpm openclaw gateway run
 
 - **Product brand:** TrustClaw
 - **CLI / package:** still `openclaw` during V1
+- **ARM64 Docker (offline / 内网):** `docker/trustclaw-arm64/` — see that directory `README.md`
 - **Mac DMG:** `pnpm trustclaw:mac:dist` → `dist/TrustClaw-<version>.dmg` (menu bar shows **TrustClaw**; internal binary remains OpenClaw)
 
+### ARM64 Docker
+
 ```bash
+cd docker/trustclaw-arm64
+./scripts/build-arm64.sh
+cp app.env.example app.env && cp app.env.dev.example app.env.dev
+# edit app.env.dev → ANTHROPIC_API_KEY
+docker compose up -d
+```
+
+- Control UI: `http://127.0.0.1:8080/` (token from `app.env`)
+- PTDS Console: `http://127.0.0.1:15174/trustclaw/`
+- Offline: `./scripts/save-bundle.sh` → `dist/trustclaw-app-arm64.tar`
+- Hub push (VPN): `./scripts/push-dockerhub.sh arm64`
+
+```bash
+# Prepare local config + API keys first (copied into DMG at build time)
+pnpm trustclaw:setup
+pnpm openclaw models auth paste-api-key --provider anthropic   # if not in ~/.claude/settings.json
+
 # Local debug DMG (ad-hoc sign when no Developer ID cert)
 ALLOW_ADHOC_SIGNING=1 BUILD_ARCHS=arm64 SKIP_NOTARIZE=1 SKIP_DSYM=1 BUILD_CONFIG=debug \
   pnpm trustclaw:mac:dist
 ```
+
+Build reads `~/.openclaw/openclaw.json`, `agents/*/agent/auth-profiles.json`, `credentials/`, `.env`, and Claude `~/.claude/settings.json` into the app bundle. **First launch** installs them into `~/.openclaw` (upgrade replaces when bundle version changes). Use `TRUSTCLAW_MAC_CONFIG_DEV=1` to source `~/.openclaw-dev` instead.
+
+### Windows portable zip
+
+```bash
+pnpm trustclaw:setup
+SKIP_BUILD=1 pnpm trustclaw:win:dist   # after pnpm build; or omit SKIP_BUILD for full rebuild
+```
+
+Output: `dist/TrustClaw-<version>-win-x64.zip`
+
+On Windows: unzip → double-click `Start-TrustClaw.cmd` → open `http://127.0.0.1:19001/`. First run installs npm deps (`npm ci --omit=dev`, needs network). Config + keys copy to `%USERPROFILE%\.openclaw`.
+
+Native WinUI tray app (`OpenClawCompanion-Setup-x64.exe`) is upstream OpenClaw; this zip is **TrustClaw Gateway + PTDS + bundled config**.

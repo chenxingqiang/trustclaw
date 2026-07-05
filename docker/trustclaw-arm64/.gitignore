@@ -1,5 +1,6 @@
-# 本地含密钥的 app.env（若已填写真实 Key）
+# 本地含密钥的环境文件
 app.env
+app.env.dev
 
 # 离线 docker save 产物（本地构建，勿提交）
 dist/
