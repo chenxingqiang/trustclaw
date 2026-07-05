@@ -79,7 +79,7 @@ function renderRailHeader(params: {
     if (params.side === "left") {
       return html`<div class="trustclaw-ptds-rail__header">
         <div class="trustclaw-ptds-rail__meta">
-          <span class="trustclaw-ptds-rail__eyebrow">PTDS</span>
+          <span class="trustclaw-ptds-rail__eyebrow">TRA</span>
           <span class="trustclaw-ptds-rail__title">${params.title}</span>
         </div>
         <button
@@ -104,7 +104,7 @@ function renderRailHeader(params: {
         ${icons.chevronRight}
       </button>
       <div class="trustclaw-ptds-rail__meta trustclaw-ptds-rail__meta--right">
-        <span class="trustclaw-ptds-rail__eyebrow">PTDS</span>
+        <span class="trustclaw-ptds-rail__eyebrow">TRA</span>
         <span class="trustclaw-ptds-rail__title">${params.title}</span>
       </div>
     </div>`;

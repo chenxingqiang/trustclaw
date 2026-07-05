@@ -1,7 +1,7 @@
 {
   "name": "openclaw",
   "version": "2026.6.11",
-  "description": "TrustClaw — Personal Trusted Data Space Runtime (PTDS), built on OpenClaw Gateway",
+  "description": "TrustClaw — Trust Runtime for Agent (TRA), built on OpenClaw Gateway",
   "keywords": [],
   "homepage": "https://github.com/openclaw/openclaw#readme",
   "bugs": {

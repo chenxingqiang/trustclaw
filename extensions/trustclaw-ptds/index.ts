@@ -69,8 +69,8 @@ function readPluginConfig(
 
 export default definePluginEntry({
   id: "trustclaw-ptds",
-  name: "TrustClaw PTDS",
-  description: "Personal Trusted Data Space runtime APIs for TrustClaw",
+  name: "TrustClaw TRA",
+  description: "Trust Runtime for Agent APIs for TrustClaw",
   register(api) {
     const cfg = readPluginConfig(api.pluginConfig);
     const text2sqlLlm = createOpenAiText2SqlLlm();
@@ -273,7 +273,7 @@ export default definePluginEntry({
       handler: uiHandler,
     });
     api.logger.info?.(
-      "[trustclaw-ptds] registered PTDS HTTP routes under /api/ptds/*, POST /api/agent/chat, and /trustclaw/* UI",
+      "[trustclaw-ptds] registered TRA HTTP routes under /api/ptds/*, POST /api/agent/chat, and /trustclaw/* UI",
     );
   },
 });

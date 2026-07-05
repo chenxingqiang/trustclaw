@@ -1,6 +1,6 @@
-# TrustClaw — Personal Trusted Data Space Runtime
+# TrustClaw — Trust Runtime for Agent
 
-**TrustClaw** is a local-first **PTDS Runtime**: personal health data, subscribed reference datasets, and auditable Agent Packs collaborate under explicit consent and immutable evidence.
+**TrustClaw** is a local-first **Trust Runtime for Agent (TRA)**: personal health data, subscribed reference datasets, and auditable Agent Packs collaborate under explicit consent and immutable evidence.
 
 | Principle | Meaning |
 | --- | --- |
@@ -21,7 +21,7 @@ pnpm trustclaw:setup
 pnpm trustclaw:dev
 ```
 
-Open **PTDS Runtime 控制台** at `http://127.0.0.1:5174/trustclaw/` (dev) or Control UI → **PTDS Console** at `http://127.0.0.1:19001/` (dev gateway) / `http://127.0.0.1:18789/` (prod). See [Getting started](trustclaw/GETTING_STARTED.md) for ports and auth.
+Open **TRA Runtime Console** at `http://127.0.0.1:5174/trustclaw/` (dev) or Control UI → **TRA Console** at `http://127.0.0.1:19001/` (dev gateway) / `http://127.0.0.1:18789/` (prod). See [Getting started](trustclaw/GETTING_STARTED.md) for ports and auth.
 
 **Models & keys (dev profile, `~/.openclaw-dev/`)**
 
@@ -30,7 +30,7 @@ Open **PTDS Runtime 控制台** at `http://127.0.0.1:5174/trustclaw/` (dev) or C
 | Chat primary | `ollama/qwen2.5:7b` (local Ollama at `http://127.0.0.1:11434`) |
 | Chat fallback | `anthropic/claude-sonnet-4-6` |
 | Anthropic proxy | Same base URL as `~/.claude/settings.json` → `ANTHROPIC_BASE_URL`; import API key with `pnpm openclaw models auth paste-api-key --provider anthropic --dev` |
-| PTDS Text2SQL | `OPENAI_API_KEY` (separate from chat models) |
+| TRA Text2SQL | `OPENAI_API_KEY` (separate from chat models) |
 | Control UI auth | Dev gateway uses token auth on `:19001`; open `pnpm openclaw dashboard --no-open --dev` (token in URL — do not paste into chat) |
 
 Quick setup after `pnpm trustclaw:setup`:
@@ -60,7 +60,7 @@ Implementation lives under `trustclaw/`. Runtime still uses the OpenClaw Gateway
 
 ## Built on OpenClaw
 
-This repository forks [OpenClaw](https://github.com/openclaw/openclaw) — a multi-channel personal AI assistant and Gateway. TrustClaw reuses its agent runtime, SQLite patterns, Gateway, and Control UI shell while adding PTDS-specific systems.
+This repository forks [OpenClaw](https://github.com/openclaw/openclaw) — a multi-channel personal AI assistant and Gateway. TrustClaw reuses its agent runtime, SQLite patterns, Gateway, and Control UI shell while adding TRA-specific systems.
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License"></a>

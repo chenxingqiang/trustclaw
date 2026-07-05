@@ -1,12 +1,12 @@
 ## TrustClaw Vision
 
-TrustClaw is a **Personal Trusted Data Space Runtime (PTDS Runtime)** — a local-first platform where personal health data, subscribed reference datasets, and auditable agents collaborate under explicit consent and immutable evidence.
+TrustClaw is a **Trust Runtime for Agent (TRA)** — a local-first platform where personal data, subscribed reference datasets, and auditable agents collaborate under explicit consent and immutable evidence.
 
 Business agents (clinical eligibility, reimbursement, compliance review, and others) are **packs on the runtime**, not the platform identity. The runtime stays vertical-agnostic; vertical logic ships as declarative Agent Packs and imported rule sets.
 
 **Core principles**
 
-1. **Personal data never leaves PTDS** — raw personal data stays in local SQLite; external models and tools only receive controlled, consented query surfaces.
+1. **Personal data never leaves the trust runtime** — raw personal data stays in local SQLite; external models and tools only receive controlled, consented query surfaces.
 2. **Every conclusion must be evidenced** — outputs trace to local data, imported standards, or deterministic rule evaluation with a replayable chain.
 3. **Every agent action must be auditable** — consent, tool calls, queries, and commits are recorded with closed step/component semantics.
 4. **Agents decouple from platform** — runtime owns isolation, tools, audit, and ledger; business behavior lives in packs and coordinators.
@@ -17,7 +17,7 @@ TrustClaw is organized by **planes**, not by a single demo chat script:
 
 | Plane | Responsibility |
 | --- | --- |
-| **Data** | PTDS schema, personal store, reference sync, SELECT guards, table lineage |
+| **Data** | TRA schema, personal store, reference sync, SELECT guards, table lineage |
 | **Policy** | Consent, domain grants, compliance import, fail-closed gates |
 | **Agent** | Agent Pack contract, coordinators, session binding, tool-gated access |
 | **Evidence** | Audit trail, hash-chain ledger, operator replay |
@@ -27,7 +27,9 @@ A typical production interaction flows through these planes — mount data → g
 
 **Technical foundation**
 
-TrustClaw is forked from [OpenClaw](https://github.com/openclaw/openclaw). We reuse Gateway, agent runner, SQLite/Kysely patterns, Control UI shell, and plugin SDK seams. PTDS-specific systems are scoped extensions under `trustclaw/` and `extensions/trustclaw-ptds/`.
+TrustClaw is forked from [OpenClaw](https://github.com/openclaw/openclaw). We reuse Gateway, agent runner, SQLite/Kysely patterns, Control UI shell, and plugin SDK seams. TRA-specific systems are scoped extensions under `trustclaw/` and `extensions/trustclaw-ptds/`.
+
+> **Terminology:** Product concept is **Trust Runtime for Agent (TRA)**. Legacy HTTP/DB seams may still use the `ptds` prefix (`/api/ptds/*`, `local_ptds.db`) until a tagged migration removes them.
 
 **Docs**
 
@@ -52,3 +54,4 @@ TrustClaw is forked from [OpenClaw](https://github.com/openclaw/openclaw). We re
 - Natural-language multi-agent routing — D23
 - CLI/package rename (`openclaw` → `trustclaw`) — D13
 - Full `domain_agents` registry import — D24
+- Retire `ptds` API/DB path prefix in favor of `tra` — D25 follow-up

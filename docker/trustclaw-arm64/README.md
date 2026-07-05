@@ -49,7 +49,7 @@ docker compose up -d --force-recreate
 | 入口              | URL                                 | 说明                               |
 | ----------------- | ----------------------------------- | ---------------------------------- |
 | Control UI / Chat | `http://127.0.0.1:8080/`            | Token = `OPENCLAW_GATEWAY_TOKEN`   |
-| PTDS Console      | `http://127.0.0.1:15174/trustclaw/` | Docker 映射；本地 dev 仍用 `:5174` |
+| TRA Runtime Console | `http://127.0.0.1:15174/trustclaw/` | Docker 映射；本地 dev 仍用 `:5174` |
 
 验证模型 Key 已注入（不打印密钥）：
 
@@ -156,7 +156,7 @@ docker pull chenxingqiang/trustclaw-app:arm64
 | 宿主机                         | 容器    | 用途                       |
 | ------------------------------ | ------- | -------------------------- |
 | `8080`（`APP_PORT`）           | `19001` | Gateway / Control UI / API |
-| `15174`（`TRUSTCLAW_UI_PORT`） | `19001` | PTDS Console `/trustclaw/` |
+| `15174`（`TRUSTCLAW_UI_PORT`） | `19001` | TRA Runtime Console `/trustclaw/` |
 
 容器内仅 Gateway `19001`；两宿主机端口映射同一进程。
 

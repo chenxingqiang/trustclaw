@@ -141,8 +141,8 @@ describe("trustclaw-ptds plugin", () => {
       } as Parameters<typeof plugin.register>[0]);
 
       const result = await beforePromptBuild!({ messages: [] });
-      expect(result.prependContext).toContain("Mounted PTDS profile");
-      expect(result.prependContext).toContain("PTDS profile briefing");
+      expect(result.prependContext).toContain("Mounted TRA profile");
+      expect(result.prependContext).toContain("TRA profile briefing");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -2,12 +2,12 @@ import type { TrustclawMessages } from "../types.js";
 
 export const en: TrustclawMessages = {
   console: {
-    title: "PTDS Runtime Console",
+    title: "TRA Runtime Console",
     badge: "TrustClaw V1",
     systemStatus: "System status",
     statusRunning: "Running",
     statusNotReady: "Not ready",
-    statusNotMounted: "PTDS not mounted",
+    statusNotMounted: "TRA not mounted",
     statusChecking: "Checking…",
     statusReset: "Reset complete",
     toggleTheme: "Toggle theme",
@@ -17,11 +17,11 @@ export const en: TrustclawMessages = {
     chatFrameTitle: "OpenClaw Chat",
     chatInControlUiTitle: "OpenClaw Chat",
     chatInControlUiBody:
-      "Embedded from Control UI. Prefer the PTDS Console tab in gateway Control UI for the native chat workbench with collapsible side rails.",
-    overviewAria: "PTDS audit charter and dual-plane map",
+      "Embedded from Control UI. Prefer the TRA Console tab in gateway Control UI for the native chat workbench with collapsible side rails.",
+    overviewAria: "TRA audit charter and dual-plane map",
     auditCharterTitle: "Fail-closed audit contract",
     auditCharterLead:
-      "Every PTDS access, rule evaluation, and agent decision must leave a verifiable trail. Missing steps, failed read-only checks, or absent consent block the pipeline.",
+      "Every trust-runtime access, rule evaluation, and agent decision must leave a verifiable trail. Missing steps, failed read-only checks, or absent consent block the pipeline.",
     auditRuleFailClosed:
       "Fail-closed: BLOCKED or FAIL status stops downstream stages; no silent fallback.",
     auditRuleReadOnly:
@@ -33,8 +33,8 @@ export const en: TrustclawMessages = {
     auditRuleConsent:
       "DATA_CONSENT / COMPLIANCE_IMPORT / REFERENCE_SYNC / DEVICE_IMPORT are separate JSONL trails — required before imports.",
     dataPlaneTitle: "Data plane",
-    dataPlaneDesc: "Local SQLite PTDS mount, browse, and governed external sync.",
-    dataPlaneStepA: "Mount personal vitals & clinical flags into local PTDS",
+    dataPlaneDesc: "Local SQLite trust-runtime mount, browse, and governed external sync.",
+    dataPlaneStepA: "Mount personal vitals & clinical flags into local trust runtime",
     dataPlaneStepC: "Grant per-domain-agent scopes — audited AGENT_DOMAIN_GRANT",
     dataPlaneStepB: "Inspect canonical tables (read-only viewer)",
     dataPlaneStepF: "Subscribe compliance / NRDL / device data with explicit consent",
@@ -43,13 +43,13 @@ export const en: TrustclawMessages = {
     auditPlaneStepD: "JSONL pipeline stages (compliance + latest chat trail)",
     auditPlaneStepE: "Hash-chained receipts; chain verify badge",
     chatWorkbenchHint:
-      "Audited Chat runs in OpenClaw Control UI → PTDS Console tab (center workbench). Agent tool calls feed Panel D/E here in real time.",
-    columnDataPlane: "Data plane · local PTDS",
+      "Audited Chat runs in OpenClaw Control UI → TRA Console tab (center workbench). Agent tool calls feed Panel D/E here in real time.",
+    columnDataPlane: "Data plane · local trust runtime",
     columnAuditPlane: "Audit plane · JSONL + ledger",
   },
   panels: {
     landing: {
-      title: "A · PTDS Initialization",
+      title: "A · TRA initialization",
       subtitle: "Step 0 — mount governed personal data before any audited query",
       notMounted: "Not mounted",
       mounted: "Mounted",
@@ -87,7 +87,7 @@ export const en: TrustclawMessages = {
       institutionLevel2: "Level 2 (secondary)",
       institutionLevel3: "Level 3 (tertiary)",
       initBtn: "Initialize and load data space",
-      resetBtn: "Reset PTDS",
+      resetBtn: "Reset TRA data",
       mounting: "Mounting…",
       resetting: "Resetting…",
       initFailed: "Initialization failed",
@@ -96,7 +96,7 @@ export const en: TrustclawMessages = {
       title: "C · Domain agent authorization",
       subtitle: "Per-agent scope grants with append-only AGENT_DOMAIN_GRANT audit history",
       description:
-        "Grant each Business Agent its own PTDS scopes. Panels B/D/E/F and chat tools fail closed until granted (runtime decoupled from agents).",
+        "Grant each Business Agent its own TRA scopes. Panels B/D/E/F and chat tools fail closed until granted (runtime decoupled from agents).",
       domain: "Domain",
       loading: "Loading…",
       ready: "Synced",
@@ -119,12 +119,12 @@ export const en: TrustclawMessages = {
         "panel.ledger": "Panel E · ledger",
         "panel.compliance": "Panel F · compliance",
         "ptds.chat": "Chat / query tool",
-        "ptds.write": "PTDS write tool",
+        "ptds.write": "TRA write tool",
       },
-      registryTitle: "Logical agent registry (PTDS)",
+      registryTitle: "Logical agent registry (TRA)",
       registrySubtitle:
         "Metadata rows from domain_agents — a separate layer from the 13 agent packs above",
-      registryUnavailable: "domain_agents table is not present in the current PTDS database.",
+      registryUnavailable: "domain_agents table is not present in the current TRA database.",
       registryEmpty: "No logical agents match the current filters.",
       registrySummary: "{total} logical agents (partial {partial} · false {false})",
       registrySelectLabel: "Select logical agent",
@@ -147,8 +147,8 @@ export const en: TrustclawMessages = {
       registryDetailInsurance: "Insurance",
       registryDetailPack: "Pack",
       registryDetailPackVersion: "Pack version",
-      registryDetailScopes: "PTDS scopes",
-      registryDetailWrite: "PTDS write",
+      registryDetailScopes: "TRA scopes",
+      registryDetailWrite: "TRA write",
       registryDetailRegistered: "Registered",
     },
     agentBar: {
@@ -160,14 +160,14 @@ export const en: TrustclawMessages = {
       notGrantedHint: "Grant this domain agent in Panel C before browsing data.",
     },
     browser: {
-      title: "B · Personal Data Space (PTDS) Browser",
+      title: "B · Trust runtime data browser",
       subtitle:
-        "Read-only inspection of personal PTDS tables and Panel F subscribed reference/compliance data — with lineage",
+        "Read-only inspection of personal trust-runtime tables and Panel F subscribed reference/compliance data — with lineage",
       mountNote: "SQLite database status:",
       viewerLabel: "Data viewer",
       categoryLabel: "Dataset",
       categoryAll: "All tables",
-      categoryPersonal: "Personal PTDS",
+      categoryPersonal: "Personal data",
       categorySubscribed: "Subscribed data",
       lineageTitle: "Data lineage",
       lineageEmpty: "Select a table to view upstream/downstream relationships and provenance.",
@@ -219,7 +219,7 @@ export const en: TrustclawMessages = {
       title: "D · Runtime Audit",
       subtitle: "Mandatory pipeline stages — each chat run must record ≥5 JSONL events",
       sectionPipeline: "Chat pipeline gates (strict order)",
-      pipelinePending: "No chat audit yet — run a GLP-1 question in Control UI PTDS Console.",
+      pipelinePending: "No chat audit yet — run a GLP-1 question in Control UI TRA Console.",
       pipelineComplete: "All 5 stages SUCCESS for trail {trailId}.",
       pipelineIncomplete:
         "Incomplete trail ({count}/5 stages) — DoD fail until LEDGER_COMMIT succeeds.",
@@ -256,7 +256,7 @@ export const en: TrustclawMessages = {
       stepDeviceImport: "Device import · DEVICE_IMPORT",
       stepUser: "0 · User Input",
       stepText2sql: "1 · Text2SQL",
-      stepQuery: "2 · PTDS Query",
+      stepQuery: "2 · Trust runtime query",
       stepRules: "3 · Rule Evaluation",
       stepDecision: "4 · GLP-1 Decision",
       stepLedger: "5 · Ledger Receipt",
@@ -285,7 +285,7 @@ export const en: TrustclawMessages = {
       title: "F · Compliance Data Subscription",
       subtitle: "External standards & device data — consent-gated; each action → JSONL audit",
       description:
-        "Choose a subscription type and delivery method to sync external pharma compliance standards or NRDL reference rules into local PTDS. Consent is required; each action is audit-logged.",
+        "Choose a subscription type and delivery method to sync external pharma compliance standards or NRDL reference rules into local trust runtime. Consent is required; each action is audit-logged.",
       subscriptionTypeLabel: "Subscription type",
       subscriptionMethodLabel: "Delivery method",
       typePharmaCompliance: "Pharma compliance data",
@@ -323,7 +323,7 @@ export const en: TrustclawMessages = {
     reference: {
       title: "NRDL reference subscription",
       description:
-        "Sync read-only NRDL drug registry and payment rules into local PTDS. Supports HTTPS URL or JSON file; personal data tables are never touched.",
+        "Sync read-only NRDL drug registry and payment rules into local trust runtime. Supports HTTPS URL or JSON file; personal data tables are never touched.",
       sectionUrl: "Remote subscription URL",
       urlLabel: "HTTPS package URL",
       urlHint:
@@ -340,7 +340,7 @@ export const en: TrustclawMessages = {
       statusEmpty: "No reference sync recorded",
       statusLoaded: "{drugs} drugs · {rules} rules · last sync {synced}",
       previewBtn: "Preview reference",
-      syncBtn: "Sync to PTDS",
+      syncBtn: "Sync to trust runtime",
       syncUrlBtn: "Sync from URL",
       bundledBtn: "Sync bundled GLP-1 reference",
       selectSource: "Enter a URL or select a JSON file",
@@ -366,16 +366,16 @@ export const en: TrustclawMessages = {
       fileLabel: "Choose device export JSON",
       fileHint: "Health/wearable JSON from vendor app or open platform.",
       consentLabel:
-        "I consent to importing this external device data into local PTDS for personal health analysis",
+        "I consent to importing this external device data into local trust runtime for personal health analysis",
       consentHint:
         "Import uses Text2SQL-generated INSERT statements into SQLite; each import is DEVICE_IMPORT audit-logged.",
       previewBtn: "Preview Text2SQL",
-      importBtn: "Import into PTDS",
+      importBtn: "Import into trust runtime",
       selectSource: "Enter an API URL or choose a JSON file",
       previewFirst: "Preview INSERT SQL before import",
       consentRequired: "User consent is required before import",
       previewing: "Generating INSERT SQL…",
-      importing: "Writing to PTDS…",
+      importing: "Writing to trust runtime…",
       statusReady: "Ready",
       statusEmpty: "No device data imported yet",
       metaTables: "Target tables",

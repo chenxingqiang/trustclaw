@@ -85,7 +85,7 @@ export function createTrustclawPtdsDataConsentHook(
       return {
         block: true,
         blockReason:
-          "PTDS is not mounted. Ask the user to initialize personal data in Panel A first.",
+          "Trust runtime is not mounted. Ask the user to initialize personal data in Panel A first.",
       };
     }
 

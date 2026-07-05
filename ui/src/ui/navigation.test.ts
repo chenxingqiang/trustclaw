@@ -65,7 +65,7 @@ describe("iconForTab", () => {
 describe("titleForTab", () => {
   it("returns expected titles for every tab", () => {
     expect(Object.fromEntries(ALL_TABS.map((tab) => [tab, titleForTab(tab)]))).toEqual({
-      ptds: "PTDS Console",
+      ptds: "TRA Console",
       chat: "Chat",
       overview: "Overview",
       activity: "Activity",

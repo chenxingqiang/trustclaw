@@ -360,7 +360,7 @@ export async function syncNrdlReferencePackage(
 
     return {
       status: "success",
-      message: "NRDL reference dataset synced to local PTDS.",
+      message: "NRDL reference dataset synced to local trust runtime.",
       version_id: pkg.metadata.version_id,
       drugs_synced: drugIdsInPackage.size,
       rules_synced: pkg.payment_rules.length,

@@ -1,7 +1,7 @@
 {
   "id": "trustclaw-ptds",
-  "name": "TrustClaw PTDS",
-  "description": "TrustClaw Personal Trusted Data Space HTTP APIs and runtime integration.",
+  "name": "TrustClaw TRA",
+  "description": "Trust Runtime for Agent — HTTP APIs, tools, and runtime integration for OpenClaw Gateway.",
   "contracts": {
     "tools": ["trustclaw_ptds_query", "trustclaw_ptds_write"]
   },
@@ -23,7 +23,7 @@
     "properties": {
       "dbPath": {
         "type": "string",
-        "description": "Override PTDS SQLite path (default: state/local_ptds.db under OPENCLAW_STATE_DIR)"
+        "description": "Override TRA SQLite path (default: state/local_ptds.db under OPENCLAW_STATE_DIR)"
       },
       "auditDir": {
         "type": "string",

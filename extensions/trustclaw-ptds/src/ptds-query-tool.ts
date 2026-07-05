@@ -33,9 +33,9 @@ export function createTrustclawPtdsQueryToolFactory(
 
     return {
       name: TRUSTCLAW_PTDS_QUERY_TOOL,
-      label: "TrustClaw PTDS Query",
+      label: "TrustClaw TRA Query",
       description:
-        "Run the TrustClaw GLP-1 Text2SQL pipeline against the local PTDS SQLite database. Returns an evidence-backed decision with audit trail metadata.",
+        "Run the TrustClaw audited Text2SQL pipeline against the local trust-runtime SQLite database. Returns an evidence-backed decision with audit trail metadata.",
       parameters: {
         type: "object",
         additionalProperties: false,

@@ -86,7 +86,7 @@ export async function runTrustclawChat(
     return {
       ok: false,
       status: "ptds_not_initialized",
-      message: "PTDS is not initialized. Call POST /api/ptds/init first.",
+      message: "Trust runtime is not initialized. Call POST /api/ptds/init first.",
     };
   }
 

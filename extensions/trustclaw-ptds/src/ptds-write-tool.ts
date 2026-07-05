@@ -36,9 +36,9 @@ export function createTrustclawPtdsWriteToolFactory(
 
     return {
       name: TRUSTCLAW_PTDS_WRITE_TOOL,
-      label: "TrustClaw PTDS Write",
+      label: "TrustClaw TRA Write",
       description:
-        "Write new personal health measurements into the local PTDS SQLite database using Text2SQL-generated INSERT statements. Use when the user asks to record, update, or import vitals (weight, BMI, HbA1c, blood pressure, wearable metrics). Requires explicit user consent.",
+        "Write new personal health measurements into the local trust-runtime SQLite database using Text2SQL-generated INSERT statements. Use when the user asks to record, update, or import vitals (weight, BMI, HbA1c, blood pressure, wearable metrics). Requires explicit user consent.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -84,7 +84,7 @@ export function createTrustclawPtdsWriteToolFactory(
           content: [
             {
               type: "text",
-              text: `已写入 PTDS：${result.rows_affected ?? 0} 行，表 ${(result.tables ?? []).join(", ")}。可在 Panel B 刷新查看。`,
+              text: `已写入可信运行时：${result.rows_affected ?? 0} 行，表 ${(result.tables ?? []).join(", ")}。可在 Panel B 刷新查看。`,
             },
           ],
           details: {

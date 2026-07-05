@@ -127,7 +127,7 @@ export function initializePtds(
     db.close();
     return {
       status: "success",
-      message: "PTDS initialized successfully.",
+      message: "Trust runtime initialized successfully.",
       db_file: dbPath,
       records_inserted: recordsInserted,
     };
@@ -159,7 +159,7 @@ export function resetPtds(
     db.close();
     return {
       status: "success",
-      message: "PTDS personal data cleared.",
+      message: "Trust runtime personal data cleared.",
       db_file: dbPath,
       records_inserted: 0,
     };

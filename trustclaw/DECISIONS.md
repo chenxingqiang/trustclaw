@@ -6,7 +6,7 @@
 | --- | --------------------------------------------------------------------- | --------- |
 | D1  | PTDS v1.1 schema（`trustclaw/ptds/schema/v1.1.sql`）                  | delivered |
 | D2  | `extensions/trustclaw-ptds` + `trustclaw/` 核心库；不改 OpenClaw core | delivered |
-| D3  | PTDS Console（`trustclaw/ui/` → `/trustclaw`）；Panel A–F             | delivered |
+| D3  | TRA Runtime Console（`trustclaw/ui/` → `/trustclaw`）；Panel A–F             | delivered |
 | D4  | Chat：`POST /api/agent/chat` + Runtime Context                        | delivered |
 | D5  | 频道集成（Telegram/WhatsApp/WebChat 等）                              | deferred  |
 | D6  | 规则引擎：TS 确定性匹配；不用 LLM 判规则                              | delivered |
@@ -28,5 +28,6 @@
 | D22 | 领域 Agent scope 赋权；fail-closed；按 pack 隔离 consent              | delivered |
 | D23 | 自然语言多 Agent 意图路由                                             | deferred  |
 | D24 | `domain_agents` 千级目录种子 + 浏览；全量导入为运营动作               | approved  |
+| D25 | 产品概念 **Trust Runtime for Agent (TRA)** 取代 PTDS；`ptds` 仅为遗留 API/路径前缀 | approved  |
 
-**开放项：** D5、D21、D23（V2）；D13（品牌化）；D24（全量注册导入）。
+**开放项：** D5、D21、D23（V2）；D13（品牌化）；D24（全量注册导入）；D25 后续（`/api/tra/*` 迁移）。

@@ -22,7 +22,7 @@ function sessionHasMountBriefing(messages: unknown[] | undefined): boolean {
       continue;
     }
     const content = record.content;
-    if (typeof content === "string" && content.includes("PTDS profile briefing")) {
+    if (typeof content === "string" && contentHasBriefingMarker(content)) {
       return true;
     }
     if (Array.isArray(content)) {
@@ -31,7 +31,7 @@ function sessionHasMountBriefing(messages: unknown[] | undefined): boolean {
           block &&
           typeof block === "object" &&
           typeof (block as { text?: string }).text === "string" &&
-          (block as { text: string }).text.includes("PTDS profile briefing")
+          contentHasBriefingMarker((block as { text: string }).text)
         ) {
           return true;
         }
@@ -41,13 +41,17 @@ function sessionHasMountBriefing(messages: unknown[] | undefined): boolean {
   return false;
 }
 
+function contentHasBriefingMarker(text: string): boolean {
+  return text.includes("TRA profile briefing") || text.includes("PTDS profile briefing");
+}
+
 function formatMountedProfileContext(
   profile: ReturnType<typeof buildPtdsHealthProfileSummary>,
   pack: ResolvedAgentPack,
   needsBriefing: boolean,
 ): string {
   const lines = [
-    `## Mounted PTDS profile (agent pack: ${pack.id})`,
+    `## Mounted TRA profile (agent pack: ${pack.id})`,
     "```json",
     JSON.stringify(
       {
@@ -71,7 +75,7 @@ function formatMountedProfileContext(
   if (needsBriefing) {
     lines.push(
       "",
-      "**Action required:** Deliver the **PTDS profile briefing** now (include the marker phrase `PTDS profile briefing` once).",
+      "**Action required:** Deliver the **TRA profile briefing** now (include the marker phrase `TRA profile briefing` once).",
     );
   }
   return lines.join("\n");

@@ -31,12 +31,12 @@ export const AGENT_DOMAIN_SCOPE_LABELS: Record<AgentDomainScope, { "zh-CN": stri
       en: "Panel F · compliance subscription/import",
     },
     "ptds.chat": {
-      "zh-CN": "Chat / PTDS 查询工具",
-      en: "Chat / PTDS query tool",
+      "zh-CN": "Chat / TRA 查询工具",
+      en: "Chat / TRA query tool",
     },
     "ptds.write": {
-      "zh-CN": "PTDS 写入工具",
-      en: "PTDS write tool",
+      "zh-CN": "TRA 写入工具",
+      en: "TRA write tool",
     },
   };
 

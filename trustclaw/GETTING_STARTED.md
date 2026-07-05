@@ -1,6 +1,8 @@
 # TrustClaw — Getting Started
 
-TrustClaw runs **on OpenClaw Gateway** with the `trustclaw-ptds` plugin. Product UX is **TrustClaw-first**: Control UI opens **PTDS Console** by default; OpenClaw Chat and operator tools remain in the sidebar.
+TrustClaw runs **on OpenClaw Gateway** with the `trustclaw-ptds` plugin. Product UX is **TrustClaw-first**: Control UI opens **TRA Console** by default; OpenClaw Chat and operator tools remain in the sidebar.
+
+> **TRA** = Trust Runtime for Agent. Legacy API paths still use `/api/ptds/*` (see `DECISIONS.md` D25).
 
 **Product development loops:** driven exclusively by [`AGENTS.md`](./AGENTS.md) (Product loop authority + Infinite Optimization Loop).
 
@@ -26,8 +28,8 @@ Open either:
 
 | URL                                 | Experience                                                                         |
 | ----------------------------------- | ---------------------------------------------------------------------------------- |
-| `http://127.0.0.1:19001/`           | **TrustClaw** — Control UI → **PTDS Console** (default tab)                        |
-| `http://127.0.0.1:5174/trustclaw/`  | Standalone **PTDS Runtime Console** (dev, hot reload; audit panels only — no Chat) |
+| `http://127.0.0.1:19001/`           | **TrustClaw** — Control UI → **TRA Console** (default tab)                        |
+| `http://127.0.0.1:5174/trustclaw/`  | Standalone **TRA Runtime Console** (dev, hot reload; audit panels only — no Chat) |
 | `http://127.0.0.1:19001/trustclaw/` | Bundled console (after `pnpm trustclaw:ui:build` + gateway on `:19001`)            |
 
 ## Gateway auth (dev)
@@ -65,15 +67,15 @@ pnpm openclaw models status --dev
 
 Set `OPENAI_API_KEY` for Text2SQL in chat.
 
-## PTDS Console layout
+## TRA Console layout
 
-Control UI **PTDS Console** tab mirrors the OpenClaw chat page:
+Control UI **TRA Console** tab mirrors the OpenClaw chat page:
 
 - **Center** — OpenClaw native Chat (sessions, tools, streaming)
-- **Left rail (A + C + B)** — PTDS init + domain agent grants + data browser (`/trustclaw/?embed=left`)
+- **Left rail (A + C + B)** — TRA init + domain agent grants + data browser (`/trustclaw/?embed=left`)
 - **Right rail (D + E + F)** — runtime audit + evidence ledger + compliance (`/trustclaw/?embed=right`)
 
-Side rails collapse like Control UI workspace rails. Chat’s internal workspace rail stays collapsed on the PTDS tab to avoid a triple-column right edge.
+Side rails collapse like Control UI workspace rails. Chat’s internal workspace rail stays collapsed on the TRA tab to avoid a triple-column right edge.
 
 ## Language (i18n)
 
@@ -81,24 +83,24 @@ TrustClaw console shares OpenClaw's locale storage key **`openclaw.i18n.locale`*
 
 | Where you switch                     | Effect                                                                 |
 | ------------------------------------ | ---------------------------------------------------------------------- |
-| Control UI → Appearance → Language   | PTDS iframe rails update via `storage` + `postMessage`                 |
-| PTDS console topbar language select  | Updates console + persists same key (Control UI picks it up on reload) |
+| Control UI → Appearance → Language   | TRA iframe rails update via `storage` + `postMessage`                 |
+| TRA console topbar language select  | Updates console + persists same key (Control UI picks it up on reload) |
 | URL `?locale=zh-CN` on `/trustclaw/` | Initial locale for standalone console                                  |
 
 Supported console bundles: **English (`en`)** and **简体中文 (`zh-CN`)**; `zh-TW` maps to `zh-CN`.
 
 ## Theme
 
-PTDS side rails follow OpenClaw Control UI **Appearance → theme** via shared `openclaw.control.settings.v1*` localStorage and `openclaw:theme` postMessage. Embedded panels use the same `data-theme-mode="light"` tokens as the center chat.
+TRA side rails follow OpenClaw Control UI **Appearance → theme** via shared `openclaw.control.settings.v1*` localStorage and `openclaw:theme` postMessage. Embedded panels use the same `data-theme-mode="light"` tokens as the center chat.
 
-## C3-PO system prompt (PTDS Console chat)
+## C3-PO system prompt (TRA Console chat)
 
-The **dev** agent (`C3-PO`) uses TrustClaw PTDS presets — not the generic Claude Code / debug persona:
+The **dev** agent (`C3-PO`) uses TrustClaw TRA presets — not the generic Claude Code / debug persona:
 
 - Plugin hook `before_prompt_build` injects `trustclaw/agents/glp1/prompts/c3po-ptds-system.v1.md`
 - `pnpm trustclaw:setup` syncs `trustclaw/workspace/dev/{SOUL,IDENTITY,AGENTS}.md` → `~/.openclaw/workspace-dev/`
 
-After setup, **start a new chat session** (or `/new`) so the updated system prompt loads. Ask “What can you do?” — the reply should describe PTDS panels A–E and `trustclaw_ptds_query`, not IDE/coding features.
+After setup, **start a new chat session** (or `/new`) so the updated system prompt loads. Ask “What can you do?” — the reply should describe TRA panels A–E and `trustclaw_ptds_query`, not IDE/coding features.
 
 ## Multi-agent packs (Phase 3)
 
@@ -110,18 +112,18 @@ After setup, **start a new chat session** (or `/new`) so the updated system prom
 | `nrdl-reimburse`     | `nrdl-reimburse`           | `trustclaw/workspace/nrdl-reimburse`     |
 | `compliance-auditor` | `compliance-auditor`       | `trustclaw/workspace/compliance-auditor` |
 
-In **PTDS Console**, use the **领域 Agent** dropdown above chat to bind a pack per session (`PUT /api/ptds/session/agent-pack`), or switch the OpenClaw agent in the chat sidebar. Restart Gateway after `trustclaw:setup` so new agents appear.
+In **TRA Console**, use the **领域 Agent** dropdown above chat to bind a pack per session (`PUT /api/ptds/session/agent-pack`), or switch the OpenClaw agent in the chat sidebar. Restart Gateway after `trustclaw:setup` so new agents appear.
 
 ## Operator smoke — platform regression
 
 典型运维路径（非架构 canonical 流程；垂直细节由 Agent Pack 决定）：
 
-1. **A · PTDS 初始化区** — `POST /api/ptds/init`
+1. **A · TRA 初始化区** — `POST /api/ptds/init`
 2. **C · 领域 Agent 赋权** — per-pack scopes (`GET/PUT /api/ptds/agent-grants`)
 3. **B · 数据浏览器** — browse local SQLite tables
 4. **Audited Chat (Control UI)** — pack 工具链（如 `trustclaw_ptds_query`）；审计/账本侧栏随 Runtime Context 刷新
 5. **D · 运行时审计** — pipeline stages from Runtime Context
-6. **E · 凭证账本** — SHA-256 链式 receipt；Reset 清空 PTDS + audit + ledger
+6. **E · 凭证账本** — SHA-256 链式 receipt；Reset 清空 TRA 个人数据 + audit + ledger
 7. **F · 合规订阅** — 外部标准 import with consent
 
 ### Two-pass manual regression
@@ -130,7 +132,7 @@ In **PTDS Console**, use the **领域 Agent** dropdown above chat to bind a pack
 
 **Pass 1 — happy path**
 
-1. `pnpm trustclaw:setup && pnpm trustclaw:dev` → open `http://127.0.0.1:19001/` PTDS Console (or `:5174/trustclaw/`).
+1. `pnpm trustclaw:setup && pnpm trustclaw:dev` → open `http://127.0.0.1:19001/` TRA Console (or `:5174/trustclaw/`).
 2. **A** — Initialize with defaults; confirm **处方上下文** fields (first prescription, institution level, specialist).
 3. **C** — Grant `glp1-eligibility` scopes (`ptds.chat`, `panel.browse`, etc.) and save.
 4. **B** — Browse `user_profile` / `v_glp1_nrdl_check_snapshot`.
@@ -141,7 +143,7 @@ In **PTDS Console**, use the **领域 Agent** dropdown above chat to bind a pack
 
 **Pass 2 — reset**
 
-1. **A** — **Reset PTDS**; status returns to not mounted.
+1. **A** — **Reset TRA**; status returns to not mounted.
 2. Repeat steps 2–7 from Pass 1 on a **new** chat session.
 3. Confirm audit JSONL + `ledger.jsonl` were cleared before re-init (Panel E empty until next chat).
 
@@ -159,9 +161,9 @@ In **PTDS Console**, use the **领域 Agent** dropdown above chat to bind a pack
 
 ```
 OpenClaw Gateway (TrustClaw default **:19001**; upstream OpenClaw alone still uses :18789)
-  ├── Control UI (/)           → default tab: PTDS Console (native chat + side rails)
-  ├── /trustclaw/*           → PTDS Runtime Console static (plugin serve; embed=left|right)
-  └── /api/ptds/*, /api/agent/chat → PTDS plugin APIs
+  ├── Control UI (/)           → default tab: TRA Console (native chat + side rails)
+  ├── /trustclaw/*           → TRA Runtime Console static (plugin serve; embed=left|right)
+  └── /api/ptds/*, /api/agent/chat → TRA plugin APIs
 ```
 
 Personal data stays in `~/.openclaw/state/local_ptds.db`. See `OPENCLAW_REUSE.md` for inherit/extend/build map.
@@ -172,7 +174,7 @@ Personal data stays in `~/.openclaw/state/local_ptds.db`. See `OPENCLAW_REUSE.md
 pnpm trustclaw:setup
 pnpm trustclaw:ui:build
 pnpm openclaw gateway run
-# → http://127.0.0.1:19001/  (PTDS Console tab; requires trustclaw:setup first)
+# → http://127.0.0.1:19001/  (TRA Console tab; requires trustclaw:setup first)
 ```
 
 ## Branding note (D13)
@@ -193,7 +195,7 @@ docker compose up -d
 ```
 
 - Control UI: `http://127.0.0.1:8080/` (token from `app.env`)
-- PTDS Console: `http://127.0.0.1:15174/trustclaw/`
+- TRA Runtime Console: `http://127.0.0.1:15174/trustclaw/`
 - Offline: `./scripts/save-bundle.sh` → `dist/trustclaw-app-arm64.tar`
 - Hub push (VPN): `./scripts/push-dockerhub.sh arm64`
 

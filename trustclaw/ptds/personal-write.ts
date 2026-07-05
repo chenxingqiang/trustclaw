@@ -61,7 +61,7 @@ export async function previewPersonalWrite(
   if (!snapshot) {
     return {
       status: "error",
-      message: "PTDS is not initialized. Complete Panel A init before writing personal data.",
+      message: "Trust runtime is not initialized. Complete Panel A init before writing personal data.",
     };
   }
 
@@ -147,7 +147,7 @@ export async function executePersonalWrite(
     try {
       const rowsAffected = runPtdsImmediateTransactionSync(db, () => {
         if (!resolvePrimaryUserId(db)) {
-          throw new Error("PTDS is not initialized. Call POST /api/ptds/init first.");
+          throw new Error("Trust runtime is not initialized. Call POST /api/ptds/init first.");
         }
         return executeDeviceImportStatements(db, preview.sql_statements!);
       });

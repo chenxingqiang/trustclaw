@@ -5,7 +5,7 @@ Skills own workflows; root owns hard policy and routing.
 
 ## TrustClaw fork
 
-This repo targets **TrustClaw** (Personal Trusted Data Space Runtime), not upstream OpenClaw product work.
+This repo targets **TrustClaw** (Trust Runtime for Agent), not upstream OpenClaw product work.
 
 **Product loops are driven exclusively by `trustclaw/AGENTS.md`.** Read it before any `trustclaw/**` change. Run Perceive → Strategy → Implement → Verify → Evolve only via that file’s Infinite Optimization Loop and checklists. `DECISIONS.md` is the human-approval gate — never start a loop from it alone.
 

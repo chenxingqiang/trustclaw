@@ -9,7 +9,7 @@ describe("trustclaw PTDS agent guidance", () => {
   it("defines C3-PO PTDS identity and rejects Claude Code persona", () => {
     const guidance = buildTrustclawPtdsAgentGuidance({});
     expect(guidance.prependSystemContext).toContain("C3-PO");
-    expect(guidance.prependSystemContext).toContain("PTDS Console");
+    expect(guidance.prependSystemContext).toContain("TRA Console");
     expect(guidance.prependSystemContext).toContain("trustclaw_ptds_query");
     expect(guidance.prependSystemContext).toContain("trustclaw_ptds_write");
     expect(guidance.agentPackId).toBe("glp1-eligibility");

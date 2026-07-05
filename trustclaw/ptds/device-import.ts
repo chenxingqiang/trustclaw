@@ -85,7 +85,7 @@ export async function previewDeviceImport(
     if (!resolvePrimaryUserId(db)) {
       return {
         status: "error",
-        message: "PTDS is not initialized. Complete Panel A init before importing device data.",
+        message: "Trust runtime is not initialized. Complete Panel A init before importing device data.",
       };
     }
   } finally {
@@ -188,7 +188,7 @@ export async function importDeviceData(
     try {
       const rowsAffected = runPtdsImmediateTransactionSync(db, () => {
         if (!resolvePrimaryUserId(db)) {
-          throw new Error("PTDS is not initialized. Call POST /api/ptds/init first.");
+          throw new Error("Trust runtime is not initialized. Call POST /api/ptds/init first.");
         }
         return executeDeviceImportStatements(db, statements);
       });
