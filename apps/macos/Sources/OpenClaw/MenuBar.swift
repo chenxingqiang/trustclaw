@@ -345,6 +345,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.terminate(nil)
             return
         }
+        TrustClawBundledStateInstaller.installIfNeeded()
         self.state = AppStateStore.shared
         AppActivationPolicy.apply(showDockIcon: self.state?.showDockIcon ?? false)
         if let state {

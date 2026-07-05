@@ -315,6 +315,28 @@ else
   exit 1
 fi
 
+TRUSTCLAW_BUNDLE_SRC="$ROOT_DIR/dist/trustclaw-mac-bundle"
+if [[ -d "$TRUSTCLAW_BUNDLE_SRC" && -f "$TRUSTCLAW_BUNDLE_SRC/openclaw.json" ]]; then
+  echo "📦 Copying TrustClaw bundled OpenClaw state (config + auth + workspaces)"
+  rm -rf "$APP_ROOT/Contents/Resources/trustclaw-bundled-state"
+  cp -R "$TRUSTCLAW_BUNDLE_SRC" "$APP_ROOT/Contents/Resources/trustclaw-bundled-state"
+fi
+
+TRUSTCLAW_AGENTS_SRC="$ROOT_DIR/trustclaw/agents"
+if [[ -d "$TRUSTCLAW_AGENTS_SRC" ]]; then
+  echo "📦 Copying TrustClaw agent packs"
+  rm -rf "$APP_ROOT/Contents/Resources/trustclaw"
+  mkdir -p "$APP_ROOT/Contents/Resources/trustclaw"
+  cp -R "$TRUSTCLAW_AGENTS_SRC" "$APP_ROOT/Contents/Resources/trustclaw/agents"
+fi
+
+TRUSTCLAW_UI_SRC="$ROOT_DIR/dist/trustclaw-ui"
+if [[ -d "$TRUSTCLAW_UI_SRC" && -f "$TRUSTCLAW_UI_SRC/index.html" ]]; then
+  echo "📦 Copying TrustClaw PTDS console assets"
+  rm -rf "$APP_ROOT/Contents/Resources/trustclaw-ui"
+  cp -R "$TRUSTCLAW_UI_SRC" "$APP_ROOT/Contents/Resources/trustclaw-ui"
+fi
+
 running_packaged_app_pids() {
   command -v pgrep >/dev/null 2>&1 || return 0
   local app_binary="$APP_ROOT/Contents/MacOS/OpenClaw"
