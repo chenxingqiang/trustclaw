@@ -1,9 +1,5 @@
-import {
-  DEFAULT_AGENT_PACK_ID,
-  type AgentPackDocument,
-  type ResolvedAgentPack,
-} from "./schema.js";
 import { loadAgentPacksFromDir, resolveDefaultAgentsDir } from "./load.js";
+import { DEFAULT_AGENT_PACK_ID, type AgentPackDocument, type ResolvedAgentPack } from "./schema.js";
 
 export type AgentPackRegistryOptions = {
   agentsDir?: string;
@@ -80,6 +76,7 @@ export function summarizeAgentPack(pack: AgentPackDocument): {
   starterQuestions?: AgentPackDocument["starterQuestions"];
   openclaw?: AgentPackDocument["openclaw"];
   tools: AgentPackDocument["tools"];
+  pipeline: Pick<AgentPackDocument["pipeline"], "stages">;
 } {
   return {
     id: pack.id,
@@ -89,6 +86,7 @@ export function summarizeAgentPack(pack: AgentPackDocument): {
     starterQuestions: pack.starterQuestions,
     openclaw: pack.openclaw,
     tools: pack.tools,
+    pipeline: { stages: pack.pipeline.stages },
   };
 }
 

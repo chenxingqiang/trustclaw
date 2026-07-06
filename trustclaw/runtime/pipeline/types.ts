@@ -36,6 +36,8 @@ export type RuntimeContext = {
   session_id: string;
   user_query: string;
   agent_pack_id: string;
+  /** Pack-declared MCA subset; Panel D gates align to this order (G10). */
+  declared_pipeline_steps: readonly string[];
   pipeline_stages: PipelineStages;
   audit_trail_id: string;
   evidence_ledger_receipt?: {

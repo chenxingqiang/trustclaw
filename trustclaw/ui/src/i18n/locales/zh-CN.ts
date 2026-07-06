@@ -214,8 +214,9 @@ export const zh_CN: TrustclawMessages = {
       subtitle: "强制管线阶段 — 每次 Chat 至少 5 条 JSONL 事件",
       sectionPipeline: "Chat 管线闸门（严格顺序）",
       pipelinePending: "尚无 Chat 审计 — 请在 Control UI TRA Console 发起 GLP-1 相关问题。",
-      pipelineComplete: "轨迹 {trailId} 五步均为 SUCCESS。",
-      pipelineIncomplete: "轨迹不完整（{count}/5 步）— 未 LEDGER_COMMIT 则 DoD 不通过。",
+      pipelineComplete: "轨迹 {trailId} 的 {total} 个 Pack 阶段均为 SUCCESS。",
+      pipelineIncomplete:
+        "轨迹不完整（{count}/{total} Pack 阶段）— 声明阶段未全部成功则 DoD 不通过。",
       pipelineBlocked: "管线在 {step} 被阻断 — 后续阶段不得执行。",
       gateText2sql: "仅 SQL 摘要；必须 read_only_verification",
       gateQuery: "仅 row_count + 列名；禁止全行 dump",

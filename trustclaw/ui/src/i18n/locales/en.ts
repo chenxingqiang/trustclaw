@@ -220,9 +220,9 @@ export const en: TrustclawMessages = {
       subtitle: "Mandatory pipeline stages — each chat run must record ≥5 JSONL events",
       sectionPipeline: "Chat pipeline gates (strict order)",
       pipelinePending: "No chat audit yet — run a GLP-1 question in Control UI TRA Console.",
-      pipelineComplete: "All 5 stages SUCCESS for trail {trailId}.",
+      pipelineComplete: "All {total} pack stages SUCCESS for trail {trailId}.",
       pipelineIncomplete:
-        "Incomplete trail ({count}/5 stages) — DoD fail until LEDGER_COMMIT succeeds.",
+        "Incomplete trail ({count}/{total} pack stages) — DoD fail until all declared stages succeed.",
       pipelineBlocked: "Pipeline blocked at stage {step} — downstream stages must not run.",
       gateText2sql: "SQL summary only; read_only_verification required",
       gateQuery: "row_count + column names; no full row dump",

@@ -41,9 +41,12 @@ describe("agent-grant-routes", () => {
     const handler = createAgentGrantsGetHandler({ auditDir, dbPath: path.join(dir, "db") });
     const { res, getBody } = mockRes();
     await handler({ method: "GET", url: "/api/tra/agent-grants" } as never, res);
-    const body = getBody() as { packs: Array<{ id: string; granted_scopes: string[] }> };
+    const body = getBody() as {
+      packs: Array<{ id: string; granted_scopes: string[]; pipeline: { stages: string[] } }>;
+    };
     const row = body.packs.find((p) => p.id === pack.id);
     expect(row?.granted_scopes).toContain("tra.chat");
+    expect(row?.pipeline.stages.length).toBeGreaterThan(0);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -77,6 +80,27 @@ describe("agent-grant-routes", () => {
     const scopes = body.history.flatMap((row) => row.scopes);
     expect(scopes).toContain("panel.browse");
     expect(scopes).toContain("tra.chat");
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("GET exposes compliance-auditor without RULE_EVAL stage (G10)", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-grants-stages-"));
+    const handler = createAgentGrantsGetHandler({
+      auditDir: path.join(dir, "audit"),
+      dbPath: path.join(dir, "db"),
+    });
+    const { res, getBody } = mockRes();
+    await handler({ method: "GET", url: "/api/tra/agent-grants" } as never, res);
+    const body = getBody() as {
+      packs: Array<{ id: string; pipeline: { stages: string[] } }>;
+    };
+    const auditor = body.packs.find((p) => p.id === "compliance-auditor");
+    expect(auditor?.pipeline.stages).toEqual([
+      "TEXT2SQL_GEN",
+      "DB_QUERY",
+      "AGENT_DECISION",
+      "LEDGER_COMMIT",
+    ]);
     rmSync(dir, { recursive: true, force: true });
   });
 

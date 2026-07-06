@@ -1,12 +1,15 @@
 // Reusable domain-agent selector for Panel B/D/E/F.
 
 import type { TrustclawApiClient, AgentGrantPackRow } from "../api.js";
+import { CHAT_PIPELINE_STEP_ORDER } from "../audit-pipeline.js";
 import { msg } from "../i18n/index.js";
 import { readPanelAgentPackId, writePanelAgentPackId } from "./agent-panel-context.js";
 
 export type PanelAgentBar = {
   refresh(): Promise<void>;
   getSelectedPackId(): string;
+  getSelectedPipelineStages(): readonly string[];
+  getPipelineStagesForPack(packId: string): readonly string[];
   hasScope(scope: string): boolean;
 };
 
@@ -84,6 +87,13 @@ export function mountPanelAgentBar(
     },
     getSelectedPackId() {
       return select.value || readPanelAgentPackId();
+    },
+    getSelectedPipelineStages() {
+      return selectedPack()?.pipeline?.stages ?? CHAT_PIPELINE_STEP_ORDER;
+    },
+    getPipelineStagesForPack(packId: string) {
+      const pack = packs.find((row) => row.id === packId);
+      return pack?.pipeline?.stages ?? CHAT_PIPELINE_STEP_ORDER;
     },
     hasScope(scope: string) {
       const pack = selectedPack();

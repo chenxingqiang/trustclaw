@@ -416,19 +416,20 @@ node scripts/run-vitest.mjs trustclaw/ledger/
 
 审查代码后须在架构层显式标注，避免「文档严格、运行宽松」：
 
-| 项                                   | 规范                                    | 当前实现（`main`）                                                                                    | 建议修复                                 |
-| ------------------------------------ | --------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `tra_not_initialized`                | 记审计 `BLOCKED`                        | **已修复** — `run-chat` 首阶段 `BLOCKED` + `audit_trail_id`                                           | —                                        |
-| `RULE_EVAL` FAIL                     | 硬阻断或仅软结论+ citations             | **已修复** — `RULE_EVAL` `FAILURE` + `AGENT_DECISION` `rule_outcome: soft_fail`；见 `AGENTS.md` §3 G6 | —                                        |
-| `missingChatPipelineSteps`           | 按 Pack `pipeline.stages` 检查          | **已修复** — `expectedSteps` 可选参数                                                                 | 调用方传 pack stages                     |
-| `AuditComponent` 类型                | Pack 声明的 component 均可写入          | **已修复** — `string` + `PLATFORM_AUDIT_COMPONENTS`                                                   | —                                        |
-| `POST /api/tra/reset`                | Operator 审计                           | **已修复** — 清空后写入 `TRA_RESET` / `TRA.Reset`                                                     | —                                        |
-| OpenClaw Chat 路径                   | 与 HTTP 相同 MCA                        | **已修复** — `trustclaw_tra_query` → `runTrustclawChat`；`mca-parity.test.ts`                         | D5 频道出站 `audit_trail_id` 仍 deferred |
-| Logic Agent → Pack 路由              | 路由决策可审计                          | D23 deferred                                                                                          | 路由 step 预留（**G8 open**）            |
-| Logic Agent `tra_scopes` / `enabled` | P1 仅目录；执行以 P5 为准               | 目录字段 UI 可见；**运行时未读** `tra_scopes`                                                         | D23 路由或 Pack 实例化映射时接入         |
-| Grants 文件篡改                      | scope ⊆ `deriveAgentDomainScopes(pack)` | **已修复** — 读/写 filter 非法 scope                                                                  | `agent-domain-grants.test.ts`            |
+| 项                                   | 规范                                    | 当前实现（`main`）                                                                                     | 建议修复                                 |
+| ------------------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| `tra_not_initialized`                | 记审计 `BLOCKED`                        | **已修复** — `run-chat` 首阶段 `BLOCKED` + `audit_trail_id`                                            | —                                        |
+| `RULE_EVAL` FAIL                     | 硬阻断或仅软结论+ citations             | **已修复** — `RULE_EVAL` `FAILURE` + `AGENT_DECISION` `rule_outcome: soft_fail`；见 `AGENTS.md` §3 G6  | —                                        |
+| `missingChatPipelineSteps`           | 按 Pack `pipeline.stages` 检查          | **已修复** — `expectedSteps` 可选参数                                                                  | 调用方传 pack stages                     |
+| `AuditComponent` 类型                | Pack 声明的 component 均可写入          | **已修复** — `string` + `PLATFORM_AUDIT_COMPONENTS`                                                    | —                                        |
+| `POST /api/tra/reset`                | Operator 审计                           | **已修复** — 清空后写入 `TRA_RESET` / `TRA.Reset`                                                      | —                                        |
+| OpenClaw Chat 路径                   | 与 HTTP 相同 MCA                        | **已修复** — `trustclaw_tra_query` → `runTrustclawChat`；`mca-parity.test.ts`                          | D5 频道出站 `audit_trail_id` 仍 deferred |
+| Logic Agent → Pack 路由              | 路由决策可审计                          | D23 deferred                                                                                           | 路由 step 预留（**G8 open**）            |
+| Logic Agent `tra_scopes` / `enabled` | P1 仅目录；执行以 P5 为准               | 目录字段 UI 可见；**运行时未读** `tra_scopes`                                                          | D23 路由或 Pack 实例化映射时接入         |
+| Grants 文件篡改                      | scope ⊆ `deriveAgentDomainScopes(pack)` | **已修复** — 读/写 filter 非法 scope                                                                   | `agent-domain-grants.test.ts`            |
+| Panel D pack 可变阶段                | 按 `pipeline.stages` 渲染闸门与完成判定 | **已修复** — `declared_pipeline_steps` + grants API `pipeline.stages`；`audit-pipeline.test.ts`（G10） | —                                        |
 
-**结论：** V1 对 **HTTP + WS tool Chat + consent + ledger** 路径 MCA 较完整；**G8–G10** 为下一迭代入口 — 排期见 `trustclaw/AGENTS.md` § Agent Platform 迭代目标。
+**结论：** V1 对 **HTTP + WS tool Chat + consent + ledger** 路径 MCA 较完整；**G8–G9** 为下一迭代入口（D23/D21 deferred）— 排期见 `trustclaw/AGENTS.md` § Agent Platform 迭代目标。
 
 ---
 

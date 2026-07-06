@@ -24,6 +24,7 @@ export type TrustclawRuntimeContextPayload = {
   session_id: string;
   user_query: string;
   agent_pack_id?: string;
+  declared_pipeline_steps?: string[];
   pipeline_stages: Record<string, unknown>;
   audit_trail_id: string;
   evidence_ledger_receipt?: {
@@ -122,6 +123,9 @@ function readRuntimeContext(value: unknown): TrustclawRuntimeContextPayload | nu
   const sessionId = typeof record.session_id === "string" ? record.session_id : "";
   const userQuery = typeof record.user_query === "string" ? record.user_query : "";
   const agentPackId = typeof record.agent_pack_id === "string" ? record.agent_pack_id : undefined;
+  const declaredPipelineSteps = Array.isArray(record.declared_pipeline_steps)
+    ? record.declared_pipeline_steps.filter((step): step is string => typeof step === "string")
+    : undefined;
   const auditTrailId = typeof record.audit_trail_id === "string" ? record.audit_trail_id : "";
   const pipelineStages = readRecord(record.pipeline_stages);
   if (!sessionId || !userQuery || !auditTrailId || !pipelineStages) {
@@ -132,6 +136,7 @@ function readRuntimeContext(value: unknown): TrustclawRuntimeContextPayload | nu
     session_id: sessionId,
     user_query: userQuery,
     ...(agentPackId ? { agent_pack_id: agentPackId } : {}),
+    ...(declaredPipelineSteps?.length ? { declared_pipeline_steps: declaredPipelineSteps } : {}),
     pipeline_stages: pipelineStages,
     audit_trail_id: auditTrailId,
     evidence_ledger_receipt: receipt

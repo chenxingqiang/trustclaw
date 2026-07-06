@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { chatPipelineStepStates, CHAT_PIPELINE_STEP_ORDER } from "./audit-pipeline.js";
+import {
+  chatPipelineStepStates,
+  CHAT_PIPELINE_STEP_ORDER,
+  isChatPipelineComplete,
+  resolveChatPipelineStepOrder,
+} from "./audit-pipeline.js";
 
 describe("chatPipelineStepStates", () => {
   it("marks missing steps as pending", () => {
@@ -19,5 +24,41 @@ describe("chatPipelineStepStates", () => {
 
     const fail = chatPipelineStepStates([{ step: "DB_QUERY", status: "FAIL" }]);
     expect(fail[1]).toBe("fail");
+  });
+});
+
+describe("resolveChatPipelineStepOrder (G10)", () => {
+  it("returns pack-declared subset in canonical order", () => {
+    expect(
+      resolveChatPipelineStepOrder(["AGENT_DECISION", "TEXT2SQL_GEN", "DB_QUERY", "LEDGER_COMMIT"]),
+    ).toEqual(["TEXT2SQL_GEN", "DB_QUERY", "AGENT_DECISION", "LEDGER_COMMIT"]);
+  });
+
+  it("omits undeclared RULE_EVAL for compliance-auditor packs", () => {
+    const order = resolveChatPipelineStepOrder([
+      "TEXT2SQL_GEN",
+      "DB_QUERY",
+      "AGENT_DECISION",
+      "LEDGER_COMMIT",
+    ]);
+    expect(order).not.toContain("RULE_EVAL");
+    expect(order).toHaveLength(4);
+  });
+
+  it("treats pack trail as complete when only declared stages succeed", () => {
+    const order = resolveChatPipelineStepOrder([
+      "TEXT2SQL_GEN",
+      "DB_QUERY",
+      "AGENT_DECISION",
+      "LEDGER_COMMIT",
+    ]);
+    const events = [
+      { step: "TEXT2SQL_GEN", status: "SUCCESS" },
+      { step: "DB_QUERY", status: "SUCCESS" },
+      { step: "AGENT_DECISION", status: "SUCCESS" },
+      { step: "LEDGER_COMMIT", status: "SUCCESS" },
+    ];
+    expect(isChatPipelineComplete(events, order)).toBe(true);
+    expect(isChatPipelineComplete(events, CHAT_PIPELINE_STEP_ORDER)).toBe(false);
   });
 });

@@ -103,6 +103,7 @@ describe("trustclaw/runtime/pipeline", () => {
         .split("\n");
       expect(auditLines.length).toBeGreaterThanOrEqual(5);
       const pack = getAgentPackRegistry().get(result.context.agent_pack_id);
+      expect(result.context.declared_pipeline_steps).toEqual(pack?.pipeline.stages);
       expect(
         missingChatPipelineSteps(path.join(dir, "tra-audit"), result.context.audit_trail_id, {
           expectedSteps: pack?.pipeline.stages,

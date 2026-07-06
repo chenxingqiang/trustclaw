@@ -4,7 +4,10 @@ import type { RuntimeContextResponse, TrustclawApiClient } from "../api.js";
 import {
   chatPipelineStepStates,
   CHAT_PIPELINE_STEP_ORDER,
+  countSuccessfulChatPipelineSteps,
+  isChatPipelineComplete,
   renderChatPipelineFlow,
+  resolveChatPipelineStepOrder,
   type ChatPipelineStepDef,
 } from "../audit-pipeline.js";
 import { msg } from "../i18n/index.js";
@@ -116,30 +119,43 @@ function pipelineDefs(m: ReturnType<typeof msg>["panels"]["audit"]): ChatPipelin
   ];
 }
 
-function countChatPipelineSteps(events: AuditEventRow[]): number {
-  const present = new Set(events.map((e) => e.step));
-  return CHAT_PIPELINE_STEP_ORDER.filter((step) => present.has(step)).length;
+function pipelineDefsForOrder(
+  m: ReturnType<typeof msg>["panels"]["audit"],
+  stepOrder: readonly string[],
+): ChatPipelineStepDef[] {
+  const allowed = new Set(stepOrder);
+  return pipelineDefs(m).filter((def) => allowed.has(def.step));
+}
+
+function countChatPipelineSteps(events: AuditEventRow[], stepOrder: readonly string[]): number {
+  return countSuccessfulChatPipelineSteps(events, stepOrder);
 }
 
 function pipelineStatusNote(
   m: ReturnType<typeof msg>["panels"]["audit"],
   trailId: string,
   events: AuditEventRow[],
+  stepOrder: readonly string[],
 ): string {
   if (events.length === 0) {
     return m.pipelinePending;
   }
-  const states = chatPipelineStepStates(events);
+  const defs = pipelineDefsForOrder(m, stepOrder);
+  const states = chatPipelineStepStates(events, stepOrder);
   const blockedIndex = states.findIndex((s) => s === "blocked" || s === "fail");
   if (blockedIndex >= 0) {
-    const stepDef = pipelineDefs(m)[blockedIndex];
+    const stepDef = defs[blockedIndex];
     return m.pipelineBlocked.replace("{step}", stepDef?.label ?? String(blockedIndex + 1));
   }
-  const successCount = countChatPipelineSteps(events);
-  if (successCount >= CHAT_PIPELINE_STEP_ORDER.length && states.every((s) => s === "ok")) {
-    return m.pipelineComplete.replace("{trailId}", trailId);
+  const successCount = countChatPipelineSteps(events, stepOrder);
+  if (isChatPipelineComplete(events, stepOrder)) {
+    return m.pipelineComplete
+      .replace("{trailId}", trailId)
+      .replace("{total}", String(stepOrder.length));
   }
-  return m.pipelineIncomplete.replace("{count}", String(successCount));
+  return m.pipelineIncomplete
+    .replace("{count}", String(successCount))
+    .replace("{total}", String(stepOrder.length));
 }
 
 function refreshPipelineVisual(
@@ -148,11 +164,13 @@ function refreshPipelineVisual(
   m: ReturnType<typeof msg>["panels"]["audit"],
   trailId: string,
   events: AuditEventRow[],
+  stepOrder: readonly string[],
 ): void {
-  const defs = pipelineDefs(m);
-  const states = chatPipelineStepStates(events);
+  const order = resolveChatPipelineStepOrder(stepOrder);
+  const defs = pipelineDefsForOrder(m, order);
+  const states = chatPipelineStepStates(events, order);
   pipelineHost.innerHTML = renderChatPipelineFlow(defs, states);
-  pipelineNote.textContent = pipelineStatusNote(m, trailId, events);
+  pipelineNote.textContent = pipelineStatusNote(m, trailId, events, order);
 }
 
 import { mountPanelAgentBar } from "./panel-agent-bar.js";
@@ -250,7 +268,14 @@ export function renderAudit(
     trailIdEl.textContent = trailId;
     chatNote.textContent = m.chatLoaded.replace("{count}", String(events.length));
     chatTimeline.innerHTML = renderEventList(events, stepLabels, { evidenceLabels });
-    refreshPipelineVisual(pipelineHost, pipelineNote, m, trailId, events);
+    refreshPipelineVisual(
+      pipelineHost,
+      pipelineNote,
+      m,
+      trailId,
+      events,
+      agentBar.getSelectedPipelineStages(),
+    );
     hydrateLedgerFromEvents(events);
   }
 
@@ -258,7 +283,14 @@ export function renderAudit(
     trailIdEl.textContent = "";
     chatNote.textContent = m.chatEmpty;
     chatTimeline.innerHTML = "";
-    refreshPipelineVisual(pipelineHost, pipelineNote, m, "", []);
+    refreshPipelineVisual(
+      pipelineHost,
+      pipelineNote,
+      m,
+      "",
+      [],
+      agentBar.getSelectedPipelineStages(),
+    );
   }
 
   async function refreshComplianceEvents(): Promise<void> {
@@ -308,7 +340,7 @@ export function renderAudit(
   });
 
   void agentBar.refresh().then(() => refreshAll());
-  refreshPipelineVisual(pipelineHost, pipelineNote, m, "", []);
+  refreshPipelineVisual(pipelineHost, pipelineNote, m, "", [], CHAT_PIPELINE_STEP_ORDER);
 
   const pollMs = options?.pollMs ?? 5000;
   const pollTimer = window.setInterval(() => {
@@ -319,6 +351,11 @@ export function renderAudit(
     render(context) {
       const selectedPackId = agentBar.getSelectedPackId();
       const contextPackId = context.agent_pack_id?.trim();
+      const liveStepOrder =
+        context.declared_pipeline_steps ??
+        (contextPackId
+          ? agentBar.getPipelineStagesForPack(contextPackId)
+          : agentBar.getSelectedPipelineStages());
       if (contextPackId && contextPackId !== selectedPackId) {
         chatNote.textContent = m.chatOtherAgent.replace("{agent}", contextPackId);
         return;
@@ -389,21 +426,36 @@ export function renderAudit(
           status: "SUCCESS",
         });
       }
-      refreshPipelineVisual(pipelineHost, pipelineNote, m, context.audit_trail_id, syntheticEvents);
+      refreshPipelineVisual(
+        pipelineHost,
+        pipelineNote,
+        m,
+        context.audit_trail_id,
+        syntheticEvents,
+        liveStepOrder,
+      );
+      const allowedSteps = new Set(resolveChatPipelineStepOrder(liveStepOrder));
       const now = Date.now();
-      const items: Array<{ label: string; body: unknown; offsetMs: number }> = [
+      const items: Array<{ label: string; body: unknown; offsetMs: number; step?: string }> = [
         { label: m.stepUser, body: { query: context.user_query }, offsetMs: 0 },
-        { label: m.stepText2sql, body: stages.text2sql, offsetMs: 1000 },
-        { label: m.stepQuery, body: stages.db_query, offsetMs: 2000 },
-        { label: m.stepRules, body: stages.rule_evaluation, offsetMs: 3000 },
-        { label: m.stepDecision, body: stages.agent_decision, offsetMs: 4000 },
+        { label: m.stepText2sql, body: stages.text2sql, offsetMs: 1000, step: "TEXT2SQL_GEN" },
+        { label: m.stepQuery, body: stages.db_query, offsetMs: 2000, step: "DB_QUERY" },
+        { label: m.stepRules, body: stages.rule_evaluation, offsetMs: 3000, step: "RULE_EVAL" },
+        {
+          label: m.stepDecision,
+          body: stages.agent_decision,
+          offsetMs: 4000,
+          step: "AGENT_DECISION",
+        },
         {
           label: m.stepLedger,
           body: context.evidence_ledger_receipt ?? { pending: m.ledgerPending },
           offsetMs: 5000,
+          step: "LEDGER_COMMIT",
         },
       ];
       chatTimeline.innerHTML = items
+        .filter((item) => !item.step || allowedSteps.has(item.step))
         .map((item) => {
           const stamp = new Date(now + item.offsetMs).toLocaleTimeString();
           const evidenceBlock =
@@ -437,7 +489,14 @@ export function renderAudit(
       trailIdEl.textContent = "";
       chatNote.textContent = m.chatEmpty;
       chatTimeline.innerHTML = "";
-      refreshPipelineVisual(pipelineHost, pipelineNote, m, "", []);
+      refreshPipelineVisual(
+        pipelineHost,
+        pipelineNote,
+        m,
+        "",
+        [],
+        agentBar.getSelectedPipelineStages(),
+      );
     },
     stopPolling() {
       window.clearInterval(pollTimer);

@@ -185,6 +185,7 @@ export interface RuntimeContextResponse {
   session_id: string;
   user_query: string;
   agent_pack_id?: string;
+  declared_pipeline_steps?: string[];
   pipeline_stages: {
     text2sql?: { sql?: string; duration_ms?: number };
     db_query?: { raw_data?: unknown };
@@ -444,6 +445,7 @@ export interface AgentGrantPackRow {
   version: string;
   displayName: { "zh-CN": string; en: string };
   domain?: string[];
+  pipeline: { stages: string[] };
   available_scopes: AgentDomainScopeId[];
   granted_scopes: AgentDomainScopeId[];
   granted_at: number | null;

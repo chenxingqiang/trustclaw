@@ -605,7 +605,7 @@ node scripts/run-vitest.mjs trustclaw/runtime/rules/evaluate.test.ts
 | G7  | OpenClaw WS chat 与 HTTP 相同 MCA                    | **done** | `trustclaw_tra_query` → `runTrustclawChat`；`mca-parity.test.ts`                       |
 | G8  | Logic Agent `tra_scopes` 路由接入                    | **open** | D23 deferred                                                                           |
 | G9  | 合规包 `publisher_signature` 验签                    | **open** | D21 deferred                                                                           |
-| G10 | Pack 可变阶段 Panel D 探测与 UI                      | **open** | Console 按 pack stages 渲染闸门                                                        |
+| G10 | Pack 可变阶段 Panel D 探测与 UI                      | **done** | `declared_pipeline_steps` + Panel D pack-scoped gates；`audit-pipeline.test.ts`        |
 | G11 | Text2SQL 走 OpenClaw `runtime.llm`                   | **done** | `plugin-text2sql-llm.ts`；非 raw fetch                                                 |
 
 **禁止：** 为闭合 G6–G10 而违反 `DECISIONS.md` `deferred`/`pending` 边界。
@@ -655,7 +655,8 @@ node scripts/run-vitest.mjs trustclaw/runtime/rules/evaluate.test.ts
 - **R18（2026-07-05，生产叙事）**：`VISION.md` 与 `AGENTS.md` 去 demo 闭环中心论；改为五平面架构；平台能力清单替代 V1 烟雾脚本；生产就绪闸门替代 Demo DoD。
 - **R20（2026-07-06，OpenClaw 解耦）**：`AGENTS.md` 增 § OpenClaw 解耦与最大化利用；Text2SQL 改 `api.runtime.llm.complete`（G11）；`openai-llm.ts` 降级为测试 harness。
 - **R21（2026-07-06，G6/G7）**：`RULE_EVAL` `FAILURE` + `AGENT_DECISION` `rule_outcome: soft_fail`；HTTP/WS `mca-parity.test.ts`；bridge 透传 `agent_pack_id`。
-- **下一轮建议**：G8–G10；D24 全量 domain_agents 导入；D5 频道出站 `audit_trail_id`。
+- **R22（2026-07-06，G10）**：`declared_pipeline_steps` on RuntimeContext；`GET /api/tra/agent-grants` 暴露 `pipeline.stages`；Panel D 按 Pack 子集渲染闸门与完成判定。
+- **下一轮建议**：G8–G9（D23/D21 deferred）；D24 全量 domain_agents 导入；D5 频道出站 `audit_trail_id`。
 
 ---
 

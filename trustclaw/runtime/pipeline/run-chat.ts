@@ -266,6 +266,7 @@ export async function runTrustclawChat(
 
   const context: RuntimeContext = {
     ...partialContext,
+    declared_pipeline_steps: pack.pipeline.stages,
     ...(evidence_ledger_receipt ? { evidence_ledger_receipt } : {}),
   };
 
