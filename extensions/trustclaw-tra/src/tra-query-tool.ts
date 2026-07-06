@@ -1,6 +1,7 @@
 import type { OpenClawPluginToolContext } from "openclaw/plugin-sdk/core";
 import { resolveBoundAgentPack } from "../../../trustclaw/runtime/agent-pack/index.js";
 import { TRUSTCLAW_TRA_QUERY_TOOL } from "../../../trustclaw/runtime/constants.js";
+import { withCoordinatorAttribution } from "../../../trustclaw/runtime/coordinator/index.js";
 import type { Text2SqlLlmCaller } from "../../../trustclaw/runtime/pipeline/index.js";
 import { runTrustclawChat } from "../../../trustclaw/runtime/pipeline/index.js";
 import type { TrustclawPluginConfig } from "../../../trustclaw/tra/config.js";
@@ -51,11 +52,11 @@ export function createTrustclawTraQueryToolFactory(
         const message = readMessageParam(params);
         const paths = resolveTrustclawPaths(pluginConfig);
         const sessionId = resolveSessionId(ctx);
-        const agentPack = resolveBoundAgentPack({
+        const coordinator = resolveBoundAgentPack({
           sessionKey: sessionId,
           openclawAgentId: ctx.agentId,
           pluginConfig,
-        }).pack;
+        });
         const result = await runTrustclawChat(
           { session_id: sessionId, message },
           {
@@ -63,7 +64,7 @@ export function createTrustclawTraQueryToolFactory(
             auditDir: paths.auditDir,
             evidenceDir: paths.evidenceDir,
             llm: deps.llm,
-            agentPack,
+            agentPack: coordinator.pack,
           },
         );
 
@@ -71,7 +72,7 @@ export function createTrustclawTraQueryToolFactory(
           throw new Error(result.message);
         }
 
-        const { context } = result;
+        const context = withCoordinatorAttribution(result.context, coordinator);
         return {
           content: [
             {

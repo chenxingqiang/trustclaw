@@ -2,7 +2,7 @@ import type { TrustclawMessages } from "../types.js";
 
 export const zh_CN: TrustclawMessages = {
   console: {
-    title: "TRA Runtime 控制台",
+    title: "TrustClaw TRA 控制台",
     badge: "TrustClaw V1",
     systemStatus: "系统状态",
     statusRunning: "运行中",

@@ -428,6 +428,7 @@ node scripts/run-vitest.mjs trustclaw/ledger/
 | Logic Agent `tra_scopes` / `enabled` | P1 仅目录；执行以 P5 为准               | 目录字段 UI 可见；**运行时未读** `tra_scopes`                                                          | D23 路由或 Pack 实例化映射时接入         |
 | Grants 文件篡改                      | scope ⊆ `deriveAgentDomainScopes(pack)` | **已修复** — 读/写 filter 非法 scope                                                                   | `agent-domain-grants.test.ts`            |
 | Panel D pack 可变阶段                | 按 `pipeline.stages` 渲染闸门与完成判定 | **已修复** — `declared_pipeline_steps` + grants API `pipeline.stages`；`audit-pipeline.test.ts`（G10） | —                                        |
+| Coordinator 归因                     | RuntimeContext 可追 `source`/lock       | **已修复** — `withCoordinatorAttribution`；`tra-query-tool.test.ts` 换 agent 锁包                      | —                                        |
 
 **结论：** V1 对 **HTTP + WS tool Chat + consent + ledger** 路径 MCA 较完整；**G8–G9** 为下一迭代入口（D23/D21 deferred）— 排期见 `trustclaw/AGENTS.md` § Agent Platform 迭代目标。
 

@@ -2,7 +2,7 @@ import type { TrustclawMessages } from "../types.js";
 
 export const en: TrustclawMessages = {
   console: {
-    title: "TRA Runtime Console",
+    title: "TrustClaw TRA Console",
     badge: "TrustClaw V1",
     systemStatus: "System status",
     statusRunning: "Running",

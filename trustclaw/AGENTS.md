@@ -612,11 +612,11 @@ node scripts/run-vitest.mjs trustclaw/runtime/rules/evaluate.test.ts
 
 ### 里程碑（缩小 repo ↔ 设计差距）
 
-| 阶段            | 目标                                                             | 完成信号                                                       |
-| --------------- | ---------------------------------------------------------------- | -------------------------------------------------------------- |
-| **2.5（当前）** | Pack schema、注册表、三 bundled packs、层操作模型文档、§12 G1–G5 | 上表 G1–G5 `done`；`GET /api/tra/agent-packs`                  |
-| **3**           | Panel C 选择器、session pack、多 workspace、pack 级 Text2SQL     | Phase 3 行于 `AGENT_PLATFORM.md`；coordinator 测试覆盖换 agent |
-| **4**           | Pack 创作 API/UI、外部签名 Pack                                  | D21 闭合后验签 import                                          |
+| 阶段            | 目标                                                             | 完成信号                                                         |
+| --------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **2.5**         | Pack schema、注册表、三 bundled packs、层操作模型文档、§12 G1–G5 | 上表 G1–G5 `done`；`GET /api/tra/agent-packs`                    |
+| **3（进行中）** | Panel C 选择器、session pack、coordinator 归因、pack 级 Text2SQL | session pack API + lock 测试；RuntimeContext `agent_pack_source` |
+| **4**           | Pack 创作 API/UI、外部签名 Pack                                  | D21 闭合后验签 import                                            |
 
 ### Pack / Skill 起步（每轮可选 1 项）
 
@@ -657,7 +657,8 @@ node scripts/run-vitest.mjs trustclaw/runtime/rules/evaluate.test.ts
 - **R21（2026-07-06，G6/G7）**：`RULE_EVAL` `FAILURE` + `AGENT_DECISION` `rule_outcome: soft_fail`；HTTP/WS `mca-parity.test.ts`；bridge 透传 `agent_pack_id`。
 - **R22（2026-07-06，G10）**：`declared_pipeline_steps` on RuntimeContext；`GET /api/tra/agent-grants` 暴露 `pipeline.stages`；Panel D 按 Pack 子集渲染闸门与完成判定。
 - **R23（2026-07-06，D24）**：`importBundledDomainAgentsRegistry` + `POST /api/tra/domain-agents/import/bundled-registry`；Panel C 运营导入按钮；修复 `seedDomainAgentsRegistryIfEmpty`。
-- **下一轮建议**：G8–G9（D23/D21 deferred）；D13 品牌化；D5 频道出站 `audit_trail_id`。
+- **R24（2026-07-06，Phase 3 + D13）**：RuntimeContext 携带 `agent_pack_source` / lock / mismatch；`tra-query-tool` 换 agent 锁包测试；Console 标题 TrustClaw 品牌化。
+- **下一轮建议**：G8–G9（D23/D21 deferred）；D13 CLI 别名；D5 频道出站 `audit_trail_id`。
 
 ---
 

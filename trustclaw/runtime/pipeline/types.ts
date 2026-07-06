@@ -38,6 +38,11 @@ export type RuntimeContext = {
   agent_pack_id: string;
   /** Pack-declared MCA subset; Panel D gates align to this order (G10). */
   declared_pipeline_steps: readonly string[];
+  /** D15 coordinator resolution source for this chat run. */
+  agent_pack_source?: import("../coordinator/index.js").CoordinatorPackSource;
+  agent_pack_locked?: boolean;
+  agent_pack_mismatch?: boolean;
+  openclaw_suggested_pack_id?: string | null;
   pipeline_stages: PipelineStages;
   audit_trail_id: string;
   evidence_ledger_receipt?: {

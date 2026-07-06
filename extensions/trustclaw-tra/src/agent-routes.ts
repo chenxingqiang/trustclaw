@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
 import { resolveBoundAgentPack } from "../../../trustclaw/runtime/agent-pack/index.js";
+import { withCoordinatorAttribution } from "../../../trustclaw/runtime/coordinator/index.js";
 import type { Text2SqlLlmCaller } from "../../../trustclaw/runtime/pipeline/index.js";
 import { runTrustclawChat } from "../../../trustclaw/runtime/pipeline/index.js";
 import { hasAgentDomainGrant } from "../../../trustclaw/tra/agent-domain-grants.js";
@@ -92,7 +93,7 @@ export function createAgentChatHandler(
       return true;
     }
 
-    sendJson(res, 200, result.context);
+    sendJson(res, 200, withCoordinatorAttribution(result.context, coordinator));
     return true;
   };
 }

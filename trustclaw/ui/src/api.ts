@@ -186,6 +186,10 @@ export interface RuntimeContextResponse {
   user_query: string;
   agent_pack_id?: string;
   declared_pipeline_steps?: string[];
+  agent_pack_source?: "session" | "lock" | "openclaw_agent" | "default" | "request";
+  agent_pack_locked?: boolean;
+  agent_pack_mismatch?: boolean;
+  openclaw_suggested_pack_id?: string | null;
   pipeline_stages: {
     text2sql?: { sql?: string; duration_ms?: number };
     db_query?: { raw_data?: unknown };

@@ -25,6 +25,10 @@ export type TrustclawRuntimeContextPayload = {
   user_query: string;
   agent_pack_id?: string;
   declared_pipeline_steps?: string[];
+  agent_pack_source?: "session" | "lock" | "openclaw_agent" | "default" | "request";
+  agent_pack_locked?: boolean;
+  agent_pack_mismatch?: boolean;
+  openclaw_suggested_pack_id?: string | null;
   pipeline_stages: Record<string, unknown>;
   audit_trail_id: string;
   evidence_ledger_receipt?: {
@@ -126,6 +130,24 @@ function readRuntimeContext(value: unknown): TrustclawRuntimeContextPayload | nu
   const declaredPipelineSteps = Array.isArray(record.declared_pipeline_steps)
     ? record.declared_pipeline_steps.filter((step): step is string => typeof step === "string")
     : undefined;
+  const agentPackSource =
+    record.agent_pack_source === "session" ||
+    record.agent_pack_source === "lock" ||
+    record.agent_pack_source === "openclaw_agent" ||
+    record.agent_pack_source === "default" ||
+    record.agent_pack_source === "request"
+      ? record.agent_pack_source
+      : undefined;
+  const agentPackLocked =
+    typeof record.agent_pack_locked === "boolean" ? record.agent_pack_locked : undefined;
+  const agentPackMismatch =
+    typeof record.agent_pack_mismatch === "boolean" ? record.agent_pack_mismatch : undefined;
+  const openclawSuggestedPackId =
+    typeof record.openclaw_suggested_pack_id === "string"
+      ? record.openclaw_suggested_pack_id
+      : record.openclaw_suggested_pack_id === null
+        ? null
+        : undefined;
   const auditTrailId = typeof record.audit_trail_id === "string" ? record.audit_trail_id : "";
   const pipelineStages = readRecord(record.pipeline_stages);
   if (!sessionId || !userQuery || !auditTrailId || !pipelineStages) {
@@ -137,6 +159,12 @@ function readRuntimeContext(value: unknown): TrustclawRuntimeContextPayload | nu
     user_query: userQuery,
     ...(agentPackId ? { agent_pack_id: agentPackId } : {}),
     ...(declaredPipelineSteps?.length ? { declared_pipeline_steps: declaredPipelineSteps } : {}),
+    ...(agentPackSource ? { agent_pack_source: agentPackSource } : {}),
+    ...(agentPackLocked !== undefined ? { agent_pack_locked: agentPackLocked } : {}),
+    ...(agentPackMismatch !== undefined ? { agent_pack_mismatch: agentPackMismatch } : {}),
+    ...(openclawSuggestedPackId !== undefined
+      ? { openclaw_suggested_pack_id: openclawSuggestedPackId }
+      : {}),
     pipeline_stages: pipelineStages,
     audit_trail_id: auditTrailId,
     evidence_ledger_receipt: receipt

@@ -80,13 +80,67 @@ describe("trustclaw_tra_query tool", () => {
         .details;
       const context = details?.trustclaw?.runtime_context as {
         audit_trail_id: string;
+        agent_pack_source?: string;
         pipeline_stages: { agent_decision: { response: string } };
       };
       expect(context.audit_trail_id).toMatch(/^aud_/);
+      expect(context.agent_pack_source).toBe("default");
       expect(context.pipeline_stages.agent_decision.response).toContain("Evidence");
       expect((result as { content: Array<{ text: string }> }).content[0]?.text).toContain(
         "Evidence",
       );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("keeps coordinator lock when OpenClaw agent changes mid-session (Phase 3)", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-tool-lock-"));
+    const dbPath = path.join(dir, "local_tra.db");
+    const auditDir = path.join(dir, "audit");
+    try {
+      const initHandler = createTraInitHandler({ dbPath, auditDir });
+      const initReq = {
+        method: "POST",
+        async *[Symbol.asyncIterator]() {
+          yield JSON.stringify(sampleInitPayload);
+        },
+      } as IncomingMessage;
+      const initRes = createMockResponse();
+      await initHandler(initReq, initRes);
+      expect(initRes.statusCode).toBe(200);
+
+      const factory = createTrustclawTraQueryToolFactory(
+        { dbPath, auditDir },
+        {
+          llm: async () =>
+            "SELECT * FROM v_glp1_nrdl_check_snapshot WHERE user_id = 'local_user' LIMIT 1",
+        },
+      );
+      const sessionKey = "agent:main:lock-test";
+      const firstTool = factory({
+        sessionKey,
+        agentId: "compliance-auditor",
+        sandboxed: false,
+      });
+      await firstTool!.execute("call-1", { message: "Audit check?" });
+
+      const secondTool = factory({
+        sessionKey,
+        agentId: "nrdl-reimburse",
+        sandboxed: false,
+      });
+      const second = await secondTool!.execute("call-2", {
+        message: "NRDL reimbursement?",
+      });
+      const context = (
+        second as { details?: { trustclaw?: { runtime_context?: Record<string, unknown> } } }
+      ).details?.trustclaw?.runtime_context;
+      expect(context?.agent_pack_id).toBe("compliance-auditor");
+      expect(context?.agent_pack_source).toBe("lock");
+      expect(context?.agent_pack_locked).toBe(true);
+      expect(context?.agent_pack_mismatch).toBe(true);
+      expect(context?.openclaw_suggested_pack_id).toBe("nrdl-reimburse");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
