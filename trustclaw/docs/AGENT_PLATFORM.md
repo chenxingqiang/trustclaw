@@ -434,7 +434,7 @@ Bundled Business Packs today: 3. Domain catalog today: 10 Domain Agent Packs × 
 Panel C intentionally shows both planes:
 
 1. **Top — Business grants:** per **Business Agent Pack** scope (`GET/PUT /api/tra/agent-grants`) — 业务赋权, fail-closed for Panel B/D/E/F and chat tools (D22).
-2. **C2 — Pack authoring (Phase 4):** `trustclaw/ui` Panel `agent-pack-authoring` — list/load/validate/save `agent.pack.json` via `/api/tra/agent-packs/*` (save requires `agentPacksDir`).
+2. **C2 — Pack authoring (Phase 4):** `trustclaw/ui` Panel `agent-pack-authoring` — list/load/validate/**create/save/delete** `agent.pack.json` via `/api/tra/agent-packs/*` (mutations require `agentPacksDir`).
 3. **Bottom — Logic Agent registry:** rows from `domain_agents` — 领域目录, filter by `pack_id` / `enabled`.
 
 UI copy: registry subtitle states logic agents are **not** the same layer as the Business Agent Pack list above.

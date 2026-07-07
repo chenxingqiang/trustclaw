@@ -92,6 +92,32 @@ describe("trustclaw/ui api client", () => {
     expect(result.issues[0]?.path).toBe("id");
   });
 
+  it("createAgentPack posts manifest to /api/tra/agent-packs", async () => {
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      expect(url).toContain("/api/tra/agent-packs");
+      expect(init?.method).toBe("POST");
+      return new Response(JSON.stringify({ status: "success", pack: { id: "loop-pack" } }), {
+        status: 201,
+      });
+    });
+    const client = createApiClient("", fetchImpl as unknown as typeof fetch);
+    const result = await client.createAgentPack({ id: "loop-pack", version: "0.0.1" });
+    expect(result.pack?.id).toBe("loop-pack");
+  });
+
+  it("deleteAgentPack calls DELETE on pack subpath", async () => {
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      expect(url).toContain("/api/tra/agent-packs/loop-pack");
+      expect(init?.method).toBe("DELETE");
+      return new Response(JSON.stringify({ status: "success", deleted_pack_id: "loop-pack" }));
+    });
+    const client = createApiClient("", fetchImpl as unknown as typeof fetch);
+    const result = await client.deleteAgentPack("loop-pack");
+    expect(result.deleted_pack_id).toBe("loop-pack");
+  });
+
   it("createApiClient routes methods to the frozen endpoints", async () => {
     const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();

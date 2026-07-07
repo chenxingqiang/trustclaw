@@ -668,7 +668,8 @@ node scripts/run-vitest.mjs trustclaw/runtime/rules/evaluate.test.ts
 - **R32（2026-07-07，Phase 4）**：`POST /api/tra/agent-packs` 创建 + `DELETE …/<id>` 删除（保护 default pack）；`deleteAgentPackDirectory`。
 - **R33（2026-07-07，D13）**：`trustclaw.mjs` CLI 别名 + `package.json` bin；`resolveCliName` / `isKnownCliBinary`；gateway/exec 守卫识别 `trustclaw`。
 - **R34（2026-07-07，Phase 4 UI）**：TRA Console Panel C2 `agent-pack-authoring`（列表/加载/校验/保存）；`api.ts` agent-packs 客户端。
-- **下一轮建议**：G8–G9（D23/D21 deferred）；D13 路径/包名迁移；Phase 4 创建/删除 UI；D5 deferred。
+- **R35（2026-07-07，Phase 4 UI）**：Panel C2 增新建草稿、Create (POST)、Delete；`createAgentPack` / `deleteAgentPack` API 客户端。
+- **下一轮建议**：G8–G9（D23/D21 deferred）；D13 路径/包名迁移；Phase 4 收口；D5 deferred。
 
 ---
 

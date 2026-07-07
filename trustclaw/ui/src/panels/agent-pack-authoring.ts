@@ -3,7 +3,9 @@
 import type { AgentPackSummaryRow, TrustclawApiClient } from "../api.js";
 import { msg } from "../i18n/index.js";
 import {
+  buildNewAgentPackDraft,
   formatAgentPackValidationIssues,
+  isAgentPackWriteDisabledError,
   packDisplayLabel,
 } from "./agent-pack-authoring-format.js";
 
@@ -45,9 +47,12 @@ export function renderAgentPackAuthoring(
           ></textarea>
         </label>
         <div class="panel-actions">
+          <button type="button" class="btn-inline" data-action="new-draft">${escapeHtml(m.newDraftBtn)}</button>
           <button type="button" class="btn-inline" data-action="load-pack">${escapeHtml(m.loadBtn)}</button>
           <button type="button" class="btn-inline" data-action="validate-pack">${escapeHtml(m.validateBtn)}</button>
+          <button type="button" class="btn-inline" data-action="create-pack">${escapeHtml(m.createBtn)}</button>
           <button type="button" class="btn-inline" data-action="save-pack">${escapeHtml(m.saveBtn)}</button>
+          <button type="button" class="btn-inline btn-inline--danger" data-action="delete-pack">${escapeHtml(m.deleteBtn)}</button>
         </div>
         <pre class="panel-note panel-note--compact agent-pack-authoring-status" data-testid="agent-pack-authoring-result"></pre>
       </div>
@@ -63,6 +68,59 @@ export function renderAgentPackAuthoring(
   )!;
   const resultEl = root.querySelector<HTMLElement>('[data-testid="agent-pack-authoring-result"]')!;
   let packs: AgentPackSummaryRow[] = [];
+  let defaultPackId = "";
+
+  function parseEditorManifest(): { ok: true; value: unknown } | { ok: false } {
+    try {
+      return { ok: true, value: JSON.parse(editorEl.value) };
+    } catch {
+      setResult(m.invalidJson, "err");
+      return { ok: false };
+    }
+  }
+
+  function readManifestPackId(value: unknown): string {
+    if (typeof value !== "object" || value === null || !("id" in value)) {
+      return "";
+    }
+    return String((value as { id: unknown }).id ?? "").trim();
+  }
+
+  function resolveTargetPackId(): string {
+    const selected = selectEl.value.trim();
+    if (selected) {
+      return selected;
+    }
+    try {
+      return readManifestPackId(JSON.parse(editorEl.value));
+    } catch {
+      return "";
+    }
+  }
+
+  function handlePackWriteError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    if (isAgentPackWriteDisabledError(message)) {
+      setResult(m.writeDisabled, "err");
+      return true;
+    }
+    if (message.includes("pack_already_exists") || message.includes("409")) {
+      setResult(m.packAlreadyExists, "err");
+      return true;
+    }
+    if (message.includes("default_pack_protected")) {
+      setResult(m.defaultPackProtected, "err");
+      return true;
+    }
+    return false;
+  }
+
+  function loadNewDraft(): void {
+    editorEl.value = JSON.stringify(buildNewAgentPackDraft(), null, 2);
+    selectEl.value = "";
+    setStatus(m.ready);
+    setResult(m.newDraftReady, "muted");
+  }
 
   function setStatus(label: string, tone: "muted" | "ok" | "err" = "muted"): void {
     statusEl.textContent = label;
@@ -135,39 +193,89 @@ export function renderAgentPackAuthoring(
   }
 
   async function saveEditor(): Promise<void> {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(editorEl.value);
-    } catch {
-      setResult(m.invalidJson, "err");
+    const parsed = parseEditorManifest();
+    if (!parsed.ok) {
       return;
     }
-    const packId =
-      typeof parsed === "object" && parsed !== null && "id" in parsed
-        ? String((parsed as { id: unknown }).id ?? "").trim()
-        : "";
+    const packId = readManifestPackId(parsed.value);
     if (!packId) {
       setResult(m.missingPackId, "err");
       return;
     }
     setStatus(m.saving);
     try {
-      const saved = await client.putAgentPack(packId, parsed);
+      const saved = await client.putAgentPack(packId, parsed.value);
       if (!saved.pack) {
         throw new Error(saved.message ?? m.saveFailed);
       }
       editorEl.value = JSON.stringify(saved.pack, null, 2);
       selectEl.value = packId;
+      await refresh();
       setStatus(m.ready);
       setResult(m.saveDone.replace("{id}", packId), "ok");
     } catch (error) {
       setStatus(m.error);
-      const message = error instanceof Error ? error.message : String(error);
-      if (message.includes("pack_write_disabled") || message.includes("403")) {
-        setResult(m.writeDisabled, "err");
-        return;
+      if (!handlePackWriteError(error)) {
+        setResult(error instanceof Error ? error.message : String(error), "err");
       }
-      setResult(message, "err");
+    }
+  }
+
+  async function createEditor(): Promise<void> {
+    const parsed = parseEditorManifest();
+    if (!parsed.ok) {
+      return;
+    }
+    const packId = readManifestPackId(parsed.value);
+    if (!packId) {
+      setResult(m.missingPackId, "err");
+      return;
+    }
+    setStatus(m.creating);
+    try {
+      const created = await client.createAgentPack(parsed.value);
+      if (!created.pack) {
+        throw new Error(created.message ?? m.createFailed);
+      }
+      editorEl.value = JSON.stringify(created.pack, null, 2);
+      selectEl.value = packId;
+      await refresh();
+      setStatus(m.ready);
+      setResult(m.createDone.replace("{id}", packId), "ok");
+    } catch (error) {
+      setStatus(m.error);
+      if (!handlePackWriteError(error)) {
+        setResult(error instanceof Error ? error.message : String(error), "err");
+      }
+    }
+  }
+
+  async function deleteSelected(): Promise<void> {
+    const packId = resolveTargetPackId();
+    if (!packId) {
+      setResult(m.selectPackOrIdForDelete, "err");
+      return;
+    }
+    if (packId === defaultPackId) {
+      setResult(m.defaultPackProtected, "err");
+      return;
+    }
+    if (!window.confirm(m.deleteConfirm.replace("{id}", packId))) {
+      return;
+    }
+    setStatus(m.deleting);
+    try {
+      const result = await client.deleteAgentPack(packId);
+      editorEl.value = "";
+      selectEl.value = "";
+      await refresh();
+      setStatus(m.ready);
+      setResult(m.deleteDone.replace("{id}", result.deleted_pack_id ?? packId), "ok");
+    } catch (error) {
+      setStatus(m.error);
+      if (!handlePackWriteError(error)) {
+        setResult(error instanceof Error ? error.message : String(error), "err");
+      }
     }
   }
 
@@ -177,12 +285,18 @@ export function renderAgentPackAuthoring(
       return;
     }
     const action = target.getAttribute("data-action");
-    if (action === "load-pack") {
+    if (action === "new-draft") {
+      loadNewDraft();
+    } else if (action === "load-pack") {
       void loadSelectedPack();
     } else if (action === "validate-pack") {
       void validateEditor();
+    } else if (action === "create-pack") {
+      void createEditor();
     } else if (action === "save-pack") {
       void saveEditor();
+    } else if (action === "delete-pack") {
+      void deleteSelected();
     }
   });
 
@@ -191,6 +305,7 @@ export function renderAgentPackAuthoring(
     try {
       const list = await client.agentPacks();
       packs = list.packs ?? [];
+      defaultPackId = list.default_pack_id?.trim() ?? "";
       populateSelect();
       setStatus(m.ready);
       setResult(m.listReady.replace("{count}", String(packs.length)), "muted");

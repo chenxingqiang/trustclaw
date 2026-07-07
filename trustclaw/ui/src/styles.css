@@ -567,6 +567,11 @@ body {
   gap: 8px;
 }
 
+.btn-inline--danger {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 40%, var(--border));
+}
+
 .agent-pack-authoring-status--ok {
   color: var(--ok);
 }

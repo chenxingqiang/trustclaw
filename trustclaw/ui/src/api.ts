@@ -559,6 +559,20 @@ export interface AgentPackPutResponse {
   message?: string;
 }
 
+export interface AgentPackCreateResponse {
+  status: "success" | "error";
+  pack?: AgentPackDetailManifest;
+  code?: string;
+  message?: string;
+}
+
+export interface AgentPackDeleteResponse {
+  status: "success" | "error";
+  deleted_pack_id?: string;
+  code?: string;
+  message?: string;
+}
+
 async function postJsonBody<TBody>(
   fetchImpl: typeof fetch,
   baseUrl: string,
@@ -699,6 +713,8 @@ export interface TrustclawApiClient {
   agentPackDetail(packId: string): Promise<AgentPackDetailResponse>;
   validateAgentPack(body: unknown): Promise<AgentPackValidateResult>;
   putAgentPack(packId: string, body: unknown): Promise<AgentPackPutResponse>;
+  createAgentPack(body: unknown): Promise<AgentPackCreateResponse>;
+  deleteAgentPack(packId: string): Promise<AgentPackDeleteResponse>;
   chat(body: AgentChatRequest): Promise<AgentChatResponse>;
   auditEvents(
     scope?: "compliance" | "chat" | "all",
@@ -834,6 +850,20 @@ export function createApiClient(
           method: "PUT",
           body: JSON.stringify(body),
         },
+      );
+    },
+    createAgentPack(body) {
+      return callJson(fetchImpl, baseUrl, "/api/tra/agent-packs", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    },
+    deleteAgentPack(packId) {
+      return callJson(
+        fetchImpl,
+        baseUrl,
+        `/api/tra/agent-packs/${encodeURIComponent(packId.trim())}`,
+        { method: "DELETE" },
       );
     },
     chat(body) {

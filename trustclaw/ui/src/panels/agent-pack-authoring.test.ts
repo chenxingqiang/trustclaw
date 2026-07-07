@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatAgentPackValidationIssues,
   packDisplayLabel,
+  buildNewAgentPackDraft,
 } from "./agent-pack-authoring-format.js";
 
 describe("formatAgentPackValidationIssues", () => {
@@ -23,5 +24,13 @@ describe("packDisplayLabel", () => {
     };
     expect(packDisplayLabel(pack, "zh-CN")).toBe("演示");
     expect(packDisplayLabel(pack, "en")).toBe("Demo");
+  });
+});
+
+describe("buildNewAgentPackDraft", () => {
+  it("uses the requested pack id in manifest and openclaw.agentId", () => {
+    const draft = buildNewAgentPackDraft("my-pack");
+    expect(draft.id).toBe("my-pack");
+    expect((draft.openclaw as { agentId: string }).agentId).toBe("my-pack");
   });
 });

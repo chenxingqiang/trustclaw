@@ -170,6 +170,20 @@ export type TrustclawMessages = {
       saveDone: string;
       writeDisabled: string;
       listReady: string;
+      newDraftBtn: string;
+      newDraftReady: string;
+      createBtn: string;
+      deleteBtn: string;
+      creating: string;
+      deleting: string;
+      createDone: string;
+      createFailed: string;
+      deleteDone: string;
+      deleteFailed: string;
+      deleteConfirm: string;
+      defaultPackProtected: string;
+      packAlreadyExists: string;
+      selectPackOrIdForDelete: string;
     };
     agentBar: {
       label: string;
