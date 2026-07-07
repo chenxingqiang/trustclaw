@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -144,4 +144,14 @@ export function writeAgentPackDocument(
   const packFile = path.join(packDir, PACK_FILENAME);
   writeFileSync(packFile, `${JSON.stringify(pack, null, 2)}\n`, "utf8");
   return { packDir, packFile };
+}
+
+/** Remove a pack directory tree; caller must ensure `packDir` stays under `agentsDir`. */
+export function deleteAgentPackDirectory(agentsDir: string, packDir: string): void {
+  const agentsRoot = path.resolve(agentsDir);
+  const resolved = path.resolve(packDir);
+  if (!resolved.startsWith(agentsRoot + path.sep) && resolved !== agentsRoot) {
+    throw new Error("Refusing to delete pack outside agents dir");
+  }
+  rmSync(resolved, { recursive: true, force: true });
 }

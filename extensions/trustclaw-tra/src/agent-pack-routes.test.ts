@@ -194,3 +194,115 @@ describe("PUT /api/tra/agent-packs/<packId>", () => {
     expect(written.version).toBe("9.9.9-loop-test");
   });
 });
+
+const LOOP_R32_PACK = {
+  id: "loop-r32-pack",
+  version: "0.0.1",
+  displayName: { "zh-CN": "R32 测试包", en: "R32 test pack" },
+  tools: { read: "trustclaw_tra_query" },
+  prompts: { system: "prompts/system.v1.md" },
+  data: { readTables: ["data_source_registry"] },
+  rules: { engine: "none" as const },
+  pipeline: {
+    stages: ["TEXT2SQL_GEN", "DB_QUERY", "AGENT_DECISION"],
+    decisionBuilder: "pass-through" as const,
+  },
+  consent: { read: { allowAlways: false } },
+  audit: {
+    businessComponent: "TRA.Agent.LoopR32",
+    decisionComponent: "Agent.LoopR32Decision",
+  },
+};
+
+describe("POST /api/tra/agent-packs", () => {
+  it("creates a new pack under agentPacksDir", async () => {
+    const agentsDir = createWritableAgentsDir();
+    const handler = createAgentPacksHandler({
+      agentPacksDir: agentsDir,
+      defaultAgentPack: "glp1-eligibility",
+    });
+    const req = {
+      method: "POST",
+      url: "/api/tra/agent-packs",
+      async *[Symbol.asyncIterator]() {
+        yield JSON.stringify(LOOP_R32_PACK);
+      },
+    } as IncomingMessage;
+    const res = createMockResponse();
+    await handler(req, res);
+    expect(res.statusCode).toBe(201);
+    resetAgentPackRegistryCache();
+    const registry = getAgentPackRegistry({
+      agentsDir,
+      defaultAgentPack: "glp1-eligibility",
+    });
+    expect(registry.get("loop-r32-pack")?.id).toBe("loop-r32-pack");
+  });
+
+  it("returns 409 when pack id already exists", async () => {
+    const agentsDir = createWritableAgentsDir();
+    const handler = createAgentPacksHandler({
+      agentPacksDir: agentsDir,
+      defaultAgentPack: "glp1-eligibility",
+    });
+    const req = {
+      method: "POST",
+      url: "/api/tra/agent-packs",
+      async *[Symbol.asyncIterator]() {
+        yield JSON.stringify(LOOP_R32_PACK);
+      },
+    } as IncomingMessage;
+    await handler(req, createMockResponse());
+    const res = createMockResponse();
+    await handler(req, res);
+    expect(res.statusCode).toBe(409);
+  });
+});
+
+describe("DELETE /api/tra/agent-packs/<packId>", () => {
+  it("deletes a non-default pack from agentPacksDir", async () => {
+    const agentsDir = createWritableAgentsDir();
+    const handler = createAgentPacksHandler({
+      agentPacksDir: agentsDir,
+      defaultAgentPack: "glp1-eligibility",
+    });
+    const createReq = {
+      method: "POST",
+      url: "/api/tra/agent-packs",
+      async *[Symbol.asyncIterator]() {
+        yield JSON.stringify(LOOP_R32_PACK);
+      },
+    } as IncomingMessage;
+    await handler(createReq, createMockResponse());
+    const deleteReq = {
+      method: "DELETE",
+      url: "/api/tra/agent-packs/loop-r32-pack",
+    } as IncomingMessage;
+    const res = createMockResponse();
+    await handler(deleteReq, res);
+    expect(res.statusCode).toBe(200);
+    resetAgentPackRegistryCache();
+    const registry = getAgentPackRegistry({
+      agentsDir,
+      defaultAgentPack: "glp1-eligibility",
+    });
+    expect(registry.get("loop-r32-pack")).toBeUndefined();
+  });
+
+  it("refuses to delete the default pack", async () => {
+    const agentsDir = createWritableAgentsDir();
+    const handler = createAgentPacksHandler({
+      agentPacksDir: agentsDir,
+      defaultAgentPack: "glp1-eligibility",
+    });
+    const req = {
+      method: "DELETE",
+      url: "/api/tra/agent-packs/glp1-eligibility",
+    } as IncomingMessage;
+    const res = createMockResponse();
+    await handler(req, res);
+    expect(res.statusCode).toBe(403);
+    const body = JSON.parse(res.getBody()) as { code: string };
+    expect(body.code).toBe("default_pack_protected");
+  });
+});

@@ -665,7 +665,8 @@ node scripts/run-vitest.mjs trustclaw/runtime/rules/evaluate.test.ts
 - **R29（2026-07-07，Phase 4）**：`GET /api/tra/agent-packs` 增 `extension_points`；`GET …/extension-points` 与 `GET …/<packId>` 只读创作 API；`describeAgentPackDetail`。
 - **R30（2026-07-07，Phase 4）**：`inspectAgentPackDocument` + `POST /api/tra/agent-packs/validate`（结构化 zod issues，不落盘）。
 - **R31（2026-07-07，Phase 4）**：`writeAgentPackDocument` + `PUT /api/tra/agent-packs/<packId>`（需 `agentPacksDir`，校验后 upsert，刷新 registry）。
-- **下一轮建议**：G8–G9（D23/D21 deferred）；D13 CLI 别名；Phase 4 pack 创建/删除 API；D5 deferred。
+- **R32（2026-07-07，Phase 4）**：`POST /api/tra/agent-packs` 创建 + `DELETE …/<id>` 删除（保护 default pack）；`deleteAgentPackDirectory`。
+- **下一轮建议**：G8–G9（D23/D21 deferred）；D13 CLI 别名；Phase 4 Console 创作 UI；D5 deferred。
 
 ---
 
