@@ -98,7 +98,7 @@ TRA side rails follow OpenClaw Control UI **Appearance → theme** via shared `o
 The **dev** agent (`C3-PO`) uses TrustClaw TRA presets — not the generic Claude Code / debug persona:
 
 - Plugin hook `before_prompt_build` injects `trustclaw/agents/glp1/prompts/c3po-tra-system.v1.md`
-- `pnpm trustclaw:setup` syncs `trustclaw/workspace/dev/{SOUL,IDENTITY,AGENTS}.md` → `~/.openclaw/workspace-dev/`
+- `pnpm trustclaw:setup` syncs `trustclaw/workspace/*/{SOUL,IDENTITY,AGENTS}.md` → `~/.openclaw/workspace-*` and `~/.openclaw-dev/workspace-*` (dev profile)
 
 After setup, **start a new chat session** (or `/new`) so the updated system prompt loads. Ask “What can you do?” — the reply should describe TRA panels A–E and `trustclaw_tra_query`, not IDE/coding features.
 

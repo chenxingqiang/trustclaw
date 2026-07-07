@@ -1,3 +1,5 @@
+import path from "node:path";
+
 /** TrustClaw product defaults (OpenClaw fork). */
 export const TRUSTCLAW_DEFAULT_GATEWAY_PORT = "19001";
 export const TRUSTCLAW_DEFAULT_UI_PORT = "5174";
@@ -17,6 +19,12 @@ export function buildTrustclawDashboardUrl(port, token, env = process.env) {
   const resolvedPort = port ?? Number(resolveTrustclawGatewayPort(env));
   const resolvedToken = token ?? resolveTrustclawPackagedGatewayToken(env);
   return `http://127.0.0.1:${resolvedPort}/#token=${encodeURIComponent(resolvedToken)}`;
+}
+
+/** OpenClaw state dir for default or `--dev` profile (matches CLI `--dev`). */
+export function resolveTrustclawProfileStateDir(homeDir, profileArgs = []) {
+  const isDev = profileArgs.includes("--dev");
+  return path.join(homeDir, isDev ? ".openclaw-dev" : ".openclaw");
 }
 
 /** Migrate legacy plugins.entries.trustclaw-ptds → trustclaw-tra and drop stale id. */

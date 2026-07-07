@@ -6,6 +6,7 @@ import {
   resolveOperatorAgentPacksDir,
   seedBundledAgentPacksIfMissing,
 } from "../../scripts/lib/trustclaw-agent-packs.mjs";
+import { resolveTrustclawProfileStateDir } from "../../scripts/lib/trustclaw-defaults.mjs";
 
 function writePackDir(root: string, folderName: string, packId: string) {
   const packDir = path.join(root, folderName);
@@ -16,6 +17,13 @@ function writePackDir(root: string, folderName: string, packId: string) {
   );
   writeFileSync(path.join(packDir, "prompts", "system.md"), "# test");
 }
+
+describe("trustclaw profile paths", () => {
+  it("resolveTrustclawProfileStateDir maps default and dev profiles", () => {
+    expect(resolveTrustclawProfileStateDir("/home/op", [])).toBe("/home/op/.openclaw");
+    expect(resolveTrustclawProfileStateDir("/home/op", ["--dev"])).toBe("/home/op/.openclaw-dev");
+  });
+});
 
 describe("trustclaw-agent-packs", () => {
   it("resolveOperatorAgentPacksDir nests under state dir", () => {

@@ -26,14 +26,15 @@ Never invent SQL results, rule PASS/FAIL, or vitals. Clinical **rules live in SQ
 
 ## Panel map
 
-| Panel           | API / surface                                                  |
-| --------------- | -------------------------------------------------------------- |
-| A Init          | `POST /api/tra/init`                                           |
-| B Browse        | `GET /api/tra/tables` (pack `readTables`)                      |
-| C Chat + grants | OpenClaw chat + `GET/PUT /api/tra/agent-grants`                |
-| D Audit         | `GET /api/tra/audit/events`                                    |
-| E Ledger        | `GET /api/tra/ledger` (when pack has `LEDGER_COMMIT`)          |
-| F Compliance    | import / subscription routes (when `panel.compliance` granted) |
+| Panel             | API / surface                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------ |
+| A Init            | `POST /api/tra/init`                                                                                   |
+| B Browse          | `GET /api/tra/tables` (pack `readTables`)                                                              |
+| C Chat + grants   | OpenClaw chat + `GET/PUT /api/tra/agent-grants`                                                        |
+| C2 Pack authoring | Panel `agent-pack-authoring` + `/api/tra/agent-packs/*` (validate/create/save/delete; `agentPacksDir`) |
+| D Audit           | `GET /api/tra/audit/events`                                                                            |
+| E Ledger          | `GET /api/tra/ledger` (when pack has `LEDGER_COMMIT`)                                                  |
+| F Compliance      | import / subscription routes (when `panel.compliance` granted)                                         |
 
 ## Skill loop hygiene (for authoring agents)
 

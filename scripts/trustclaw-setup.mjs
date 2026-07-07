@@ -11,6 +11,7 @@ import {
 import {
   TRUSTCLAW_DEFAULT_GATEWAY_PORT,
   migrateTrustclawPluginEntry,
+  resolveTrustclawProfileStateDir,
 } from "./lib/trustclaw-defaults.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -47,8 +48,7 @@ const TRUSTCLAW_AGENT_WORKSPACES = [
 const devArgs = process.argv.includes("--dev") ? ["--dev"] : [];
 
 function resolveProfileStateDir(profileArgs) {
-  const isDev = profileArgs.includes("--dev");
-  return path.join(homedir(), isDev ? ".openclaw-dev" : ".openclaw");
+  return resolveTrustclawProfileStateDir(homedir(), profileArgs);
 }
 
 function resolveProfileConfigPath(profileArgs) {
@@ -283,12 +283,17 @@ function syncWorkspaceTemplate(templateDir, targetDir) {
   }
 }
 
-function syncDevWorkspace() {
+function syncWorkspacesForProfile(profileArgs) {
+  const stateDir = resolveProfileStateDir(profileArgs);
+  const profileLabel = profileArgs.includes("--dev") ? "dev" : "default";
   for (const entry of TRUSTCLAW_AGENT_WORKSPACES) {
-    const targetDir = path.join(homedir(), ".openclaw", entry.syncTargetName);
+    const targetDir = path.join(stateDir, entry.syncTargetName);
     syncWorkspaceTemplate(entry.templateDir, targetDir);
-    console.log(`[trustclaw:setup] Synced ${entry.agentId} workspace → ${targetDir}`);
+    console.log(
+      `[trustclaw:setup] Synced ${entry.agentId} workspace → ${targetDir} (${profileLabel} profile)`,
+    );
   }
+  return 0;
 }
 
 // Enable for default + dev profiles
@@ -315,10 +320,13 @@ for (const profileArgs of profiles) {
   if (exitCode !== 0) {
     break;
   }
+  exitCode = syncWorkspacesForProfile(profileArgs);
+  if (exitCode !== 0) {
+    break;
+  }
 }
 
 if (exitCode === 0) {
-  syncDevWorkspace();
   console.log(
     `[trustclaw:setup] gateway.port → ${TRUSTCLAW_DEFAULT_GATEWAY_PORT} (default + dev profiles)`,
   );
