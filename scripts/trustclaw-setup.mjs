@@ -5,6 +5,10 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  resolveOperatorAgentPacksDir,
+  seedBundledAgentPacksIfMissing,
+} from "./lib/trustclaw-agent-packs.mjs";
+import {
   TRUSTCLAW_DEFAULT_GATEWAY_PORT,
   migrateTrustclawPluginEntry,
 } from "./lib/trustclaw-defaults.mjs";
@@ -12,6 +16,7 @@ import {
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "..");
 const workspaceRoot = path.join(repoRoot, "trustclaw", "workspace");
+const bundledAgentsDir = path.join(repoRoot, "trustclaw", "agents");
 const ACPX_DIST_MANIFEST = path.join(
   repoRoot,
   "dist",
@@ -151,10 +156,15 @@ function syncClaudeModelService(profileArgs) {
 /** Writes TrustClaw defaults directly to openclaw.json (avoids repeated dev rebuilds). */
 function applyTrustclawConfig(profileArgs) {
   const { configPath, config } = loadProfileConfig(profileArgs);
+  const stateDir = resolveProfileStateDir(profileArgs);
   const plugins = config.plugins ?? {};
   const entries = migrateTrustclawPluginEntry({ ...(plugins.entries ?? {}) });
   const existing = entries["trustclaw-tra"] ?? {};
   const hadLegacyPtds = Boolean(plugins.entries?.["trustclaw-ptds"]);
+  const agentPacksDir =
+    typeof existing.config?.agentPacksDir === "string" && existing.config.agentPacksDir.trim()
+      ? existing.config.agentPacksDir.trim()
+      : resolveOperatorAgentPacksDir(stateDir);
 
   config.plugins = {
     ...plugins,
@@ -165,6 +175,7 @@ function applyTrustclawConfig(profileArgs) {
         enabled: true,
         config: {
           ...(existing.config ?? {}),
+          agentPacksDir,
           defaultAgentPack: existing.config?.defaultAgentPack ?? "glp1-eligibility",
         },
       },
@@ -181,6 +192,23 @@ function applyTrustclawConfig(profileArgs) {
     console.log(
       `[trustclaw:setup] Migrated plugins.entries.trustclaw-ptds → trustclaw-tra (${profileLabel} profile)`,
     );
+  }
+  return 0;
+}
+
+function seedOperatorAgentPacks(profileArgs) {
+  const stateDir = resolveProfileStateDir(profileArgs);
+  const { config } = loadProfileConfig(profileArgs);
+  const configuredDir =
+    typeof config.plugins?.entries?.["trustclaw-tra"]?.config?.agentPacksDir === "string"
+      ? config.plugins.entries["trustclaw-tra"].config.agentPacksDir.trim()
+      : resolveOperatorAgentPacksDir(stateDir);
+  const { seeded, skipped } = seedBundledAgentPacksIfMissing(bundledAgentsDir, configuredDir);
+  if (seeded.length > 0) {
+    console.log(`[trustclaw:setup] Seeded agent packs → ${configuredDir}: ${seeded.join(", ")}`);
+  }
+  if (skipped.length > 0) {
+    console.log(`[trustclaw:setup] Kept existing agent packs: ${skipped.join(", ")}`);
   }
   return 0;
 }
@@ -272,6 +300,10 @@ for (const profileArgs of profiles) {
     break;
   }
   exitCode = applyTrustclawConfig(profileArgs);
+  if (exitCode !== 0) {
+    break;
+  }
+  exitCode = seedOperatorAgentPacks(profileArgs);
   if (exitCode !== 0) {
     break;
   }

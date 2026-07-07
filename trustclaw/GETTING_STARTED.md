@@ -124,7 +124,7 @@ In **TrustClaw TRA Console**, use the **领域 Agent** dropdown above chat to bi
 2. **Validate** — `POST /api/tra/agent-packs/validate` (structured zod issues)
 3. **Create / Save / Delete** — `POST` / `PUT` / `DELETE` under `/api/tra/agent-packs` (requires Gateway plugin `agentPacksDir` for writes)
 
-Use **New draft** for a starter manifest aligned with `trustclaw/agents/_template/agent.pack.json`. Bundled packs under `trustclaw/agents/` remain read-only unless copied to `agentPacksDir`. Signed external pack import (D21) is **Phase 4.1**, not yet shipped.
+Use **New draft** for a starter manifest aligned with `trustclaw/agents/_template/agent.pack.json`. `pnpm trustclaw:setup` sets `plugins.entries.trustclaw-tra.config.agentPacksDir` to `~/.openclaw/agent-packs` (or `~/.openclaw-dev/agent-packs` with `--dev`) and seeds bundled packs when folders are missing. Override `agentPacksDir` in `openclaw.json` to use another writable directory. Signed external pack import (D21) is **Phase 4.1**, not yet shipped.
 
 ## Operator smoke — platform regression
 
