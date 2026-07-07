@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 // Ensures TrustClaw TRA plugin is enabled for local fork demos.
 import { homedir } from "node:os";
 import path from "node:path";
@@ -13,6 +13,7 @@ import {
   migrateTrustclawPluginEntry,
   resolveTrustclawProfileStateDir,
 } from "./lib/trustclaw-defaults.mjs";
+import { syncWorkspaceTemplate } from "./lib/trustclaw-workspace-sync.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "..");
@@ -264,23 +265,6 @@ function ensureTrustclawAgents(profileArgs) {
   }
 
   return 0;
-}
-
-function syncWorkspaceTemplate(templateDir, targetDir) {
-  if (!existsSync(templateDir)) {
-    return;
-  }
-  mkdirSync(targetDir, { recursive: true });
-  for (const name of ["SOUL.md", "IDENTITY.md", "AGENTS.md"]) {
-    const src = path.join(templateDir, name);
-    if (existsSync(src)) {
-      cpSync(src, path.join(targetDir, name), { force: true });
-    }
-  }
-  const avatarSrcDir = path.join(templateDir, "avatars");
-  if (existsSync(avatarSrcDir)) {
-    cpSync(avatarSrcDir, path.join(targetDir, "avatars"), { force: true, recursive: true });
-  }
 }
 
 function syncWorkspacesForProfile(profileArgs) {

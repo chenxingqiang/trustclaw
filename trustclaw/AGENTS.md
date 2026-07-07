@@ -521,27 +521,29 @@ node scripts/run-vitest.mjs trustclaw/runtime/rules/evaluate.test.ts
 
 下表为 Agent 每轮 **Verify** 或合并后 **Perceive** 用的**平台能力探针**（**不**替代单元测试；**不**等价于任何单一垂直 demo 脚本）。
 
-| id                    | 路径 / 命令                                            | 平面     | 说明                                                                  |
-| --------------------- | ------------------------------------------------------ | -------- | --------------------------------------------------------------------- |
-| `tra_init`            | `POST /api/tra/init`                                   | Data     | init 映射 canonical 表                                                |
-| `tra_reset`           | `POST /api/tra/reset`                                  | Operator | 清空个人 TRA 数据行 + audit/ledger                                    |
-| `tra_query_guard`     | `trustclaw/tra/query.ts` SELECT 守卫                   | Data     | 非 SELECT → 拒绝                                                      |
-| `text2sql_handshake`  | Text2SQL → TRA store 握手 1                            | Agent    | `sanitized_sql` + `read_only_verification`                            |
-| `rule_eval_handshake` | TRA store → RuleEval 握手 2                            | Agent    | snapshot + `active_ruleset`                                           |
-| `pack_decision`       | RuleEval → Pack 握手 3（如 glp1：`evaluation_matrix`） | Agent    | 垂直逻辑在 pack，不在平台 vision 层冻结                               |
-| `agent_chat`          | `POST /api/agent/chat`                                 | Agent    | pack 端到端                                                           |
-| `audit_five_steps`    | 每 Chat 5 审计步                                       | Evidence | 见 [Audit steps](#audit-steps每-chat-至少-5-条)                       |
-| `compliance_import`   | `POST /api/tra/compliance/import` + Panel F consent    | Policy   | `COMPLIANCE_IMPORT` + active standard                                 |
-| `data_consent`        | `trustclaw_tra_query` requireApproval                  | Policy   | `DATA_CONSENT` + deny 阻断                                            |
-| `domain_grants`       | `GET/PUT /api/tra/agent-grants`                        | Policy   | 领域 scope fail-closed（D22）                                         |
-| `ledger_chain`        | Evidence SHA-256 链                                    | Evidence | `verifyEvidenceChain`                                                 |
-| `ui_six_panels`       | Console A–F + Agent 工作台 Chat                        | Operator | 双表面分工见 [TRA 双表面](#tra-双表面runtime-console-vs-agent-工作台) |
-| `domain_agents_api`   | `GET /api/tra/domain-agents`                           | Operator | 逻辑 Agent 目录（D24 全量导入为运营动作）                             |
-| `pack_extension_pts`  | `listAgentPackExtensionPoints()`                       | Agent    | 垂直引擎注册表；新 pack 作者必读                                      |
-| `skill_loop_cmds`     | `listSkillLoopVerifyCommands()`                        | Agent    | OpenClaw skills + pack vitest                                         |
-| `pack_scoped_audit`   | `missingChatPipelineSteps(..., { expectedSteps })`     | Evidence | 按 Pack `pipeline.stages` 探测缺口（G2）                              |
-| `gap_backlog_g1_g5`   | §12 G1–G5                                              | Evidence | 差距闭环 baseline；新轮从 G6+ 选取                                    |
-| `plugin_runtime_llm`  | `createPluginText2SqlLlm(api)`                         | Agent    | Text2SQL 复用 OpenClaw Provider 路由（G11）                           |
+| id                    | 路径 / 命令                                              | 平面     | 说明                                                                  |
+| --------------------- | -------------------------------------------------------- | -------- | --------------------------------------------------------------------- |
+| `tra_init`            | `POST /api/tra/init`                                     | Data     | init 映射 canonical 表                                                |
+| `tra_reset`           | `POST /api/tra/reset`                                    | Operator | 清空个人 TRA 数据行 + audit/ledger                                    |
+| `tra_query_guard`     | `trustclaw/tra/query.ts` SELECT 守卫                     | Data     | 非 SELECT → 拒绝                                                      |
+| `text2sql_handshake`  | Text2SQL → TRA store 握手 1                              | Agent    | `sanitized_sql` + `read_only_verification`                            |
+| `rule_eval_handshake` | TRA store → RuleEval 握手 2                              | Agent    | snapshot + `active_ruleset`                                           |
+| `pack_decision`       | RuleEval → Pack 握手 3（如 glp1：`evaluation_matrix`）   | Agent    | 垂直逻辑在 pack，不在平台 vision 层冻结                               |
+| `agent_chat`          | `POST /api/agent/chat`                                   | Agent    | pack 端到端                                                           |
+| `audit_five_steps`    | 每 Chat 5 审计步                                         | Evidence | 见 [Audit steps](#audit-steps每-chat-至少-5-条)                       |
+| `compliance_import`   | `POST /api/tra/compliance/import` + Panel F consent      | Policy   | `COMPLIANCE_IMPORT` + active standard                                 |
+| `data_consent`        | `trustclaw_tra_query` requireApproval                    | Policy   | `DATA_CONSENT` + deny 阻断                                            |
+| `domain_grants`       | `GET/PUT /api/tra/agent-grants`                          | Policy   | 领域 scope fail-closed（D22）                                         |
+| `ledger_chain`        | Evidence SHA-256 链                                      | Evidence | `verifyEvidenceChain`                                                 |
+| `ui_six_panels`       | Console A–F + Agent 工作台 Chat                          | Operator | 双表面分工见 [TRA 双表面](#tra-双表面runtime-console-vs-agent-工作台) |
+| `domain_agents_api`   | `GET /api/tra/domain-agents`                             | Operator | 逻辑 Agent 目录（D24 全量导入为运营动作）                             |
+| `pack_extension_pts`  | `listAgentPackExtensionPoints()`                         | Agent    | 垂直引擎注册表；新 pack 作者必读                                      |
+| `skill_loop_cmds`     | `listSkillLoopVerifyCommands()`                          | Agent    | OpenClaw skills + pack vitest                                         |
+| `pack_scoped_audit`   | `missingChatPipelineSteps(..., { expectedSteps })`       | Evidence | 按 Pack `pipeline.stages` 探测缺口（G2）                              |
+| `pack_authoring_api`  | `extensions/trustclaw-tra/src/agent-pack-routes.test.ts` | Operator | Phase 4 HTTP validate/create/save/delete（12 tests）                  |
+| `pack_authoring_ui`   | `pnpm trustclaw:ui:test`                                 | Operator | Panel C2 vitest（39 tests）                                           |
+| `gap_backlog_g1_g5`   | §12 G1–G5                                                | Evidence | 差距闭环 baseline；新轮从 G6+ 选取                                    |
+| `plugin_runtime_llm`  | `createPluginText2SqlLlm(api)`                           | Agent    | Text2SQL 复用 OpenClaw Provider 路由（G11）                           |
 
 **禁止**：把 `DECISIONS.md` 标为 `deferred` 的项（D5/D21/D23 等）当作本轮必做，除非决策状态已更新。
 
@@ -674,7 +676,8 @@ node scripts/run-vitest.mjs trustclaw/runtime/rules/evaluate.test.ts
 - **R37（2026-07-07，Operator）**：`trustclaw:setup` 默认写入 `agentPacksDir`（`~/.openclaw/agent-packs`）并种子化 bundled packs；Panel C2 写路径开箱可用。
 - **R38（2026-07-07，Operator + 验证）**：`test/scripts/trustclaw-agent-packs.test.ts` 覆盖种子化契约；`GETTING_STARTED` Pass 1 增 Panel C2 create/save/delete 回归步骤。
 - **R39（2026-07-07，Operator）**：`trustclaw:setup` 按 profile 同步 workspace（`--dev` → `~/.openclaw-dev/workspace-*`）；`tra-pack-operations` skill 增 Panel C2 映射。
-- **下一轮建议**：G8–G9（D23/D21 deferred）；D13 路径/包名迁移；`agent-pack-routes` + UI vitest 复跑。
+- **R40（2026-07-07，Operator + 验证）**：`trustclaw:setup` 同步 `skills/`（含 `tra-pack-operations`）；平台能力清单增 `pack_authoring_api` / `pack_authoring_ui`；复跑 12+39 vitest 全绿。
+- **下一轮建议**：G8–G9（D23/D21 deferred）；D13 路径/包名迁移；Operator Pass 1 手工 C2 回归。
 
 ---
 
