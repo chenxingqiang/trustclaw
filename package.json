@@ -14,7 +14,8 @@
     "url": "git+https://github.com/openclaw/openclaw.git"
   },
   "bin": {
-    "openclaw": "openclaw.mjs"
+    "openclaw": "openclaw.mjs",
+    "trustclaw": "trustclaw.mjs"
   },
   "directories": {
     "doc": "docs",
@@ -25,6 +26,7 @@
     "LICENSE",
     "npm-shrinkwrap.json",
     "openclaw.mjs",
+    "trustclaw.mjs",
     "pnpm-workspace.yaml",
     "README.md",
     "THIRD_PARTY_NOTICES.md",
@@ -1681,6 +1683,7 @@
     "mac:package": "bash scripts/package-mac-app.sh",
     "mac:restart": "bash scripts/restart-mac.sh",
     "openclaw": "node scripts/run-node.mjs",
+    "trustclaw": "node scripts/run-node.mjs",
     "openclaw:rpc": "node scripts/run-node.mjs agent --mode rpc --json",
     "perf:issue-78851": "node --import tsx scripts/perf/issue-78851-model-resolution.ts",
     "perf:kova:summary": "node scripts/kova-ci-summary.mjs",

@@ -182,7 +182,8 @@ pnpm openclaw gateway run
 ## Branding note (D13)
 
 - **Product brand:** TrustClaw
-- **CLI / package:** still `openclaw` during V1
+- **CLI:** `openclaw` remains canonical; **`trustclaw` is an alias** (`trustclaw.mjs` → same runtime). Config paths stay `~/.openclaw/` during transition.
+- **pnpm:** `pnpm openclaw …` or `pnpm trustclaw …`
 - **ARM64 Docker (offline / 内网):** `docker/trustclaw-arm64/` — see that directory `README.md`
 - **Mac DMG:** `pnpm trustclaw:mac:dist` → `dist/TrustClaw-<version>.dmg` (menu bar shows **TrustClaw**; internal binary remains OpenClaw)
 

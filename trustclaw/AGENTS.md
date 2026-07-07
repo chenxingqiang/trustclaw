@@ -666,7 +666,8 @@ node scripts/run-vitest.mjs trustclaw/runtime/rules/evaluate.test.ts
 - **R30（2026-07-07，Phase 4）**：`inspectAgentPackDocument` + `POST /api/tra/agent-packs/validate`（结构化 zod issues，不落盘）。
 - **R31（2026-07-07，Phase 4）**：`writeAgentPackDocument` + `PUT /api/tra/agent-packs/<packId>`（需 `agentPacksDir`，校验后 upsert，刷新 registry）。
 - **R32（2026-07-07，Phase 4）**：`POST /api/tra/agent-packs` 创建 + `DELETE …/<id>` 删除（保护 default pack）；`deleteAgentPackDirectory`。
-- **下一轮建议**：G8–G9（D23/D21 deferred）；D13 CLI 别名；Phase 4 Console 创作 UI；D5 deferred。
+- **R33（2026-07-07，D13）**：`trustclaw.mjs` CLI 别名 + `package.json` bin；`resolveCliName` / `isKnownCliBinary`；gateway/exec 守卫识别 `trustclaw`。
+- **下一轮建议**：G8–G9（D23/D21 deferred）；Phase 4 Console 创作 UI；D13 路径/包名迁移；D5 deferred。
 
 ---
 

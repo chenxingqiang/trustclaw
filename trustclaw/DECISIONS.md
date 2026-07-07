@@ -16,7 +16,7 @@
 | D10 | TRA DB 默认 `state/local_tra.db`                                                    | delivered |
 | D11 | Init 扩展字段写入 canonical 表                                                      | delivered |
 | D12 | 数据浏览器默认表 + 订阅表血缘                                                       | delivered |
-| D13 | 品牌 TrustClaw；CLI/路径暂 `openclaw`                                               | approved  |
+| D13 | 品牌 TrustClaw；CLI 别名 `trustclaw`；路径/包名暂 `openclaw`                        | approved  |
 | D14 | 业务规则仅 SQLite/合规导入；禁止 TS 硬编码 GLP-1                                    | delivered |
 | D15 | 会话级 Agent Pack 绑定 + coordinator lock                                           | delivered |
 | D16 | NRDL 参考表 HTTPS 订阅 → 本地表；无运行时远程 DB                                    | delivered |

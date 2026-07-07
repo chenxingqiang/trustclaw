@@ -2,9 +2,22 @@
 import path from "node:path";
 
 const DEFAULT_CLI_NAME = "openclaw";
+const TRUSTCLAW_CLI_NAME = "trustclaw";
 
-const KNOWN_CLI_NAMES = new Set([DEFAULT_CLI_NAME]);
-const CLI_PREFIX_RE = /^(?:((?:pnpm|npm|bunx|npx)\s+))?(openclaw)\b/;
+const KNOWN_CLI_NAMES = new Set([DEFAULT_CLI_NAME, TRUSTCLAW_CLI_NAME]);
+const CLI_PREFIX_RE = /^(?:((?:pnpm|npm|bunx|npx)\s+))?(openclaw|trustclaw)\b/;
+
+/** True when `token` names a supported CLI binary (`openclaw` or `trustclaw`). */
+export function isKnownCliBinary(token: string | undefined): boolean {
+  if (!token?.trim()) {
+    return false;
+  }
+  const base = path
+    .basename(token.trim())
+    .replace(/\.(?:cmd|exe)$/iu, "")
+    .toLowerCase();
+  return KNOWN_CLI_NAMES.has(base);
+}
 
 /** Resolve the displayed CLI binary name from argv, falling back to `openclaw`. */
 export function resolveCliName(argv: string[] = process.argv): string {
