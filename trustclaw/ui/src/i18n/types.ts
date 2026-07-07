@@ -234,6 +234,7 @@ export type TrustclawMessages = {
       chatLoading: string;
       chatLive: string;
       chatCoordinator: string;
+      chatMismatch: string;
       chatOtherAgent: string;
       apiUnavailable: string;
       stepDataConsent: string;

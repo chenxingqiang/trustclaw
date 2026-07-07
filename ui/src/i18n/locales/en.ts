@@ -400,7 +400,7 @@ export const en: TranslationMap = {
     resize: "Resize sidebar",
   },
   tabs: {
-    tra: "TRA Console",
+    tra: "TrustClaw TRA Console",
     agents: "Agents",
     activity: "Activity",
     overview: "Overview",

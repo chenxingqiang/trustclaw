@@ -250,6 +250,8 @@ export const en: TrustclawMessages = {
       chatLoading: "Loading chat pipeline audit…",
       chatLive: "Live runtime context from the latest chat run.",
       chatCoordinator: "Agent pack «{pack}» (source: {source}).",
+      chatMismatch:
+        "Locked pack «{pack}» (source: {source}). OpenClaw agent suggests «{suggested}».",
       chatOtherAgent:
         "Live trail belongs to agent «{agent}» — switch the selector or chat with that agent.",
       apiUnavailable:

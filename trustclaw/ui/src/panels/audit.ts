@@ -364,10 +364,19 @@ export function renderAudit(
       trailIdEl.textContent = context.audit_trail_id;
       const packId = context.agent_pack_id?.trim() ?? "";
       const packSource = context.agent_pack_source?.trim();
-      chatNote.textContent =
-        packId && packSource
-          ? m.chatCoordinator.replace("{pack}", packId).replace("{source}", packSource)
-          : m.chatLive;
+      const suggestedPackId = context.openclaw_suggested_pack_id?.trim();
+      if (context.agent_pack_mismatch && packId && packSource && suggestedPackId) {
+        chatNote.textContent = m.chatMismatch
+          .replace("{pack}", packId)
+          .replace("{source}", packSource)
+          .replace("{suggested}", suggestedPackId);
+      } else if (packId && packSource) {
+        chatNote.textContent = m.chatCoordinator
+          .replace("{pack}", packId)
+          .replace("{source}", packSource);
+      } else {
+        chatNote.textContent = m.chatLive;
+      }
       void refreshComplianceEvents();
       const stages = context.pipeline_stages;
       const syntheticEvents: AuditEventRow[] = [];

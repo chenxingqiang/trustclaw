@@ -399,7 +399,7 @@ export const zh_CN: TranslationMap = {
     resize: "调整侧边栏大小",
   },
   tabs: {
-    tra: "TRA 控制台",
+    tra: "TrustClaw TRA 控制台",
     agents: "代理",
     activity: "活动",
     overview: "概览",

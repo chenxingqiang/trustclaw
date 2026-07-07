@@ -244,6 +244,7 @@ export const zh_CN: TrustclawMessages = {
       chatLoading: "正在加载 Chat 管线审计…",
       chatLive: "来自最近一次 Chat 运行的实时 Runtime Context。",
       chatCoordinator: "领域 Agent「{pack}」（来源：{source}）。",
+      chatMismatch: "锁定 Pack「{pack}」（来源：{source}）。OpenClaw Agent 建议「{suggested}」。",
       chatOtherAgent: "实时轨迹属于领域 Agent「{agent}」— 请切换选择器或等待该 Agent 的 Chat。",
       apiUnavailable:
         "审计 API 不可用（404）。请重启 Gateway（`pnpm trustclaw:dev`）以注册 /api/tra/audit/events。",

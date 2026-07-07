@@ -248,6 +248,64 @@ describe("trustclaw/runtime/pipeline", () => {
     }
   });
 
+  it("runs nrdl-reimburse pack with full RULE_EVAL pipeline (Phase 3)", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-pipeline-nrdl-"));
+    const dbPath = path.join(dir, "local_tra.db");
+    const auditDir = path.join(dir, "tra-audit");
+    const nrdlPack = getAgentPackRegistry().get("nrdl-reimburse")!;
+    try {
+      initializeTra(
+        {
+          ...TRA_INIT_DEFAULTS,
+          weight: 85,
+          height: 170,
+          hba1c: 6.8,
+          hasType2Diabetes: true,
+        },
+        { dbPath },
+      );
+
+      const result = await runTrustclawChat(
+        {
+          session_id: "sess_nrdl",
+          message: "司美格鲁肽医保报销条件是什么？",
+          agent_pack_id: nrdlPack.id,
+        },
+        {
+          dbPath,
+          auditDir,
+          evidenceDir: path.join(dir, "tra-evidence"),
+          llm: async () =>
+            "SELECT * FROM v_glp1_nrdl_check_snapshot WHERE user_id = 'local_user' LIMIT 1",
+          agentPack: nrdlPack,
+        },
+      );
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) {
+        return;
+      }
+      expect(result.context.agent_pack_id).toBe(nrdlPack.id);
+      expect(result.context.declared_pipeline_steps).toEqual(nrdlPack.pipeline.stages);
+      expect(result.context.pipeline_stages.rule_evaluation.evaluated_rules.length).toBeGreaterThan(
+        0,
+      );
+
+      const missing = missingChatPipelineSteps(auditDir, result.context.audit_trail_id, {
+        expectedSteps: nrdlPack.pipeline.stages,
+      });
+      expect(missing).toEqual([]);
+
+      const steps = readAuditEvents({ auditDir, limit: 20 })
+        .filter((event) => event.audit_trail_id === result.context.audit_trail_id)
+        .map((event) => event.step);
+      expect(steps).toContain("RULE_EVAL");
+      expect(steps).toContain("AGENT_DECISION");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("runs compliance-auditor pack without RULE_EVAL audit steps (Phase 3)", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "trustclaw-pipeline-compliance-"));
     const dbPath = path.join(dir, "local_tra.db");

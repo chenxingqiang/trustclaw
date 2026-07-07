@@ -659,7 +659,8 @@ node scripts/run-vitest.mjs trustclaw/runtime/rules/evaluate.test.ts
 - **R23（2026-07-06，D24）**：`importBundledDomainAgentsRegistry` + `POST /api/tra/domain-agents/import/bundled-registry`；Panel C 运营导入按钮；修复 `seedDomainAgentsRegistryIfEmpty`。
 - **R24（2026-07-06，Phase 3 + D13）**：RuntimeContext 携带 `agent_pack_source` / lock / mismatch；`tra-query-tool` 换 agent 锁包测试；Console 标题 TrustClaw 品牌化。
 - **R25（2026-07-07，Phase 3）**：`compliance-auditor` chat 无 `RULE_EVAL` 管道测试；MCA parity 断言 HTTP `request` / WS `session` 协调器归因；Panel D 实时展示 `agent_pack_source`。
-- **下一轮建议**：G8–G9（D23/D21 deferred）；D13 CLI 别名；D5 频道出站 `audit_trail_id`；multi-workspace coordinator。
+- **R26（2026-07-07，Phase 3 + D13）**：`nrdl-reimburse` 全阶段 chat 管道测试；Panel D `agent_pack_mismatch` + 建议 pack 提示；Control UI `tabs.tra` TrustClaw 品牌化。
+- **下一轮建议**：G8–G9（D23/D21 deferred）；D13 文档/侧栏 bundle 余量；D5 频道出站 `audit_trail_id`；multi-workspace coordinator。
 
 ---
 
