@@ -517,6 +517,70 @@ export interface DomainAgentsBundledRegistryImportRequest {
   force?: boolean;
 }
 
+export interface AgentPackSummaryRow {
+  id: string;
+  version: string;
+  displayName: { "zh-CN": string; en: string };
+  domain?: string[];
+  tools: { read: string; write?: string };
+  pipeline: { stages: string[] };
+}
+
+export interface AgentPacksListResponse {
+  status: "success" | "error";
+  default_pack_id?: string;
+  packs?: AgentPackSummaryRow[];
+  extension_points?: Record<string, string[]>;
+  schema_ref?: string;
+  message?: string;
+}
+
+export type AgentPackDetailManifest = Record<string, unknown>;
+
+export interface AgentPackDetailResponse {
+  status: "success" | "error";
+  pack?: AgentPackDetailManifest;
+  message?: string;
+}
+
+export interface AgentPackValidationIssue {
+  path: string;
+  message: string;
+}
+
+export type AgentPackValidateResult =
+  | { ok: true; pack: AgentPackDetailManifest; schema_ref?: string }
+  | { ok: false; issues: AgentPackValidationIssue[]; message?: string };
+
+export interface AgentPackPutResponse {
+  status: "success" | "error";
+  pack?: AgentPackDetailManifest;
+  code?: string;
+  message?: string;
+}
+
+async function postJsonBody<TBody>(
+  fetchImpl: typeof fetch,
+  baseUrl: string,
+  path: string,
+  body: unknown,
+): Promise<{ status: number; body: TBody }> {
+  const url = baseUrl ? `${baseUrl.replace(/\/$/, "")}${path}` : path;
+  const response = await fetchImpl(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const text = await response.text();
+  let parsed: TBody;
+  try {
+    parsed = (text.length > 0 ? JSON.parse(text) : null) as TBody;
+  } catch {
+    throw new Error(`Non-JSON response from ${path} (${response.status}): ${text.slice(0, 200)}`);
+  }
+  return { status: response.status, body: parsed };
+}
+
 /** Serialize domain-agents registry URL with optional filters. */
 export function buildDomainAgentsUrl(base: string, query?: DomainAgentsQuery): string {
   const url = new URL("/api/tra/domain-agents", base);
@@ -631,6 +695,10 @@ export interface TrustclawApiClient {
     body?: DomainAgentsBundledRegistryImportRequest,
   ): Promise<DomainAgentsImportResponse>;
   putAgentGrant(body: PutAgentGrantRequest): Promise<PutAgentGrantResponse>;
+  agentPacks(): Promise<AgentPacksListResponse>;
+  agentPackDetail(packId: string): Promise<AgentPackDetailResponse>;
+  validateAgentPack(body: unknown): Promise<AgentPackValidateResult>;
+  putAgentPack(packId: string, body: unknown): Promise<AgentPackPutResponse>;
   chat(body: AgentChatRequest): Promise<AgentChatResponse>;
   auditEvents(
     scope?: "compliance" | "chat" | "all",
@@ -723,6 +791,50 @@ export function createApiClient(
         method: "PUT",
         body: JSON.stringify(body),
       });
+    },
+    agentPacks() {
+      return callJson(fetchImpl, baseUrl, "/api/tra/agent-packs");
+    },
+    agentPackDetail(packId) {
+      return callJson(
+        fetchImpl,
+        baseUrl,
+        `/api/tra/agent-packs/${encodeURIComponent(packId.trim())}`,
+      );
+    },
+    async validateAgentPack(body) {
+      const result = await postJsonBody<{
+        status: string;
+        valid?: boolean;
+        pack?: AgentPackDetailManifest;
+        issues?: AgentPackValidationIssue[];
+        schema_ref?: string;
+        message?: string;
+      }>(fetchImpl, baseUrl, "/api/tra/agent-packs/validate", body);
+      if (result.status === 200 && result.body.valid === true && result.body.pack) {
+        return { ok: true, pack: result.body.pack, schema_ref: result.body.schema_ref };
+      }
+      if (result.status === 400 && Array.isArray(result.body.issues)) {
+        return {
+          ok: false,
+          issues: result.body.issues,
+          message: result.body.message,
+        };
+      }
+      throw new Error(
+        `/api/tra/agent-packs/validate failed (${result.status}): ${result.body.message ?? "unknown error"}`,
+      );
+    },
+    putAgentPack(packId, body) {
+      return callJson(
+        fetchImpl,
+        baseUrl,
+        `/api/tra/agent-packs/${encodeURIComponent(packId.trim())}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(body),
+        },
+      );
     },
     chat(body) {
       return callJson(fetchImpl, baseUrl, "/api/agent/chat", {

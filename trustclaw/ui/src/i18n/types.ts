@@ -144,6 +144,33 @@ export type TrustclawMessages = {
       registryDetailWrite: string;
       registryDetailRegistered: string;
     };
+    agentPackAuthoring: {
+      title: string;
+      subtitle: string;
+      description: string;
+      loading: string;
+      ready: string;
+      error: string;
+      validating: string;
+      saving: string;
+      selectLabel: string;
+      selectPlaceholder: string;
+      editorLabel: string;
+      editorPlaceholder: string;
+      loadBtn: string;
+      validateBtn: string;
+      saveBtn: string;
+      selectPackFirst: string;
+      invalidJson: string;
+      missingPackId: string;
+      loadFailed: string;
+      loadDone: string;
+      validateOk: string;
+      saveFailed: string;
+      saveDone: string;
+      writeDisabled: string;
+      listReady: string;
+    };
     agentBar: {
       label: string;
       checking: string;

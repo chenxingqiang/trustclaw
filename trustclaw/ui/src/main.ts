@@ -5,6 +5,7 @@ import { createApiClient, resolveApiBaseUrl } from "./api.js";
 import { renderConsoleOverview } from "./console-overview.js";
 import { i18n, msg } from "./i18n/index.js";
 import { renderAgentGrants } from "./panels/agent-grants.js";
+import { renderAgentPackAuthoring } from "./panels/agent-pack-authoring.js";
 import { renderAudit } from "./panels/audit.js";
 import { renderBrowser } from "./panels/browser.js";
 import { renderCompliance } from "./panels/compliance.js";
@@ -77,10 +78,12 @@ function mountEmbed(mode: EmbedMode): void {
     app!.append(col);
     const landing = document.createElement("div");
     const grants = document.createElement("div");
+    const packAuthoring = document.createElement("div");
     const browser = document.createElement("div");
-    col.append(landing, grants, browser);
+    col.append(landing, grants, packAuthoring, browser);
     const browserPanel = renderBrowser(browser, client);
     renderAgentGrants(grants, client);
+    renderAgentPackAuthoring(packAuthoring, client);
     renderLanding(landing, client, {
       onInitialized: () => void browserPanel.refresh(),
       onReset: () => void browserPanel.refresh(),
@@ -160,8 +163,9 @@ function mountFullConsole(): void {
 
   const landingSection = document.createElement("div");
   const grantsSection = document.createElement("div");
+  const packAuthoringSection = document.createElement("div");
   const browserSection = document.createElement("div");
-  leftCol.append(landingSection, grantsSection, browserSection);
+  leftCol.append(landingSection, grantsSection, packAuthoringSection, browserSection);
 
   const auditSection = document.createElement("div");
   const ledgerSection = document.createElement("div");
@@ -193,6 +197,7 @@ function mountFullConsole(): void {
   void ledgerPanel.refresh();
 
   renderAgentGrants(grantsSection, client);
+  renderAgentPackAuthoring(packAuthoringSection, client);
   renderLanding(landingSection, client, {
     onInitialized() {
       void browser.refresh();

@@ -70,6 +70,28 @@ describe("trustclaw/ui api client", () => {
     ).rejects.toThrow(/Non-JSON response from \/api\/tra\/status/);
   });
 
+  it("validateAgentPack returns structured issues on 400", async () => {
+    const fetchImpl = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            status: "error",
+            code: "invalid_agent_pack",
+            valid: false,
+            issues: [{ path: "id", message: "Invalid" }],
+          }),
+          { status: 400 },
+        ),
+    );
+    const client = createApiClient("", fetchImpl as unknown as typeof fetch);
+    const result = await client.validateAgentPack({ id: "BAD" });
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      return;
+    }
+    expect(result.issues[0]?.path).toBe("id");
+  });
+
   it("createApiClient routes methods to the frozen endpoints", async () => {
     const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();

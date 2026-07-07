@@ -545,6 +545,36 @@ body {
   --panel-accent: color-mix(in srgb, var(--panel-c) 70%, var(--accent));
 }
 
+.panel--pack-author {
+  --panel-accent: color-mix(in srgb, var(--panel-c) 50%, var(--accent));
+}
+
+.panel--pack-author .panel__body {
+  display: grid;
+  gap: 10px;
+}
+
+.panel--pack-author textarea {
+  width: 100%;
+  min-height: 220px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.panel--pack-author .panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.agent-pack-authoring-status--ok {
+  color: var(--ok);
+}
+
+.agent-pack-authoring-status--err {
+  color: var(--warn);
+}
+
 .agent-grants-list {
   display: grid;
   gap: 12px;
