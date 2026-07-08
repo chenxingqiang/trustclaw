@@ -99,11 +99,24 @@ cp app.env.dev.example app.env.dev
 
 ### 容器 ↔ 本地同步
 
-| 方向              | 命令                                | 说明                                                                                             |
-| ----------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------ |
-| 容器 → 本地       | `./scripts/pull-container-state.sh` | 拉取 volume 到 `runtime-state/`；domain-agents 注册表同步到 `trustclaw/tra/seeds/domain-agents/` |
-| 本地代码 → 容器   | `./scripts/push-container-code.sh`  | 构建并推送 plugin/UI 到运行中容器                                                                |
-| 本地 state → 容器 | `./scripts/push-container-state.sh` | 将 `runtime-state/` 的 DB、merged packs、审计写回 volume                                         |
+| 方向            | 命令                                | 说明                                                                                                                     |
+| --------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 容器 → 本地     | `./scripts/pull-container-state.sh` | 拉取 volume 到 `runtime-state/`；domain-agents 注册表同步到 `trustclaw/tra/seeds/domain-agents/`                         |
+| 本地代码 → 容器 | `./scripts/push-container-code.sh`  | 构建并推送 plugin/UI/runtime/agents/workspace + setup libs；重启后 `init-config` 迁移 `trustclaw-ptds` → `trustclaw-tra` |
+
+**与本地 `main` 的常见漂移（2026-07 起）**
+
+| 本地已交付                                     | 旧容器镜像（未 rebuild / 未 push） |
+| ---------------------------------------------- | ---------------------------------- |
+| 插件 id `trustclaw-tra`（D25）                 | 仍为 `trustclaw-ptds`              |
+| `GET/POST /api/tra/agent-packs/*`              | 404                                |
+| Panel C2 pack authoring UI                     | 无                                 |
+| `agentPacksDir` → `state/agent-packs` + 种子化 | 未配置或仅 bundled 只读路径        |
+| workspace 同步含 `skills/`                     | 仅 SOUL/IDENTITY/AGENTS            |
+
+对齐步骤：`./scripts/push-container-code.sh`（热更新）或 `./scripts/build-arm64.sh && docker compose up -d --force-recreate`（全量镜像）。
+
+| 本地 state → 容器 | `./scripts/push-container-state.sh` | 将 `runtime-state/` 的 DB、merged packs、审计写回 volume |
 
 `runtime-state/` 默认 gitignore（含密钥）；仅 `runtime-state/README.md` 可提交。
 

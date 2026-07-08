@@ -1,16 +1,23 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 /**
  * First-boot OpenClaw config for TrustClaw ARM64 Docker.
  * Merges app.env into ~/.openclaw/openclaw.json and syncs workspace templates.
  */
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import {
+  resolveTrustclawTraPluginConfig,
+  seedBundledAgentPacksIfMissing,
+} from "/app/scripts/lib/trustclaw-agent-packs.mjs";
+import { migrateTrustclawPluginEntry } from "/app/scripts/lib/trustclaw-defaults.mjs";
+import { syncWorkspaceTemplate } from "/app/scripts/lib/trustclaw-workspace-sync.mjs";
 
 const stateDir = process.env.OPENCLAW_STATE_DIR ?? "/home/node/.openclaw";
 const configPath = process.env.OPENCLAW_CONFIG_PATH ?? path.join(stateDir, "openclaw.json");
 const seedPath = process.env.TRUSTCLAW_CONFIG_SEED ?? "/opt/trustclaw/config/openclaw.json.seed";
 const appRoot = process.env.TRUSTCLAW_APP_ROOT ?? "/app";
+const bundledAgentsDir = path.join(appRoot, "trustclaw", "agents");
 
 function envTrim(key) {
   const value = process.env[key];
@@ -31,19 +38,6 @@ function loadJson(filePath, fallback) {
 function saveJson(filePath, data) {
   mkdirSync(path.dirname(filePath), { recursive: true });
   writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`);
-}
-
-function syncWorkspaceTemplate(templateDir, targetDir) {
-  if (!existsSync(templateDir)) {
-    return;
-  }
-  mkdirSync(targetDir, { recursive: true });
-  for (const name of ["SOUL.md", "IDENTITY.md", "AGENTS.md"]) {
-    const src = path.join(templateDir, name);
-    if (existsSync(src)) {
-      cpSync(src, path.join(targetDir, name), { force: true });
-    }
-  }
 }
 
 function syncTrustclawWorkspaces() {
@@ -75,6 +69,20 @@ function buildControlUiOrigins() {
   return [...origins];
 }
 
+function resolveTrustclawTraEntry(existingEntries) {
+  const migrated = migrateTrustclawPluginEntry({ ...existingEntries });
+  const traEntry = resolveTrustclawTraPluginConfig(migrated["trustclaw-tra"], stateDir);
+  const envPacksDir = envTrim("TRUSTCLAW_AGENT_PACKS_DIR");
+  if (envPacksDir) {
+    traEntry.config = { ...(traEntry.config ?? {}), agentPacksDir: envPacksDir };
+  }
+  const envDefaultPack = envTrim("TRUSTCLAW_DEFAULT_AGENT_PACK");
+  if (envDefaultPack) {
+    traEntry.config = { ...(traEntry.config ?? {}), defaultAgentPack: envDefaultPack };
+  }
+  return traEntry;
+}
+
 function applyEnvToConfig(config) {
   const gatewayToken = envTrim("OPENCLAW_GATEWAY_TOKEN");
   const anthropicBaseUrl = envTrim("ANTHROPIC_BASE_URL");
@@ -100,31 +108,13 @@ function applyEnvToConfig(config) {
   };
 
   const rawEntries = { ...(config.plugins?.entries ?? {}) };
-  const legacyPtds = rawEntries["trustclaw-ptds"];
-  if (legacyPtds) {
-    delete rawEntries["trustclaw-ptds"];
-    const tra = rawEntries["trustclaw-tra"] ?? {};
-    rawEntries["trustclaw-tra"] = {
-      ...legacyPtds,
-      ...tra,
-      enabled: tra.enabled ?? legacyPtds.enabled ?? true,
-      config: { ...(legacyPtds.config ?? {}), ...(tra.config ?? {}) },
-    };
-  }
+  const traEntry = resolveTrustclawTraEntry(rawEntries);
 
   config.plugins = {
     ...config.plugins,
     entries: {
-      ...rawEntries,
-      "trustclaw-tra": {
-        ...(config.plugins?.entries?.["trustclaw-tra"] ?? {}),
-        enabled: true,
-        config: {
-          ...(config.plugins?.entries?.["trustclaw-tra"]?.config ?? {}),
-          agentPacksDir: envTrim("TRUSTCLAW_AGENT_PACKS_DIR") ?? "/app/trustclaw/agents",
-          defaultAgentPack: envTrim("TRUSTCLAW_DEFAULT_AGENT_PACK") ?? "glp1-eligibility",
-        },
-      },
+      ...migrateTrustclawPluginEntry(rawEntries),
+      "trustclaw-tra": traEntry,
       acpx: {
         ...(config.plugins?.entries?.acpx ?? {}),
         enabled: false,
@@ -135,6 +125,7 @@ function applyEnvToConfig(config) {
       },
     },
   };
+  delete config.plugins.entries["trustclaw-ptds"];
 
   config.env = { ...(config.env ?? {}) };
   if (anthropicBaseUrl) {
@@ -215,6 +206,20 @@ function warnMissingModelAuth(config) {
   );
 }
 
+function seedOperatorAgentPacks(traEntry) {
+  const targetDir = traEntry.config?.agentPacksDir;
+  if (!targetDir) {
+    return;
+  }
+  const { seeded, skipped } = seedBundledAgentPacksIfMissing(bundledAgentsDir, targetDir);
+  if (seeded.length > 0) {
+    console.log(`[trustclaw:docker] Seeded agent packs → ${targetDir}: ${seeded.join(", ")}`);
+  }
+  if (skipped.length > 0) {
+    console.log(`[trustclaw:docker] Kept existing agent packs: ${skipped.join(", ")}`);
+  }
+}
+
 function main() {
   mkdirSync(stateDir, { recursive: true });
   mkdirSync(path.join(stateDir, "agents", "main", "agent"), { recursive: true });
@@ -224,6 +229,7 @@ function main() {
   const merged = applyEnvToConfig(existing);
   saveJson(configPath, merged);
   syncTrustclawWorkspaces();
+  seedOperatorAgentPacks(merged.plugins.entries["trustclaw-tra"]);
   warnMissingModelAuth(merged);
 
   const bootstrapScript = path.join(appRoot, "scripts/lib/tra-state-bootstrap.mjs");

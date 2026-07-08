@@ -9,6 +9,9 @@ COPY docker/trustclaw-arm64/config/openclaw.json.seed /opt/trustclaw/config/open
 # Full product tree (~1.5MB): tra schema/seeds, agents, runtime, workspace, ui/dist fallback.
 COPY trustclaw /app/trustclaw
 COPY scripts/lib/tra-state-bootstrap.mjs /app/scripts/lib/tra-state-bootstrap.mjs
+COPY scripts/lib/trustclaw-defaults.mjs /app/scripts/lib/trustclaw-defaults.mjs
+COPY scripts/lib/trustclaw-agent-packs.mjs /app/scripts/lib/trustclaw-agent-packs.mjs
+COPY scripts/lib/trustclaw-workspace-sync.mjs /app/scripts/lib/trustclaw-workspace-sync.mjs
 # Bundled plugin resolves UI from dist/extensions/.../dist/ui (see ui-routes.ts).
 RUN mkdir -p /app/dist/extensions/trustclaw-tra/dist/ui /app/dist/extensions/dist/ui && \
     if [ -d /app/extensions/trustclaw-tra/dist/ui ]; then \
