@@ -6,7 +6,10 @@ import { spawnSync } from "node:child_process";
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { migrateLegacyWorkspaceDomainPacks } from "/app/scripts/lib/normalize-domain-agent-pack.mjs";
+import {
+  migrateLegacyAgentsList,
+  migrateLegacyWorkspaceDomainPacks,
+} from "/app/scripts/lib/normalize-domain-agent-pack.mjs";
 import {
   isNonWritableAgentPacksDir,
   resolveTrustclawTraPluginConfig,
@@ -210,6 +213,16 @@ function warnMissingModelAuth(config) {
   );
 }
 
+function migrateLegacyAgentsListInConfig(config) {
+  const list = config.agents?.list;
+  const { agentsList, migrated, changed } = migrateLegacyAgentsList(list, stateDir);
+  if (!changed) {
+    return;
+  }
+  config.agents = { ...(config.agents ?? {}), list: agentsList };
+  console.log(`[trustclaw:docker] Migrated agents.list ids: ${migrated.join(", ")}`);
+}
+
 function migrateLegacyWorkspaceDomainPacksTree() {
   const workspaceAgentsDir = path.join(stateDir, "workspace", "trustclaw-agents");
   const { migrated, skipped } = migrateLegacyWorkspaceDomainPacks(workspaceAgentsDir);
@@ -255,6 +268,7 @@ function main() {
   const seed = loadJson(seedPath, {});
   const existing = existsSync(configPath) ? loadJson(configPath, seed) : seed;
   const merged = applyEnvToConfig(existing);
+  migrateLegacyAgentsListInConfig(merged);
   saveJson(configPath, merged);
   syncTrustclawWorkspaces();
   seedOperatorAgentPacks(merged.plugins.entries["trustclaw-tra"]);

@@ -85,6 +85,7 @@ const TAB_PATHS: Record<Tab, string> = {
 
 const PATH_ALIASES: Record<string, Tab> = {
   "/dreams": "dreams",
+  "/ptds": "tra",
 };
 
 const PATH_TO_TAB = new Map<string, Tab>([

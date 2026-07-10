@@ -94,3 +94,58 @@ export function migrateLegacyWorkspaceDomainPacks(workspaceAgentsDir) {
   }
   return { migrated, skipped };
 }
+
+export function resolveLegacyAgentId(agentId) {
+  const trimmed = agentId?.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (LEGACY_DOMAIN_PACK_FOLDER_MAP[trimmed]) {
+    return LEGACY_DOMAIN_PACK_FOLDER_MAP[trimmed];
+  }
+  if (trimmed.startsWith("ptds-")) {
+    return trimmed.replace(/^ptds-/, "tra-");
+  }
+  return null;
+}
+
+/** Rename ptds-* OpenClaw agent ids in agents.list to tra-* and dedupe. */
+export function migrateLegacyAgentsList(agentsList, stateDir = "") {
+  if (!Array.isArray(agentsList)) {
+    return { agentsList: [], migrated: [], changed: false };
+  }
+  const migrated = [];
+  const seen = new Set();
+  const next = [];
+  for (const entry of agentsList) {
+    if (!entry || typeof entry !== "object") {
+      continue;
+    }
+    const updated = { ...entry };
+    const currentId = typeof updated.id === "string" ? updated.id.trim() : "";
+    const targetId = resolveLegacyAgentId(currentId);
+    if (targetId) {
+      migrated.push(`${currentId}→${targetId}`);
+      updated.id = targetId;
+    }
+    for (const key of ["workspace", "agentDir"]) {
+      if (typeof updated[key] === "string") {
+        updated[key] = normalizeLegacyPackText(updated[key]);
+      }
+    }
+    const finalId = typeof updated.id === "string" ? updated.id.trim() : "";
+    if (!finalId || seen.has(finalId)) {
+      continue;
+    }
+    if (
+      stateDir &&
+      DOMAIN_AGENT_PACK_IDS.includes(finalId) &&
+      typeof updated.workspace !== "string"
+    ) {
+      updated.workspace = path.join(stateDir, "workspace", "trustclaw-agents", finalId);
+    }
+    seen.add(finalId);
+    next.push(updated);
+  }
+  return { agentsList: next, migrated, changed: migrated.length > 0 };
+}

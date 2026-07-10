@@ -139,6 +139,32 @@ describe("normalize-domain-agent-pack", () => {
     expect(mod.DOMAIN_AGENT_PACK_IDS).toHaveLength(10);
   });
 
+  it("migrates legacy ptds agent ids in agents.list to tra-*", async () => {
+    const mod = await import("../../scripts/lib/normalize-domain-agent-pack.mjs");
+    const result = mod.migrateLegacyAgentsList(
+      [
+        { id: "main", default: true },
+        { id: "ptds-audit", model: "sonnet" },
+        { id: "tra-audit", model: "sonnet" },
+        {
+          id: "ptds-outpatient",
+          workspace: "/home/node/.openclaw/workspace/trustclaw-agents/ptds-outpatient",
+        },
+      ],
+      "/home/node/.openclaw",
+    );
+    expect(result.changed).toBe(true);
+    expect(result.migrated).toEqual(["ptds-audit→tra-audit", "ptds-outpatient→tra-outpatient"]);
+    expect(result.agentsList.map((entry) => entry.id)).toEqual([
+      "main",
+      "tra-audit",
+      "tra-outpatient",
+    ]);
+    expect(result.agentsList[2].workspace).toBe(
+      "/home/node/.openclaw/workspace/trustclaw-agents/tra-outpatient",
+    );
+  });
+
   it("normalizes legacy pack manifest tools and audit ids", async () => {
     const mod = await import("../../scripts/lib/normalize-domain-agent-pack.mjs");
     const pack = mod.normalizeLegacyPackManifest(

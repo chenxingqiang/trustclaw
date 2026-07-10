@@ -187,6 +187,7 @@ describe("tabFromPath", () => {
   it("returns tra for root path (TrustClaw-first default)", () => {
     expect(tabFromPath("/")).toBe("tra");
     expect(tabFromPath("/tra")).toBe("tra");
+    expect(tabFromPath("/ptds")).toBe("tra");
   });
 
   it("handles base paths", () => {

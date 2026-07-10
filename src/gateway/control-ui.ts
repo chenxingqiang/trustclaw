@@ -899,7 +899,8 @@ function matchesControlUiBootstrapConfigPath(pathname: string, basePath: string)
   // when no base path is configured).
   if (
     pathname === `${basePath}${CONTROL_UI_BOOTSTRAP_CONFIG_PATH}` ||
-    pathname === `${basePath}${LEGACY_BOOTSTRAP_CONFIG_PATH}`
+    pathname === `${basePath}${LEGACY_BOOTSTRAP_CONFIG_PATH}` ||
+    pathname.endsWith(CONTROL_UI_BOOTSTRAP_CONFIG_PATH)
   ) {
     return true;
   }
@@ -1049,6 +1050,10 @@ export async function handleControlUiHttpRequest(
       if (CONTROL_UI_ROOT_PUBLIC_ASSETS.has(namespacedRel)) {
         return namespacedRel;
       }
+    }
+    const publicAssetTail = uiPath.slice(uiPath.lastIndexOf("/") + 1);
+    if (CONTROL_UI_ROOT_PUBLIC_ASSETS.has(publicAssetTail)) {
+      return publicAssetTail;
     }
     const assetsIndex = uiPath.indexOf("/assets/");
     if (assetsIndex >= 0) {

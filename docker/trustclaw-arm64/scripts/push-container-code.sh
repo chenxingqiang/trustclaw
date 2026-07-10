@@ -28,6 +28,9 @@ docker cp "$ROOT/scripts/lib/tra-state-bootstrap.mjs" "$CONTAINER:/app/scripts/l
 docker cp "$ROOT/scripts/lib/normalize-domain-agent-pack.mjs" "$CONTAINER:/app/scripts/lib/normalize-domain-agent-pack.mjs"
 docker cp "$DIR/scripts/init-config.mjs" "$CONTAINER:/opt/trustclaw/init-config.mjs"
 
+echo "==> Push Control UI"
+docker cp "$ROOT/dist/control-ui/." "$CONTAINER:/app/dist/control-ui/"
+
 echo "==> Push plugin bundle (trustclaw-tra)"
 docker exec "$CONTAINER" mkdir -p /app/dist/extensions/trustclaw-tra/dist/ui
 docker cp "$ROOT/dist/extensions/trustclaw-tra/index.js" "$CONTAINER:/app/dist/extensions/trustclaw-tra/index.js"
